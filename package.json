@@ -1,0 +1,8 @@
+{
+  "name": "deduction",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Max Bogue <max@maxbogue.com>",
+  "license": "MIT",
+  "dependencies": {}
+}
