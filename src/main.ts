@@ -3,6 +3,8 @@ import expressWs from 'express-ws';
 import WebSocket from 'ws';
 import { createServer } from 'http';
 
+import { Game, WebSocketPlayer } from './game';
+
 const { app } = expressWs(express());
 
 app.get('/', (req: Request, res: Response) => {
@@ -21,36 +23,15 @@ app.get('/game/:id/', (req: any, res: any) => {
 
 type Dict<T> = { [key: string]: T };
 
-const websocketsById: Dict<Set<WebSocket>> = {};
-
-function sendPlayerCount(gameId: string): void {
-  const websockets = websocketsById[gameId];
-  websockets.forEach(w => {
-    w.send(`there are now ${websockets.size} players connected`);
-  });
-}
+const gamesById: Dict<Game> = {};
 
 app.ws('/:gameId/', (ws: WebSocket, req: Request) => {
-  console.log('websocket connected');
-
   const { gameId } = req.params;
-  if (!websocketsById[gameId]) {
-    websocketsById[gameId] = new Set();
+  if (!gamesById[gameId]) {
+    gamesById[gameId] = new Game();
   }
-  websocketsById[gameId].add(ws);
-
-  ws.on('message', (message: string) => {
-    console.log('received: %s', message);
-    ws.send(`Hello, you sent -> ${message}`);
-  });
-
-  ws.on('close', () => {
-    console.log('closing websocket');
-    websocketsById[gameId].delete(ws);
-    sendPlayerCount(gameId);
-  });
-
-  sendPlayerCount(gameId);
+  const game = gamesById[gameId];
+  game.addPlayer(new WebSocketPlayer(game, ws));
 });
   
 console.log('Starting server...');
