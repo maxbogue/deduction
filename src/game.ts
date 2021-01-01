@@ -2,9 +2,15 @@ import WebSocket from 'ws';
 
 import { Dict, Maybe } from './types';
 
+enum GameStatus {
+  Setup = 'Setup',
+  InProgress = 'InProgress',
+}
+
 interface ConnectionDescription {
   role: string;
   name: string;
+  isReady: boolean;
 }
 
 interface PlayerDescription {
@@ -14,25 +20,29 @@ interface PlayerDescription {
 }
 
 interface SetupState {
+  status: GameStatus.Setup;
   connections: ConnectionDescription[];
   availableRoles: string[];
 }
 
 interface InProgressState {
+  status: GameStatus.InProgress;
   players: PlayerDescription[];
 }
 
 type State = SetupState | InProgressState;
 
 interface ConnectionObserver {
-  removeConnection(conn: Connection): void;
-  updateState(): void;
   setConnectionRole(conn: Connection, role: string): void;
+  removeConnection(conn: Connection): void;
+  start(): void;
+  updateState(): void;
 }
 
 interface Connection {
   getRole(): string;
   setRole(role: string): void;
+  isReady(): boolean;
   getDescription(): ConnectionDescription;
   sendState(gameState: State): void;
 }
@@ -40,7 +50,7 @@ interface Connection {
 const ROLES = ['A', 'B', 'C'];
 
 class Player {
-  private role: string;
+  private readonly role: string;
   private name: string;
 
   constructor(role: string, name: string) {
@@ -66,7 +76,7 @@ export class Game implements ConnectionObserver {
   private readonly roleToConnection: Dict<Connection> = {};
   private readonly roleToPlayer: Dict<Player> = {};
   private readonly players: Player[] = [];
-  private isStarted = false;
+  private status: GameStatus = GameStatus.Setup;
 
   addConnection(conn: Connection): void {
     this.connections.push(conn);
@@ -111,14 +121,27 @@ export class Game implements ConnectionObserver {
     //this.updateState();
   //}
 
+  start(): void {
+    if (!this.connections.every(c => !c.getRole() || c.isReady())) {
+      return;
+    }
+    this.connections.forEach(conn => {
+      const { role, name } = conn.getDescription();
+      this.players.push(new Player(role, name));
+    });
+    this.status = GameStatus.InProgress;
+  }
+
   getState(): State {
-    if (!this.isStarted) {
+    if (this.status === GameStatus.Setup) {
       return {
+        status: this.status,
         connections: this.connections.map(c => c.getDescription()),
         availableRoles: ROLES.filter(r => !this.roleToConnection[r]),
       };
     }
     return {
+      status: this.status,
       players: this.players.map(p => p.getDescription()),
     };
   }
@@ -131,24 +154,42 @@ export class Game implements ConnectionObserver {
   }
 }
 
+enum ConnectionEvents {
+  SetRole = 'SetRole',
+  SetName = 'SetName',
+  SetReady = 'SetReady',
+  Start = 'Start',
+}
+
 interface SetRoleEvent {
-  type: 'setRole';
+  type: ConnectionEvents.SetRole;
   data: string;
 }
 
 interface SetNameEvent {
-  type: 'setName';
+  type: ConnectionEvents.SetName;
   data: string;
 }
 
-type ConnectionEvent = SetRoleEvent | SetNameEvent;
+interface SetReadyEvent {
+  type: ConnectionEvents.SetReady;
+  data: boolean;
+}
+
+interface StartEvent {
+  type: ConnectionEvents.Start;
+}
+
+type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent;
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
   private ws: WebSocket;
-  private role: string = '';
-  // mutable, used during setup
-  private name: string = '';
+  private role = '';
+
+  // mutable, only used during setup
+  private name = '';
+  private _isReady = false;
 
   constructor(observer: ConnectionObserver, ws: WebSocket) {
     this.observer = observer;
@@ -175,27 +216,38 @@ export class WebSocketConnection implements Connection {
     return this.role;
   }
 
+  isReady(): boolean {
+    return this._isReady;
+  }
+
   getDescription(): ConnectionDescription {
     return {
       role: this.role,
       name: this.name,
+      isReady: this._isReady,
     };
   }
 
   processEvent(event: ConnectionEvent): void {
     console.log(event);
-    if (event.type === 'setRole') {
-      this.observer.setConnectionRole(this, event.data);
-    } else if (event.type === 'setName') {
-      this.name = event.data;
+    switch (event.type) {
+      case ConnectionEvents.SetRole:
+        this.observer.setConnectionRole(this, event.data);
+        break;
+      case ConnectionEvents.SetName:
+        this.name = event.data;
+        break;
+      case ConnectionEvents.SetReady:
+        this._isReady = event.data;
+        break;
+      case ConnectionEvents.Start:
+        this.observer.start();
+        break;
     }
     this.observer.updateState();
   }
 
   sendState(state: State): void {
-    this.ws.send(JSON.stringify({
-      type: 'STATE',
-      data: state,
-    }));
+    this.ws.send(JSON.stringify(state));
   }
 }
