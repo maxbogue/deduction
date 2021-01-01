@@ -26,10 +26,13 @@ type State = SetupState | InProgressState;
 
 interface ConnectionObserver {
   removeConnection(conn: Connection): void;
+  updateState(): void;
+  setConnectionRole(conn: Connection, role: string): void;
 }
 
 interface Connection {
-  getRole(): Maybe<string>;
+  getRole(): string;
+  setRole(role: string): void;
   getDescription(): ConnectionDescription;
   sendState(gameState: State): void;
 }
@@ -80,6 +83,24 @@ export class Game implements ConnectionObserver {
     this.updateState();
   }
 
+  setConnectionRole(conn: Connection, role: string) {
+    if (!ROLES.includes(role)) {
+      throw new Error(`Invalid role: ${role}`);
+    }
+
+    if (this.roleToConnection[role]) {
+      return;
+    }
+
+    const oldRole = conn.getRole();
+    if (oldRole) {
+      delete this.roleToConnection[oldRole];
+    }
+
+    this.roleToConnection[role] = conn;
+    conn.setRole(role);
+  }
+
   //addPlayer(role: string, player: Player): void {
     //this.roleToPlayer[role] = player;
     //this.updateState();
@@ -110,6 +131,18 @@ export class Game implements ConnectionObserver {
   }
 }
 
+interface SetRoleEvent {
+  type: 'setRole';
+  data: string;
+}
+
+interface SetNameEvent {
+  type: 'setName';
+  data: string;
+}
+
+type ConnectionEvent = SetRoleEvent | SetNameEvent;
+
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
   private ws: WebSocket;
@@ -124,14 +157,18 @@ export class WebSocketConnection implements Connection {
     console.log('websocket connected');
 
     ws.on('message', (message: string) => {
-      console.log('received: %s', message);
-      ws.send(`Hello, you sent -> ${message}`);
+      const event = JSON.parse(message);
+      this.processEvent(event);
     });
 
     ws.on('close', () => {
       console.log('closing websocket');
       this.observer.removeConnection(this);
     });
+  }
+
+  setRole(role: string): void {
+    this.role = role;
   }
 
   getRole(): string {
@@ -143,6 +180,16 @@ export class WebSocketConnection implements Connection {
       role: this.role,
       name: this.name,
     };
+  }
+
+  processEvent(event: ConnectionEvent): void {
+    console.log(event);
+    if (event.type === 'setRole') {
+      this.observer.setConnectionRole(this, event.data);
+    } else if (event.type === 'setName') {
+      this.name = event.data;
+    }
+    this.observer.updateState();
   }
 
   sendState(state: State): void {
