@@ -3,7 +3,8 @@ import expressWs from 'express-ws';
 import WebSocket from 'ws';
 import { createServer } from 'http';
 
-import { Game, WebSocketPlayer } from './game';
+import { Game, WebSocketConnection } from './game';
+import { Dict } from './types';
 
 const { app } = expressWs(express());
 
@@ -21,8 +22,6 @@ app.get('/game/:id/', (req: any, res: any) => {
   `);
 });
 
-type Dict<T> = { [key: string]: T };
-
 const gamesById: Dict<Game> = {};
 
 app.ws('/:gameId/', (ws: WebSocket, req: Request) => {
@@ -31,7 +30,7 @@ app.ws('/:gameId/', (ws: WebSocket, req: Request) => {
     gamesById[gameId] = new Game();
   }
   const game = gamesById[gameId];
-  game.addPlayer(new WebSocketPlayer(game, ws));
+  game.addConnection(new WebSocketConnection(game, ws));
 });
   
 console.log('Starting server...');
