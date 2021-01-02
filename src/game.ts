@@ -13,7 +13,7 @@ interface ConnectionDescription {
   isReady: boolean;
 }
 
-interface PlayerDescription {
+interface PlayerPublicState {
   role: string;
   name: string;
   connected: boolean;
@@ -27,7 +27,12 @@ interface SetupState {
 
 interface InProgressState {
   status: GameStatus.InProgress;
-  players: PlayerDescription[];
+  players: PlayerPublicState[];
+  playerState: Maybe<PlayerPrivateState>;
+}
+
+interface PlayerPrivateState {
+  hand: string[];
 }
 
 type State = SetupState | InProgressState;
@@ -48,16 +53,19 @@ interface Connection {
 }
 
 const ROLES = ['A', 'B', 'C'];
+const CARDS = ROLES.concat(['1', '2', '3', '4']);
 
 class Player {
   private readonly role: string;
   private name: string;
   private connected: boolean;
+  private readonly hand: string[];
 
-  constructor(role: string, name: string, connected: boolean) {
+  constructor(role: string, name: string, connected: boolean, hand: string[]) {
     this.role = role;
     this.name = name;
     this.connected = connected;
+    this.hand = hand;
   }
 
   setIsConnected(connected: boolean) {
@@ -72,11 +80,21 @@ class Player {
     return this.role;
   }
 
-  getDescription(): PlayerDescription {
+  getHand(): string[] {
+    return this.hand;
+  }
+
+  getPrivateState(): PlayerPrivateState {
+    return {
+      hand: this.hand
+    };
+  } 
+
+  getPublicState(): PlayerPublicState {
     return {
       role: this.role,
       name: this.name,
-      connected: this.connected,
+      connected: this.connected
     };
   }
 };
@@ -132,13 +150,29 @@ export class Game implements ConnectionObserver {
     //this.updateState();
   //}
 
+  dealCards(hands: number) : string[][] {
+    const count = CARDS.length
+    const cardsPerHand = count/hands
+    let allHands: string[][] = []
+    for (let i=0; i < hands; i++) {
+      const begin = i*cardsPerHand;
+      const end = begin+cardsPerHand;
+      allHands.push(CARDS.slice(begin, end));
+    } 
+    return allHands
+  }
+
   start(): void {
     if (!this.connections.every(c => !c.getRole() || c.isReady())) {
       return;
     }
-    this.connections.forEach(conn => {
+    const playerConnections = this.connections.filter(c => c.getRole())
+    let allHands = this.dealCards(playerConnections.length)
+
+    playerConnections.forEach(conn => {
       const { role, name } = conn.getDescription();
-      const newPlayer: Player = new Player(role, name, true)
+      const thisHand = allHands.splice(0,1)[0];
+      const newPlayer: Player = new Player(role, name, true, thisHand)
       this.players.push(newPlayer);
       this.roleToPlayer[role] = newPlayer;
     });
@@ -155,7 +189,8 @@ export class Game implements ConnectionObserver {
     }
     return {
       status: this.status,
-      players: this.players.map(p => p.getDescription()),
+      players: this.players.map(p => p.getPublicState()),
+      playerState: null,
     };
   }
 
@@ -166,7 +201,16 @@ export class Game implements ConnectionObserver {
   updateState(): void {
     const state = this.getState();
     this.connections.forEach(conn => {
-      conn.sendState(state);
+      const role = conn.getRole()
+      if (state.status === GameStatus.InProgress && role) {
+        const player = this.roleToPlayer[role];
+        conn.sendState({
+          ...state,
+          playerState: player.getPrivateState(),
+        });
+      } else {
+        conn.sendState(state);
+      }
     });
   }
 }
