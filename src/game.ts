@@ -52,10 +52,20 @@ const ROLES = ['A', 'B', 'C'];
 class Player {
   private readonly role: string;
   private name: string;
+  private connected: boolean;
 
-  constructor(role: string, name: string) {
+  constructor(role: string, name: string, connected: boolean) {
     this.role = role;
     this.name = name;
+    this.connected = connected;
+  }
+
+  setIsConnected(connected: boolean) {
+    this.connected = connected;
+  }
+
+  getIsConnected(): boolean {
+    return this.connected
   }
 
   getRole(): string {
@@ -66,7 +76,7 @@ class Player {
     return {
       role: this.role,
       name: this.name,
-      connected: false,
+      connected: this.connected,
     };
   }
 };
@@ -89,6 +99,7 @@ export class Game implements ConnectionObserver {
     const role = conn.getRole();
     if (role) {
       delete this.roleToConnection[role];
+      this.roleToPlayer[role].setIsConnected(false);
     }
     this.updateState();
   }
@@ -127,7 +138,9 @@ export class Game implements ConnectionObserver {
     }
     this.connections.forEach(conn => {
       const { role, name } = conn.getDescription();
-      this.players.push(new Player(role, name));
+      const newPlayer: Player = new Player(role, name, true)
+      this.players.push(newPlayer);
+      this.roleToPlayer[role] = newPlayer;
     });
     this.status = GameStatus.InProgress;
   }
@@ -144,6 +157,10 @@ export class Game implements ConnectionObserver {
       status: this.status,
       players: this.players.map(p => p.getDescription()),
     };
+  }
+
+  getConnectionStatusForPlayer(player: Player): boolean {
+    return false
   }
 
   updateState(): void {
