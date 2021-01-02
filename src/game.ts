@@ -28,6 +28,7 @@ interface SetupState {
 interface InProgressState {
   status: GameStatus.InProgress;
   players: PlayerPublicState[];
+  solution: Maybe<Crime>;
   playerState: Maybe<PlayerPrivateState>;
 }
 
@@ -40,20 +41,19 @@ type State = SetupState | InProgressState;
 interface ConnectionObserver {
   setConnectionRole(conn: Connection, role: string): void;
   removeConnection(conn: Connection): void;
+  setSkin(skinName: string): void;
   start(): void;
   updateState(): void;
 }
 
 interface Connection {
   getRole(): string;
+  clearRole(): void;
   setRole(role: string): void;
   isReady(): boolean;
   getDescription(): ConnectionDescription;
   sendState(gameState: State): void;
 }
-
-const ROLES = ['A', 'B', 'C'];
-const CARDS = ROLES.concat(['1', '2', '3', '4']);
 
 class Player {
   private readonly role: string;
@@ -99,12 +99,20 @@ class Player {
   }
 };
 
+interface Crime {
+  role: string,
+  object: string,
+  place: string
+}
+
 export class Game implements ConnectionObserver {
   private readonly connections: Connection[] = [];
-  private readonly roleToConnection: Dict<Connection> = {};
+  private roleToConnection: Dict<Connection> = {};
   private readonly roleToPlayer: Dict<Player> = {};
   private readonly players: Player[] = [];
   private status: GameStatus = GameStatus.Setup;
+  private skin: Skin = SKINS["classic"];
+  private solution: Maybe<Crime> = null; 
 
   addConnection(conn: Connection): void {
     this.connections.push(conn);
@@ -123,8 +131,9 @@ export class Game implements ConnectionObserver {
   }
 
   setConnectionRole(conn: Connection, role: string) {
-    if (!ROLES.includes(role)) {
-      throw new Error(`Invalid role: ${role}`);
+    if (!this.skin.roles.includes(role)) {
+      console.log(`Invalid role ${role} for skin ${this.skin.skinName}`);
+      return
     }
 
     if (this.roleToConnection[role]) {
@@ -140,6 +149,26 @@ export class Game implements ConnectionObserver {
     conn.setRole(role);
   }
 
+  setSkin(skinName: string) {
+    if (!SKINS[skinName]) {
+      console.log(`Invalid skin ${skinName} for game.`)
+      return
+    }
+
+    if (this.status !== GameStatus.Setup) {
+      console.log('Too late to change skin. Game has begun!');
+      return
+    }
+
+    const skin = SKINS[skinName]
+      
+    if (this.skin === skin) {
+      console.log("Skin already set.");
+    } else {
+      this.resetRoles();
+      this.skin = skin;
+    }
+  }
   //addPlayer(role: string, player: Player): void {
     //this.roleToPlayer[role] = player;
     //this.updateState();
@@ -150,14 +179,46 @@ export class Game implements ConnectionObserver {
     //this.updateState();
   //}
 
+  resetRoles() {
+    if (this.status === GameStatus.Setup){
+      this.connections.forEach(conn => {
+        conn.clearRole();
+      });
+      this.roleToConnection = {};
+    } else {
+      console.log('Too late to reset roles! Game has begun!')
+      // option to end game and return to setup state?
+    }
+  }
+
+  pickACard(cards: string[]): string {
+    let randomCardIndex = Math.floor(Math.random()*cards.length)
+    return cards.splice(randomCardIndex, 1)[0]
+  }
+
   dealCards(hands: number) : string[][] {
-    const count = CARDS.length
+
+    const roles = this.skin.roles.slice();
+    const objects = this.skin.objects.slice();
+    const places = this.skin.places.slice();
+
+    this.solution = {
+      role: this.pickACard(roles),
+      object: this.pickACard(objects),
+      place: this.pickACard(places)
+    }
+
+    const allCards = [...roles, ...objects, ...places];
+
+    // shuffle the deck
+
+    const count = allCards.length
     const cardsPerHand = count/hands
     let allHands: string[][] = []
     for (let i=0; i < hands; i++) {
       const begin = i*cardsPerHand;
       const end = begin+cardsPerHand;
-      allHands.push(CARDS.slice(begin, end));
+      allHands.push(allCards.slice(begin, end));
     } 
     return allHands
   }
@@ -184,12 +245,13 @@ export class Game implements ConnectionObserver {
       return {
         status: this.status,
         connections: this.connections.map(c => c.getDescription()),
-        availableRoles: ROLES.filter(r => !this.roleToConnection[r]),
+        availableRoles: this.skin.roles.filter(r => !this.roleToConnection[r]),
       };
     }
     return {
       status: this.status,
       players: this.players.map(p => p.getPublicState()),
+      solution: this.solution,
       playerState: null,
     };
   }
@@ -215,10 +277,36 @@ export class Game implements ConnectionObserver {
   }
 }
 
+interface Skin {
+  skinName: string,
+  roles: string[],
+  objects: string[],
+  objectDescriptor: string,
+  places: string[],
+}
+
+const SKINS: Dict<Skin> = {
+  classic: {
+    skinName: "classic",
+    roles: ['Mlle. Crimson', 'Gen. Dijon', 'Dr. Grape', 'Sr. Tomatillo', 'Mrs. Juniper', "Ms. Ivory"],
+    objects: ['Pistol', 'Knife', 'Bat', 'Wire', 'Hydroflask TM', 'Hammer'],
+    objectDescriptor: "Weapon",
+    places: ['Breakfast Nook', 'Closet', 'Office', 'Bedroom', 'Rec Room', 'Den', 'Entryway', 'Laundry Room', 'Master Bath', 'Pantry'],
+  },
+  familyCookies: {
+    skinName: "familyCookies",
+    roles: ['Doug', 'Harl', 'Steve', 'Katharine', 'Lucy', 'Les', 'Kim'],
+    objects: ['Lebkuchen', 'Hazelnut Stick', 'Gingerbread', 'Spice Bar', 'Pecan Puff', 'Chocolate Walnut', 'Sand Stars', 'Almond Thumbprints'],
+    objectDescriptor: "Cookie",
+    places: ['Pond Street', 'Pittsfield', 'Daytona Beach', 'Buckingham Drive', 'Aurielle Drive', 'Nottingham Court', 'Redwood City', 'Shelburne Bay']
+  },
+}
+
 enum ConnectionEvents {
   SetRole = 'SetRole',
   SetName = 'SetName',
   SetReady = 'SetReady',
+  SetSkin = 'SetSkin',
   Start = 'Start',
 }
 
@@ -237,11 +325,16 @@ interface SetReadyEvent {
   data: boolean;
 }
 
+interface SetSkinEvent {
+  type: ConnectionEvents.SetSkin;
+  data: string;
+}
+
 interface StartEvent {
   type: ConnectionEvents.Start;
 }
 
-type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent;
+type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent | SetSkinEvent;
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
@@ -273,6 +366,11 @@ export class WebSocketConnection implements Connection {
     this.role = role;
   }
 
+  clearRole(): void {
+    this.setRole('');
+    this._isReady = false;
+  }
+
   getRole(): string {
     return this.role;
   }
@@ -301,6 +399,9 @@ export class WebSocketConnection implements Connection {
       case ConnectionEvents.SetReady:
         this._isReady = event.data;
         break;
+      case ConnectionEvents.SetSkin:
+        this.observer.setSkin(event.data)
+        break
       case ConnectionEvents.Start:
         this.observer.start();
         break;
