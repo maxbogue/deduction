@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
 
 import { Dict, Maybe } from './types';
+import { pickOne, pickMany, repeat } from './utils';
 
 enum GameStatus {
   Setup = 'Setup',
@@ -191,21 +192,15 @@ export class Game implements ConnectionObserver {
     }
   }
 
-  pickACard(cards: string[]): string {
-    let randomCardIndex = Math.floor(Math.random()*cards.length)
-    return cards.splice(randomCardIndex, 1)[0]
-  }
-
-  dealCards(hands: number) : string[][] {
-
+  dealCards(numHands: number) : string[][] {
     const roles = this.skin.roles.slice();
     const objects = this.skin.objects.slice();
     const places = this.skin.places.slice();
 
     this.solution = {
-      role: this.pickACard(roles),
-      object: this.pickACard(objects),
-      place: this.pickACard(places)
+      role: pickOne(roles),
+      object: pickOne(objects),
+      place: pickOne(places),
     }
 
     const allCards = [...roles, ...objects, ...places];
@@ -213,14 +208,12 @@ export class Game implements ConnectionObserver {
     // shuffle the deck
 
     const count = allCards.length
-    const cardsPerHand = count/hands
-    let allHands: string[][] = []
-    for (let i=0; i < hands; i++) {
-      const begin = i*cardsPerHand;
-      const end = begin+cardsPerHand;
-      allHands.push(allCards.slice(begin, end));
-    } 
-    return allHands
+    const cardsPerHand = Math.floor(count / numHands);
+    const getsExtra = count % numHands;
+    return repeat(
+      (i: number) => pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand),
+      numHands
+    );
   }
 
   start(): void {
