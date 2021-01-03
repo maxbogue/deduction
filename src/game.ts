@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 
 import { Dict, Maybe } from './types';
 import { pickOne, pickMany, repeat } from './utils';
+import isEqual from 'lodash/isEqual';
 
 enum GameStatus {
   Setup = 'Setup',
@@ -44,6 +45,7 @@ export interface ConnectionObserver {
   removeConnection(conn: Connection): void;
   setSkin(skinName: string): void;
   start(): void;
+  accuse(accusation: Crime): void;
   updateState(): void;
 }
 
@@ -56,7 +58,7 @@ export interface Connection {
   sendState(gameState: State): void;
 }
 
-interface Crime {
+export interface Crime {
   role: string,
   object: string,
   place: string
@@ -247,6 +249,42 @@ export class Game implements ConnectionObserver {
       this.roleToPlayer[role] = newPlayer;
     });
     this.status = GameStatus.InProgress;
+  }
+
+
+
+  validateCrimeForCurrentSkin(crime: Crime) {
+    let errors = ''
+
+    if (!this.skin.roles.includes(crime.role)) {
+      errors += `Role ${crime.role} not in current list of suspects ${this.skin.roles}`
+    }
+    if (!this.skin.objects.includes(crime.object)) {
+      errors += `Object ${crime.object} not in current list of ${this.skin.objectDescriptor}: ${this.skin.objects}`
+    }
+    if (!this.skin.places.includes(crime.place)) {
+      errors += `Place ${crime.place} not in current list of places ${this.skin.places}`
+    }
+
+    if (errors) {
+      throw new Error(errors)
+    }
+  }
+
+  accuse(accusation: Crime): void {
+    // check that our accusation has the correct format
+    if (this.status !== GameStatus.InProgress) {
+      throw new Error("Accusations can only be made once game has started!")
+    }
+
+    console.log('Accusing!');
+    this.validateCrimeForCurrentSkin(accusation)
+
+    console.log(isEqual(accusation, this.solution));
+
+    // log accusation with player?
+    // if correct, game ends and player wins
+    // else, idk... for now just log "sorry"
   }
 
   getState(): State {

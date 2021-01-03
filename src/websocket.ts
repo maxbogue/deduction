@@ -1,7 +1,30 @@
 import WebSocket from 'ws';
 
 import { Dict, Maybe } from './types';
-import { Connection, ConnectionObserver, ConnectionDescription, State } from './game';
+import { Connection, ConnectionObserver, ConnectionDescription, State, Crime } from './game';
+
+function validateCrime(dict: Crime) {
+  let crime = null
+  let errors = ''
+  if (!dict.role) {
+    errors += 'Missing suspect. '
+  }
+  if (!dict.object) {
+    errors += 'Missing object. ' 
+  }
+  if (!dict.place) {
+    errors += 'Missing place. '
+  }
+
+  const foundKeys = Object.keys(dict).length
+  if (foundKeys !== 3) {
+    errors += `Found ${foundKeys}. Expected 3.`
+  }
+
+  if (errors) {
+    throw new Error(errors)
+  }
+}
 
 enum ConnectionEvents {
   SetRole = 'SetRole',
@@ -9,6 +32,7 @@ enum ConnectionEvents {
   SetReady = 'SetReady',
   SetSkin = 'SetSkin',
   Start = 'Start',
+  Accuse = 'Accuse',
 }
 
 interface SetRoleEvent {
@@ -35,7 +59,12 @@ interface StartEvent {
   type: ConnectionEvents.Start;
 }
 
-type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent | SetSkinEvent;
+interface AccuseEvent {
+  type: ConnectionEvents.Accuse;
+  data: Crime;
+}
+
+type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent | SetSkinEvent | AccuseEvent;
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
@@ -53,8 +82,12 @@ export class WebSocketConnection implements Connection {
     console.log('websocket connected');
 
     ws.on('message', (message: string) => {
-      const event = JSON.parse(message);
-      this.processEvent(event);
+      try {
+        const event = JSON.parse(message);
+        this.processEvent(event);
+      } catch (e){
+        console.log(e.message)
+      }
     });
 
     ws.on('close', () => {
@@ -101,11 +134,17 @@ export class WebSocketConnection implements Connection {
         this._isReady = event.data;
         break;
       case ConnectionEvents.SetSkin:
-        this.observer.setSkin(event.data)
-        break
+        this.observer.setSkin(event.data);
+        break;
       case ConnectionEvents.Start:
         this.observer.start();
         break;
+      case ConnectionEvents.Accuse:
+        validateCrime(event.data);
+        this.observer.accuse(event.data);
+        break;
+      default:
+        console.log('Event not found in processEvent', event)
     }
     this.observer.updateState();
   }
