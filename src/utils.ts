@@ -1,3 +1,4 @@
+// Generates an array of length n by repeatedly invoking f.
 export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
   const ls = [];
   for (let i = 0; i < n; i++) {
@@ -6,11 +7,12 @@ export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
   return ls;
 };
 
-// Removes one item from the list and returns it.
-export const pickOne = <T>(items: T[]): T => {
-  const i = Math.floor(Math.random() * items.length);
-  return items.splice(i, 1)[0]
+// Removes one random item from the list and returns it.
+export const pickOne = <T>(ls: T[]): T => {
+  const i = Math.floor(Math.random() * ls.length);
+  return ls.splice(i, 1)[0]
 };
 
-export const pickMany = <T>(items: T[], n: number): T[] =>
-  repeat(() => pickOne(items), n);
+// Removes n random items from the list and returns them.
+export const pickMany = <T>(ls: T[], n: number): T[] =>
+  repeat(() => pickOne(ls), n);

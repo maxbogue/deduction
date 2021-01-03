@@ -3,8 +3,9 @@ import expressWs from 'express-ws';
 import WebSocket from 'ws';
 import { createServer } from 'http';
 
-import { Game, WebSocketConnection } from './game';
+import { Game } from './game';
 import { Dict } from './types';
+import { WebSocketConnection } from './websocket';
 
 const { app } = expressWs(express());
 
