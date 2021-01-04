@@ -40,4 +40,4 @@ export interface PlayerPrivateState {
   hand: string[];
 }
 
-export type State = SetupState | InProgressState;
+export type GameState = SetupState | InProgressState;

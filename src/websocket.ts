@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 
 import { ConnectionEvent, ConnectionEvents } from './events';
 import { Connection, ConnectionObserver } from './game';
-import { ConnectionDescription, State, Crime } from './state';
+import { ConnectionDescription, GameState, Crime } from './state';
 import { Dict, Maybe } from './types';
 
 function validateCrime(dict: Crime) {
@@ -112,7 +112,7 @@ export class WebSocketConnection implements Connection {
     this.observer.updateState();
   }
 
-  sendState(state: State): void {
+  sendState(state: GameState): void {
     this.ws.send(JSON.stringify(state));
   }
 }

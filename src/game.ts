@@ -4,7 +4,7 @@ import { Dict, Maybe } from './types';
 import { pickOne, pickMany, repeat } from './utils';
 import isEqual from 'lodash/isEqual';
 
-import { Crime, ConnectionDescription, GameStatus, State, PlayerPrivateState, PlayerPublicState } from '@/state';
+import { Crime, ConnectionDescription, GameStatus, GameState, PlayerPrivateState, PlayerPublicState } from '@/state';
 
 export interface ConnectionObserver {
   setConnectionRole(conn: Connection, role: string): void;
@@ -21,7 +21,7 @@ export interface Connection {
   setRole(role: string): void;
   isReady(): boolean;
   getDescription(): ConnectionDescription;
-  sendState(gameState: State): void;
+  sendState(gameState: GameState): void;
 }
 
 interface Skin {
@@ -247,7 +247,7 @@ export class Game implements ConnectionObserver {
     // else, idk... for now just log "sorry"
   }
 
-  getState(): State {
+  getState(): GameState {
     if (this.status === GameStatus.Setup) {
       return {
         status: this.status,
