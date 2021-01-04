@@ -4,13 +4,18 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strict": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es6",
     "experimentalDecorators": true,
     "baseUrl": "src",
     "paths": {
       "@/*": [ "*" ]
     }
   },
+  "files": ["src/shims.d.ts"],
   "include": [
-    "./src/**/*"
+    "src/**/*.ts",
+    "src/**/*.vue"
   ]
 }

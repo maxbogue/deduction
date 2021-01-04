@@ -2,25 +2,25 @@ import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
 import WebSocket from 'ws';
 import { createServer } from 'http';
+import path from 'path';
 
 import { Game } from './game';
 import { Dict } from './types';
 import { WebSocketConnection } from './websocket';
 
+const JS_PATH = path.resolve(__dirname, '..', 'build', 'js');
+
 const { app } = expressWs(express());
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('<h1>Hello jhsjdkfhasklfhas</h1>');
+app.get('/js/:filename', function (req, res) {
+  res.sendFile(path.resolve(JS_PATH, req.params.filename));
 });
 
-app.get('/game/:id/', (req: any, res: any) => {
-  res.status(200).send(`
-    <h1>Some cool page</h1>
-    <h2>URL</h2>
-    ${req.url}
-    <h2>Params</h2>
-    ${JSON.stringify(req.params, null, 2)}
-  `);
+//app.use('/robots.txt', express.static('static/robots.txt'));
+app.use('/static', express.static('static'));
+
+app.get('*', function (req, res) {
+  res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
 const gamesById: Dict<Game> = {};
