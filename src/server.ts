@@ -19,19 +19,19 @@ app.get('/js/:filename', function (req, res) {
 //app.use('/robots.txt', express.static('static/robots.txt'));
 app.use('/static', express.static('static'));
 
-app.get('*', function (req, res) {
-  res.sendFile(path.resolve(__dirname, 'index.html'));
-});
-
 const gamesById: Dict<Game> = {};
 
-app.ws('/:gameId/', (ws: WebSocket, req: Request) => {
+app.ws('/api/:gameId/', (ws: WebSocket, req: Request) => {
   const { gameId } = req.params;
   if (!gamesById[gameId]) {
     gamesById[gameId] = new Game();
   }
   const game = gamesById[gameId];
   game.addConnection(new WebSocketConnection(game, ws));
+});
+
+app.get('*', function (req, res) {
+  res.sendFile(path.resolve(__dirname, 'index.html'));
 });
   
 console.log('Starting server...');

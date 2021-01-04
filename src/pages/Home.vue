@@ -1,11 +1,24 @@
 <template>
-  <div>TESTING 123 IS THIS THING ON {{ test }}</div>
+  <form @submit="onSubmit">
+    <input type="text" v-model="gameId">
+    <button type="submit">Submit</button>
+  </form>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
-  data: () => ({ test: 'bar' })
+  data: () => ({
+    gameId: 'foo',
+  }),
+  methods: {
+    onSubmit() {
+      this.$router.push({
+        name: 'game',
+        params: { id: this.gameId },
+      });
+    },
+  },
 });
 </script>

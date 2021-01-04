@@ -82,7 +82,6 @@ const baseConfig = {
   resolve: {
     extensions: ['.ts', '.js', '.vue', '.vue.ts', '.json'],
     alias: {
-      vue$: 'vue/dist/vue.esm.js',
       '@': path.join(__dirname, 'src'),
     },
   },
