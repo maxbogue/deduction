@@ -4,41 +4,7 @@ import { Dict, Maybe } from './types';
 import { pickOne, pickMany, repeat } from './utils';
 import isEqual from 'lodash/isEqual';
 
-enum GameStatus {
-  Setup = 'Setup',
-  InProgress = 'InProgress',
-}
-
-interface PlayerPublicState {
-  role: string;
-  name: string;
-  connected: boolean;
-}
-
-interface SetupState {
-  status: GameStatus.Setup;
-  connections: ConnectionDescription[];
-  availableRoles: string[];
-}
-
-interface InProgressState {
-  status: GameStatus.InProgress;
-  players: PlayerPublicState[];
-  solution: Maybe<Crime>;
-  playerState: Maybe<PlayerPrivateState>;
-}
-
-interface PlayerPrivateState {
-  hand: string[];
-}
-
-export type State = SetupState | InProgressState;
-
-export interface ConnectionDescription {
-  role: string;
-  name: string;
-  isReady: boolean;
-}
+import { Crime, ConnectionDescription, GameStatus, State, PlayerPrivateState, PlayerPublicState } from '@/state';
 
 export interface ConnectionObserver {
   setConnectionRole(conn: Connection, role: string): void;
@@ -56,12 +22,6 @@ export interface Connection {
   isReady(): boolean;
   getDescription(): ConnectionDescription;
   sendState(gameState: State): void;
-}
-
-export interface Crime {
-  role: string,
-  object: string,
-  place: string
 }
 
 interface Skin {

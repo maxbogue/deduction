@@ -1,7 +1,9 @@
 import WebSocket from 'ws';
 
+import { ConnectionEvent, ConnectionEvents } from './events';
+import { Connection, ConnectionObserver } from './game';
+import { ConnectionDescription, State, Crime } from './state';
 import { Dict, Maybe } from './types';
-import { Connection, ConnectionObserver, ConnectionDescription, State, Crime } from './game';
 
 function validateCrime(dict: Crime) {
   let crime = null
@@ -26,45 +28,6 @@ function validateCrime(dict: Crime) {
   }
 }
 
-enum ConnectionEvents {
-  SetRole = 'SetRole',
-  SetName = 'SetName',
-  SetReady = 'SetReady',
-  SetSkin = 'SetSkin',
-  Start = 'Start',
-  Accuse = 'Accuse',
-}
-
-interface SetRoleEvent {
-  type: ConnectionEvents.SetRole;
-  data: string;
-}
-
-interface SetNameEvent {
-  type: ConnectionEvents.SetName;
-  data: string;
-}
-
-interface SetReadyEvent {
-  type: ConnectionEvents.SetReady;
-  data: boolean;
-}
-
-interface SetSkinEvent {
-  type: ConnectionEvents.SetSkin;
-  data: string;
-}
-
-interface StartEvent {
-  type: ConnectionEvents.Start;
-}
-
-interface AccuseEvent {
-  type: ConnectionEvents.Accuse;
-  data: Crime;
-}
-
-type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent | SetSkinEvent | AccuseEvent;
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
