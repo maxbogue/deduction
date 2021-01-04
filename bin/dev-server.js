@@ -54,7 +54,7 @@ function invoke(env) {
 
   for (const webpackConfig of webpackConfigs) {
     webpackConfig.mode = 'development';
-    webpackConfig.plugins.push()
+    webpackConfig.plugins.push();
   }
 
   const serverConfig = webpackConfigs.filter(c => c.name === 'server')[0];

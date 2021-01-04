@@ -21,12 +21,12 @@ const baseConfig = {
         test: /\.ts$/,
         use: [
           {
-            loader: "babel-loader",
-            options: { babelrc: true  }
+            loader: 'babel-loader',
+            options: { babelrc: true },
           },
           {
-            loader: "ts-loader",
-            options: { appendTsSuffixTo: [/\.vue$/]  }
+            loader: 'ts-loader',
+            options: { appendTsSuffixTo: [/\.vue$/] },
           },
         ],
       },

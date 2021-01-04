@@ -38,4 +38,10 @@ export interface AccuseEvent {
   data: Crime;
 }
 
-export type ConnectionEvent = SetRoleEvent | SetNameEvent | SetReadyEvent | StartEvent | SetSkinEvent | AccuseEvent;
+export type ConnectionEvent =
+  | SetRoleEvent
+  | SetNameEvent
+  | SetReadyEvent
+  | StartEvent
+  | SetSkinEvent
+  | AccuseEvent;

@@ -1,8 +1,7 @@
 import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
-import WebSocket from 'ws';
-import { createServer } from 'http';
 import path from 'path';
+import WebSocket from 'ws';
 
 import { Game } from './game';
 import { Dict } from './types';
@@ -12,7 +11,7 @@ const JS_PATH = path.resolve(__dirname, '..', 'build', 'js');
 
 const { app } = expressWs(express());
 
-app.get('/js/:filename', function (req, res) {
+app.get('/js/:filename', (req: Request, res: Response) => {
   res.sendFile(path.resolve(JS_PATH, req.params.filename));
 });
 
@@ -30,9 +29,9 @@ app.ws('/api/:gameId/', (ws: WebSocket, req: Request) => {
   game.addConnection(new WebSocketConnection(game, ws));
 });
 
-app.get('*', function (req, res) {
+app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'index.html'));
 });
-  
+
 console.log('Starting server...');
 app.listen(3000);

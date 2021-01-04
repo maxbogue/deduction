@@ -2,32 +2,29 @@ import WebSocket from 'ws';
 
 import { ConnectionEvent, ConnectionEvents } from './events';
 import { Connection, ConnectionObserver } from './game';
-import { ConnectionDescription, GameState, Crime } from './state';
-import { Dict, Maybe } from './types';
+import { ConnectionDescription, Crime, GameState } from './state';
 
-function validateCrime(dict: Crime) {
-  let crime = null
-  let errors = ''
-  if (!dict.role) {
-    errors += 'Missing suspect. '
+function validateCrime(crime: Crime) {
+  let errors = '';
+  if (!crime.role) {
+    errors += 'Missing suspect. ';
   }
-  if (!dict.object) {
-    errors += 'Missing object. ' 
+  if (!crime.object) {
+    errors += 'Missing object. ';
   }
-  if (!dict.place) {
-    errors += 'Missing place. '
+  if (!crime.place) {
+    errors += 'Missing place. ';
   }
 
-  const foundKeys = Object.keys(dict).length
+  const foundKeys = Object.keys(crime).length;
   if (foundKeys !== 3) {
-    errors += `Found ${foundKeys}. Expected 3.`
+    errors += `Found ${foundKeys}. Expected 3.`;
   }
 
   if (errors) {
-    throw new Error(errors)
+    throw new Error(errors);
   }
 }
-
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
@@ -48,8 +45,8 @@ export class WebSocketConnection implements Connection {
       try {
         const event = JSON.parse(message);
         this.processEvent(event);
-      } catch (e){
-        console.log(e.message)
+      } catch (e: unknown) {
+        console.log(e.message);
       }
     });
 
@@ -107,7 +104,7 @@ export class WebSocketConnection implements Connection {
         this.observer.accuse(event.data);
         break;
       default:
-        console.log('Event not found in processEvent', event)
+        console.log('Event not found in processEvent', event);
     }
     this.observer.updateState();
   }

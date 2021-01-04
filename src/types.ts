@@ -1,2 +1,4 @@
 export type Maybe<T> = T | null;
-export type Dict<T> = { [key: string]: T };
+export interface Dict<T> {
+  [key: string]: T;
+}

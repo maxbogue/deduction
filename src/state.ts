@@ -24,9 +24,9 @@ export interface SetupState {
 }
 
 export interface Crime {
-  role: string,
-  object: string,
-  place: string
+  role: string;
+  object: string;
+  place: string;
 }
 
 export interface InProgressState {
