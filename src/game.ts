@@ -154,8 +154,8 @@ export class Game implements ConnectionObserver {
     this.connections.splice(i, 1);
     const role = conn.getRole();
     if (role) {
+      this.roleToPlayer[role]?.setIsConnected(false);
       delete this.roleToConnection[role];
-      this.roleToPlayer[role].setIsConnected(false);
     }
     this.updateState();
   }

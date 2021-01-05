@@ -1,12 +1,19 @@
 <template>
   <div>
     <div>{{ state }}</div>
-    <div><button @click="chooseRole">role me baby</button></div>
+    <button
+      v-for="role in state.availableRoles"
+      :key="role"
+      @click="chooseRoleFor(role)"
+    >
+      {{ role }}
+    </button>
+    <button @click="chooseFirstAvailableRole">role me baby</button>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, Ref } from 'vue';
+import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
@@ -14,6 +21,7 @@ import { GameState, GameStatus } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
+  name: 'Game',
   setup() {
     const route = useRoute();
     const id = computed(() => route.params.id);
@@ -32,18 +40,27 @@ export default defineComponent({
       id,
       state,
       send,
-    }
+    };
   },
   methods: {
-    chooseRole() {
+    chooseFirstAvailableRole() {
+      if (
+        this.state?.status !== GameStatus.Setup ||
+        this.state?.availableRoles.length === 0
+      ) {
+        return;
+      }
+      this.chooseRoleFor(this.state.availableRoles[0]);
+    },
+    chooseRoleFor(name: string) {
       if (this.state?.status !== GameStatus.Setup) {
         return;
       }
       this.send({
         type: ConnectionEvents.SetRole,
-        data: this.state.availableRoles[0],
-      })
-    }
+        data: name,
+      });
+    },
   },
 });
 </script>
