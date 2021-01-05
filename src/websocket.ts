@@ -46,7 +46,9 @@ export class WebSocketConnection implements Connection {
         const event = JSON.parse(message);
         this.processEvent(event);
       } catch (e: unknown) {
-        console.log(e.message);
+        if (e instanceof Error) {
+          console.log(e.message);
+        }
       }
     });
 
