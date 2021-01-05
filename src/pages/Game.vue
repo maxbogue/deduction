@@ -1,14 +1,18 @@
 <template>
   <div>
     <div>{{ state }}</div>
-    <button
-      v-for="role in state.availableRoles"
-      :key="role"
-      @click="chooseRoleFor(role)"
-    >
-      {{ role }}
-    </button>
-    <button @click="chooseFirstAvailableRole">role me baby</button>
+    <div v-if="isStateSetup">
+      <button
+        v-for="role in state.availableRoles"
+        :key="role"
+        @click="chooseRoleFor(role)"
+      >
+        {{ role }}
+      </button>
+      <button @click="chooseFirstAvailableRole">role me baby</button>
+      <button @click="setReady">Ready!</button>
+      <button @click="startGame">Start!</button>
+    </div>
   </div>
 </template>
 
@@ -35,11 +39,14 @@ export default defineComponent({
     const send = (event: ConnectionEvent) => {
       ws.send(JSON.stringify(event));
     };
-
+    const isStateSetup = computed(
+      () => state.value?.status === GameStatus.Setup
+    );
     return {
       id,
       state,
       send,
+      isStateSetup,
     };
   },
   methods: {
@@ -59,6 +66,23 @@ export default defineComponent({
       this.send({
         type: ConnectionEvents.SetRole,
         data: name,
+      });
+    },
+    setReady() {
+      if (this.state?.status !== GameStatus.Setup) {
+        return;
+      }
+      this.send({
+        type: ConnectionEvents.SetReady,
+        data: true,
+      });
+    },
+    startGame() {
+      if (this.state?.status !== GameStatus.Setup) {
+        return;
+      }
+      this.send({
+        type: ConnectionEvents.Start,
       });
     },
   },
