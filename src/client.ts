@@ -1,3 +1,5 @@
+import '@/style/index.scss';
+
 import { createApp } from 'vue';
 import { RouterView } from 'vue-router';
 

@@ -1,11 +1,5 @@
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const { VueLoaderPlugin } = require('vue-loader');
-
-const styleLoader =
-  process.env.NODE_ENV !== 'production'
-    ? 'vue-style-loader'
-    : MiniCssExtractPlugin.loader;
 
 const sassLoader = {
   loader: 'sass-loader',
@@ -40,7 +34,7 @@ const baseConfig = {
           {
             resourceQuery: /module/,
             use: [
-              styleLoader,
+              'style-loader',
               {
                 loader: 'css-loader',
                 options: {
@@ -53,7 +47,7 @@ const baseConfig = {
             ],
           },
           {
-            use: [styleLoader, 'css-loader', sassLoader],
+            use: ['style-loader', 'css-loader', sassLoader],
           },
         ],
       },
@@ -63,24 +57,9 @@ const baseConfig = {
       },
     ],
   },
-  plugins: [
-    new VueLoaderPlugin(),
-    new MiniCssExtractPlugin({
-      filename: '[name].css',
-    }),
-  ],
-  externals: {
-    // Unused drivers for knex.
-    sqlite3: 'sqlite3',
-    mariasql: 'mariasql',
-    mssql: 'mssql',
-    mysql: 'mysql',
-    oracle: 'oracle',
-    'strong-oracle': 'strong-oracle',
-    oracledb: 'oracledb',
-  },
+  plugins: [new VueLoaderPlugin()],
   resolve: {
-    extensions: ['.ts', '.js', '.vue', '.vue.ts', '.json'],
+    extensions: ['.ts', '.js', '.vue', '.json'],
     alias: {
       '@': path.join(__dirname, 'src'),
     },

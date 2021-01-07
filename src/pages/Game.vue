@@ -1,18 +1,7 @@
 <template>
-  <div>
-    <div>{{ state }}</div>
-    <div v-if="isStateSetup">
-      <button
-        v-for="role in state.availableRoles"
-        :key="role"
-        @click="chooseRoleFor(role)"
-      >
-        {{ role }}
-      </button>
-      <button @click="chooseFirstAvailableRole">role me baby</button>
-      <button @click="setReady">Ready!</button>
-      <button @click="startGame">Start!</button>
-    </div>
+  <div class="game">
+    <GameSetup v-if="isStateSetup" :state="state" :send="send" />
+    <div class="game__state">{{ JSON.stringify(state, null, 2) }}</div>
   </div>
 </template>
 
@@ -20,12 +9,16 @@
 import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import { ConnectionEvent, ConnectionEvents } from '@/events';
+import GameSetup from '@/components/GameSetup';
+import { ConnectionEvent } from '@/events';
 import { GameState, GameStatus } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Game',
+  components: {
+    GameSetup,
+  },
   setup() {
     const route = useRoute();
     const id = computed(() => route.params.id);
@@ -49,42 +42,24 @@ export default defineComponent({
       isStateSetup,
     };
   },
-  methods: {
-    chooseFirstAvailableRole() {
-      if (
-        this.state?.status !== GameStatus.Setup ||
-        this.state?.availableRoles.length === 0
-      ) {
-        return;
-      }
-      this.chooseRoleFor(this.state.availableRoles[0]);
-    },
-    chooseRoleFor(name: string) {
-      if (this.state?.status !== GameStatus.Setup) {
-        return;
-      }
-      this.send({
-        type: ConnectionEvents.SetRole,
-        data: name,
-      });
-    },
-    setReady() {
-      if (this.state?.status !== GameStatus.Setup) {
-        return;
-      }
-      this.send({
-        type: ConnectionEvents.SetReady,
-        data: true,
-      });
-    },
-    startGame() {
-      if (this.state?.status !== GameStatus.Setup) {
-        return;
-      }
-      this.send({
-        type: ConnectionEvents.Start,
-      });
-    },
-  },
+  methods: {},
 });
 </script>
+
+<style lang="scss" scoped>
+@import '@/style/constants';
+
+.game {
+  font-size: 1.6rem;
+  margin: $pad-lg auto $pad-lg;
+  padding: $pad-md;
+  background-color: #eee;
+  width: 800px;
+
+  &__state {
+    color: #666;
+    font-family: 'Courier New';
+    white-space: pre-wrap;
+  }
+}
+</style>
