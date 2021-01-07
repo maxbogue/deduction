@@ -1,6 +1,7 @@
 <template>
   <div class="game">
     <GameSetup v-if="isStateSetup" :state="state" :send="send" />
+    <GameInProgress v-else-if="isStateInProgress" :state="state" :send="send" />
     <div class="game__state">{{ JSON.stringify(state, null, 2) }}</div>
   </div>
 </template>
@@ -9,6 +10,7 @@
 import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+import GameInProgress from '@/components/GameInProgress';
 import GameSetup from '@/components/GameSetup';
 import { ConnectionEvent } from '@/events';
 import { GameState, GameStatus } from '@/state';
@@ -18,6 +20,7 @@ export default defineComponent({
   name: 'Game',
   components: {
     GameSetup,
+    GameInProgress,
   },
   setup() {
     const route = useRoute();
@@ -35,11 +38,16 @@ export default defineComponent({
     const isStateSetup = computed(
       () => state.value?.status === GameStatus.Setup
     );
+    const isStateInProgress = computed(
+      () => state.value?.status === GameStatus.InProgress
+    );
+
     return {
       id,
       state,
       send,
       isStateSetup,
+      isStateInProgress,
     };
   },
   methods: {},

@@ -7,6 +7,7 @@ import {
   GameStatus,
   PlayerPrivateState,
   PlayerPublicState,
+  Skin,
 } from '@/state';
 
 import { Dict, Maybe } from './types';
@@ -28,14 +29,6 @@ export interface Connection {
   isReady: () => boolean;
   getDescription: () => ConnectionDescription;
   sendState: (gameState: GameState) => void;
-}
-
-interface Skin {
-  skinName: string;
-  roles: string[];
-  objects: string[];
-  objectDescriptor: string;
-  places: string[];
 }
 
 const SKINS: Dict<Skin> = {
@@ -301,6 +294,7 @@ export class Game implements ConnectionObserver {
       players: this.players.map(p => p.getPublicState()),
       solution: this.solution,
       playerState: null,
+      skin: this.skin,
     };
   }
 

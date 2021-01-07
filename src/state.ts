@@ -23,6 +23,14 @@ export interface SetupState {
   availableRoles: string[];
 }
 
+export interface Skin {
+  skinName: string;
+  roles: string[];
+  objects: string[];
+  objectDescriptor: string;
+  places: string[];
+}
+
 export interface Crime {
   role: string;
   object: string;
@@ -34,6 +42,7 @@ export interface InProgressState {
   players: PlayerPublicState[];
   solution: Maybe<Crime>;
   playerState: Maybe<PlayerPrivateState>;
+  skin: Skin;
 }
 
 export interface PlayerPrivateState {
