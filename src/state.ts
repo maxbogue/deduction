@@ -29,6 +29,7 @@ export interface SetupState {
   status: GameStatus.Setup;
   connections: ConnectionDescription[];
   skin: Skin;
+  connectionIndex: number;
 }
 
 export interface Crime {

@@ -287,6 +287,7 @@ export class Game implements ConnectionObserver {
         status: this.status,
         connections: this.connections.map(c => c.getDescription()),
         skin: this.skin,
+        connectionIndex: 0,
       };
     }
     return {
@@ -300,16 +301,23 @@ export class Game implements ConnectionObserver {
 
   updateState(): void {
     const state = this.getState();
-    this.connections.forEach(conn => {
+    this.connections.forEach((conn, i) => {
       const role = conn.getRole();
-      if (state.status === GameStatus.InProgress && role) {
+      if (state.status === GameStatus.InProgress) {
+        if (!role) {
+          conn.sendState(state);
+          return;
+        }
         const player = this.roleToPlayer[role];
         conn.sendState({
           ...state,
           playerState: player.getPrivateState(),
         });
       } else {
-        conn.sendState(state);
+        conn.sendState({
+          ...state,
+          connectionIndex: i,
+        });
       }
     });
   }

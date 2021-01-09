@@ -1,5 +1,6 @@
 <template>
   <div>
+    <input v-model="name" type="text" />
     <div
       v-for="role in state.skin.roles"
       :key="role"
@@ -18,6 +19,7 @@
 </template>
 
 <script lang="ts">
+import debounce from 'lodash/debounce';
 import { defineComponent, PropType } from 'vue';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
@@ -38,6 +40,18 @@ export default defineComponent({
     },
   },
   computed: {
+    connection(): ConnectionDescription {
+      return this.state.connections[this.state.connectionIndex];
+    },
+    name: {
+      get(): string {
+        return this.connection.name;
+      },
+      set: debounce(function (name: string) {
+        // @ts-expect-error `this` type not defined correctly in Lodash.
+        this.setName(name);
+      }, 200),
+    },
     roleToConnection(): Dict<ConnectionDescription> {
       return dictFromList(this.state.connections, (acc, connection) => {
         if (connection.role) {
@@ -64,6 +78,12 @@ export default defineComponent({
       this.send({
         type: ConnectionEvents.SetRole,
         data: role,
+      });
+    },
+    setName(name: string) {
+      this.send({
+        type: ConnectionEvents.SetName,
+        data: name,
       });
     },
     setReady() {
