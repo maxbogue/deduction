@@ -286,7 +286,7 @@ export class Game implements ConnectionObserver {
       return {
         status: this.status,
         connections: this.connections.map(c => c.getDescription()),
-        availableRoles: this.skin.roles.filter(r => !this.roleToConnection[r]),
+        skin: this.skin,
       };
     }
     return {

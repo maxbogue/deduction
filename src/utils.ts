@@ -1,3 +1,5 @@
+import { Dict } from '@/types';
+
 // Generates an array of length n by repeatedly invoking f.
 export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
   const ls = [];
@@ -5,6 +7,17 @@ export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
     ls.push(f(i));
   }
   return ls;
+};
+
+export const dictFromList = <T, U>(
+  ls: T[],
+  f: (acc: Dict<U>, x: T) => void
+): Dict<U> => {
+  const dict: Dict<U> = {};
+  ls.forEach(x => {
+    f(dict, x);
+  });
+  return dict;
 };
 
 // Removes one random item from the list and returns it.

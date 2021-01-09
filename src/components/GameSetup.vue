@@ -1,13 +1,17 @@
 <template>
   <div>
-    <button
-      v-for="role in state.availableRoles"
+    <div
+      v-for="role in state.skin.roles"
       :key="role"
-      @click="chooseRoleFor(role)"
+      class="game-setup__role"
+      :class="classesForRole(role)"
+      @click="selectRole(role)"
     >
-      {{ role }}
-    </button>
-    <button @click="chooseFirstAvailableRole">role me baby</button>
+      <span>{{ role }}</span>
+      <span v-if="!isRoleAvailable(role)">
+        [{{ roleToConnection[role].name }}]</span
+      >
+    </div>
     <button @click="setReady">Ready!</button>
     <button @click="startGame">Start!</button>
   </div>
@@ -17,7 +21,9 @@
 import { defineComponent, PropType } from 'vue';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { SetupState } from '@/state';
+import { ConnectionDescription, SetupState } from '@/state';
+import { Dict } from '@/types';
+import { dictFromList } from '@/utils';
 
 export default defineComponent({
   name: 'GameSetup',
@@ -31,17 +37,33 @@ export default defineComponent({
       required: true,
     },
   },
+  computed: {
+    roleToConnection(): Dict<ConnectionDescription> {
+      return dictFromList(this.state.connections, (acc, connection) => {
+        if (connection.role) {
+          acc[connection.role] = connection;
+        }
+      });
+    },
+  },
   methods: {
-    chooseFirstAvailableRole() {
-      if (this.state.availableRoles.length === 0) {
+    isRoleAvailable(role: string): boolean {
+      return !this.roleToConnection[role];
+    },
+    classesForRole(role: string) {
+      const connection = this.roleToConnection[role];
+      return {
+        'game-setup__role--available': !connection,
+        'game-setup__role--ready': connection?.isReady,
+      };
+    },
+    selectRole(role: string) {
+      if (!this.isRoleAvailable(role)) {
         return;
       }
-      this.chooseRoleFor(this.state.availableRoles[0]);
-    },
-    chooseRoleFor(name: string) {
       this.send({
         type: ConnectionEvents.SetRole,
-        data: name,
+        data: role,
       });
     },
     setReady() {
@@ -59,4 +81,17 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.game-setup {
+  &__role {
+    &--ready {
+      color: green;
+    }
+
+    &--available {
+      color: blue;
+      cursor: pointer;
+    }
+  }
+}
+</style>

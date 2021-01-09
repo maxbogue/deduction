@@ -35,9 +35,11 @@ export default defineComponent({
     const send = (event: ConnectionEvent) => {
       ws.send(JSON.stringify(event));
     };
+
     const isStateSetup = computed(
       () => state.value?.status === GameStatus.Setup
     );
+
     const isStateInProgress = computed(
       () => state.value?.status === GameStatus.InProgress
     );

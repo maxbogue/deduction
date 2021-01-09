@@ -17,18 +17,18 @@ export interface ConnectionDescription {
   isReady: boolean;
 }
 
-export interface SetupState {
-  status: GameStatus.Setup;
-  connections: ConnectionDescription[];
-  availableRoles: string[];
-}
-
 export interface Skin {
   skinName: string;
   roles: string[];
   objects: string[];
   objectDescriptor: string;
   places: string[];
+}
+
+export interface SetupState {
+  status: GameStatus.Setup;
+  connections: ConnectionDescription[];
+  skin: Skin;
 }
 
 export interface Crime {
