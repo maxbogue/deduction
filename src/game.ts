@@ -42,8 +42,8 @@ const SKINS: Dict<Skin> = {
       'Mrs. Juniper',
       'Ms. Ivory',
     ],
-    objects: ['Pistol', 'Knife', 'Bat', 'Wire', 'Hydroflask TM', 'Hammer'],
-    objectDescriptor: 'Weapon',
+    tools: ['Pistol', 'Knife', 'Bat', 'Wire', 'Hydroflask TM', 'Hammer'],
+    toolDescriptor: 'Weapon',
     places: [
       'Breakfast Nook',
       'Closet',
@@ -60,7 +60,7 @@ const SKINS: Dict<Skin> = {
   familyCookies: {
     skinName: 'familyCookies',
     roles: ['Doug', 'Harl', 'Steve', 'Katharine', 'Lucy', 'Les', 'Kim'],
-    objects: [
+    tools: [
       'Lebkuchen',
       'Hazelnut Stick',
       'Gingerbread',
@@ -70,7 +70,7 @@ const SKINS: Dict<Skin> = {
       'Sand Stars',
       'Almond Thumbprints',
     ],
-    objectDescriptor: 'Cookie',
+    toolDescriptor: 'Cookie',
     places: [
       'Pond Street',
       'Pittsfield',
@@ -113,7 +113,7 @@ class Player {
     return this.hand;
   }
 
-  getPrivateState(): PlayerPrivateState {
+  getPrivateState(): Omit<PlayerPrivateState, 'index'> {
     return {
       hand: this.hand,
     };
@@ -163,13 +163,30 @@ export class Game implements ConnectionObserver {
       return;
     }
 
-    const oldRole = conn.getRole();
-    if (oldRole) {
-      delete this.roleToConnection[oldRole];
-    }
+    if (this.status === GameStatus.Setup) {
+      const oldRole = conn.getRole();
+      if (oldRole) {
+        delete this.roleToConnection[oldRole];
+      }
 
-    this.roleToConnection[role] = conn;
-    conn.setRole(role);
+      this.roleToConnection[role] = conn;
+      conn.setRole(role);
+    } else if (this.status === GameStatus.InProgress) {
+      const oldRole = conn.getRole();
+      if (oldRole) {
+        // Can't switch roles mid-game.
+        return;
+      }
+
+      const player = this.roleToPlayer[role];
+      if (!player || player.getIsConnected()) {
+        return;
+      }
+
+      this.roleToConnection[role] = conn;
+      conn.setRole(role);
+      player.setIsConnected(true);
+    }
   }
 
   setSkin(skinName: string): void {
@@ -208,16 +225,16 @@ export class Game implements ConnectionObserver {
 
   dealCards(numHands: number): string[][] {
     const roles = this.skin.roles.slice();
-    const objects = this.skin.objects.slice();
+    const tools = this.skin.tools.slice();
     const places = this.skin.places.slice();
 
     this.solution = {
       role: pickOne(roles),
-      object: pickOne(objects),
+      tool: pickOne(tools),
       place: pickOne(places),
     };
 
-    const allCards = [...roles, ...objects, ...places];
+    const allCards = [...roles, ...tools, ...places];
 
     // shuffle the deck
 
@@ -253,8 +270,8 @@ export class Game implements ConnectionObserver {
     if (!this.skin.roles.includes(crime.role)) {
       errors += `Role ${crime.role} not in current list of suspects ${this.skin.roles}`;
     }
-    if (!this.skin.objects.includes(crime.object)) {
-      errors += `Object ${crime.object} not in current list of ${this.skin.objectDescriptor}: ${this.skin.objects}`;
+    if (!this.skin.tools.includes(crime.tool)) {
+      errors += `Tool ${crime.tool} not in current list of ${this.skin.toolDescriptor}: ${this.skin.tools}`;
     }
     if (!this.skin.places.includes(crime.place)) {
       errors += `Place ${crime.place} not in current list of places ${this.skin.places}`;
@@ -311,7 +328,10 @@ export class Game implements ConnectionObserver {
         const player = this.roleToPlayer[role];
         conn.sendState({
           ...state,
-          playerState: player.getPrivateState(),
+          playerState: {
+            ...player.getPrivateState(),
+            index: this.players.indexOf(player),
+          },
         });
       } else {
         conn.sendState({

@@ -20,8 +20,8 @@ export interface ConnectionDescription {
 export interface Skin {
   skinName: string;
   roles: string[];
-  objects: string[];
-  objectDescriptor: string;
+  tools: string[];
+  toolDescriptor: string;
   places: string[];
 }
 
@@ -34,7 +34,7 @@ export interface SetupState {
 
 export interface Crime {
   role: string;
-  object: string;
+  tool: string;
   place: string;
 }
 
@@ -47,6 +47,7 @@ export interface InProgressState {
 }
 
 export interface PlayerPrivateState {
+  index: number;
   hand: string[];
 }
 

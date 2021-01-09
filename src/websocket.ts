@@ -9,8 +9,8 @@ function validateCrime(crime: Crime) {
   if (!crime.role) {
     errors += 'Missing suspect. ';
   }
-  if (!crime.object) {
-    errors += 'Missing object. ';
+  if (!crime.tool) {
+    errors += 'Missing tool. ';
   }
   if (!crime.place) {
     errors += 'Missing place. ';
