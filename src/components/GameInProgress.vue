@@ -1,5 +1,19 @@
 <template>
   <div class="game-in-progress">
+    <div class="game-in-progress__connection-player">
+      You are {{ connectionPlayer }}
+    </div>
+    <div class="game-in-progress__players">
+      <div
+        v-for="player in state.players"
+        :key="player.role"
+        class="game-in-progress__player"
+        :class="classesForPlayer(player)"
+        @click="reconnectAsPlayer(player)"
+      >
+        {{ playerToString(player) }}
+      </div>
+    </div>
     <div class="game-in-progress__cards">
       <div class="game-in-progress__card-column">
         <div
@@ -43,8 +57,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { ConnectionEvent } from '@/events';
-import { InProgressState } from '@/state';
+import { ConnectionEvent, ConnectionEvents } from '@/events';
+import { InProgressState, PlayerPublicState } from '@/state';
+import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'GameInProgress',
@@ -63,7 +78,28 @@ export default defineComponent({
     selectedTool: '',
     selectedPlace: '',
   }),
+  computed: {
+    currentPlayer(): Maybe<PlayerPublicState> {
+      if (!this.state.playerState) {
+        return null;
+      }
+      return this.state.players[this.state.playerState.index];
+    },
+    connectionPlayer(): string {
+      return this.currentPlayer
+        ? this.playerToString(this.currentPlayer)
+        : 'observing';
+    },
+  },
   methods: {
+    classesForPlayer(player: PlayerPublicState) {
+      return {
+        'game-in-progress__player--disconnected': !player.connected,
+        'game-in-progress__player--reconnectable': this.canReconnectAsPlayer(
+          player
+        ),
+      };
+    },
     selectRole(role: string) {
       this.selectedRole = role === this.selectedRole ? '' : role;
     },
@@ -72,6 +108,19 @@ export default defineComponent({
     },
     selectPlace(place: string) {
       this.selectedPlace = place === this.selectedPlace ? '' : place;
+    },
+    playerToString(player: PlayerPublicState): string {
+      const { role, name } = player;
+      return `${role} [${name}]`;
+    },
+    canReconnectAsPlayer(player: PlayerPublicState): boolean {
+      return !this.currentPlayer && !player.connected;
+    },
+    reconnectAsPlayer(player: PlayerPublicState) {
+      this.send({
+        type: ConnectionEvents.SetRole,
+        data: player.role,
+      });
     },
   },
 });
@@ -103,6 +152,19 @@ export default defineComponent({
 
     &--selected {
       color: green;
+    }
+  }
+
+  &__player {
+    color: green;
+
+    &--disconnected {
+      color: red;
+    }
+
+    &--reconnectable {
+      color: blue;
+      cursor: pointer;
     }
   }
 }
