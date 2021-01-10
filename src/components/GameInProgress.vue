@@ -1,7 +1,8 @@
 <template>
   <div class="game-in-progress">
     <div class="game-in-progress__connection-player">
-      You are {{ connectionPlayer }}
+      You {{ isDed ? 'were' : 'are' }} {{ connectionPlayer }}
+      <span v-if="isDed">&#x1F47B;</span>
     </div>
     <div class="game-in-progress__players">
       <div
@@ -15,11 +16,14 @@
       </div>
     </div>
     <div>
-      <button v-if="currentPlayer" @click="toggleShowPersonalState">
+      <button
+        v-if="currentPlayer"
+        @click="showPersonalState = !showPersonalState"
+      >
         Hide/Reveal Personal Info
       </button>
     </div>
-    <div id="personalState" style="display: none">
+    <div v-if="showPersonalState">
       <div class="game-in-progress__cards">
         <div class="game-in-progress__card-column">
           <div>My Hand:</div>
@@ -99,6 +103,7 @@ export default defineComponent({
     selectedRole: '',
     selectedTool: '',
     selectedPlace: '',
+    showPersonalState: false,
   }),
   computed: {
     currentPlayer(): Maybe<PlayerPublicState> {
@@ -107,13 +112,16 @@ export default defineComponent({
       }
       return this.state.players[this.state.playerState.index];
     },
+    isDed(): boolean {
+      return Boolean(this.currentPlayer?.failedAccusation);
+    },
     connectionPlayer(): string {
       return this.currentPlayer
         ? this.playerToString(this.currentPlayer)
         : 'observing';
     },
     readyToAccuse(): boolean {
-      if (!this.currentPlayer) {
+      if (!this.currentPlayer || this.isDed) {
         return false;
       }
       return (
@@ -150,7 +158,7 @@ export default defineComponent({
   methods: {
     classesForPlayer(player: PlayerPublicState) {
       return {
-        'game-in-progress__player--disconnected': !player.connected,
+        'game-in-progress__player--disconnected': !player.isConnected,
         'game-in-progress__player--reconnectable': this.canReconnectAsPlayer(
           player
         ),
@@ -176,20 +184,12 @@ export default defineComponent({
         data: crime,
       });
     },
-    toggleShowPersonalState() {
-      const x = document.getElementById('personalState');
-      if (x.style.display === 'none') {
-        x.style.display = 'block';
-      } else {
-        x.style.display = 'none';
-      }
-    },
     playerToString(player: PlayerPublicState): string {
       const { role, name } = player;
       return `${role} [${name}]`;
     },
     canReconnectAsPlayer(player: PlayerPublicState): boolean {
-      return !this.currentPlayer && !player.connected;
+      return !this.currentPlayer && !player.isConnected;
     },
     reconnectAsPlayer(player: PlayerPublicState) {
       this.send({

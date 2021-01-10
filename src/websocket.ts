@@ -101,7 +101,7 @@ export class WebSocketConnection implements Connection {
         break;
       case ConnectionEvents.Accuse:
         validateCrime(event.data);
-        this.observer.accuse(event.data);
+        this.observer.accuse(this.role, event.data);
         break;
       default:
         console.log('Event not found in processEvent', event);

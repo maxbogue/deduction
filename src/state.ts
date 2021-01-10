@@ -3,12 +3,14 @@ import { Maybe } from '@/types';
 export enum GameStatus {
   Setup = 'Setup',
   InProgress = 'InProgress',
+  GameOver = 'GameOver',
 }
 
 export interface PlayerPublicState {
   role: string;
   name: string;
-  connected: boolean;
+  isConnected: boolean;
+  failedAccusation: Maybe<Crime>;
 }
 
 export interface ConnectionDescription {
@@ -27,8 +29,8 @@ export interface Skin {
 
 export interface SetupState {
   status: GameStatus.Setup;
-  connections: ConnectionDescription[];
   skin: Skin;
+  connections: ConnectionDescription[];
   connectionIndex: number;
 }
 
@@ -40,10 +42,10 @@ export interface Crime {
 
 export interface InProgressState {
   status: GameStatus.InProgress;
-  players: PlayerPublicState[];
-  solution: Maybe<Crime>;
-  playerState: Maybe<PlayerPrivateState>;
   skin: Skin;
+  players: PlayerPublicState[];
+  playerState: Maybe<PlayerPrivateState>;
+  solution: Maybe<Crime>;
 }
 
 export interface PlayerPrivateState {
@@ -51,4 +53,13 @@ export interface PlayerPrivateState {
   hand: string[];
 }
 
-export type GameState = SetupState | InProgressState;
+export interface GameOverState {
+  status: GameStatus.GameOver;
+  skin: Skin;
+  players: PlayerPublicState[];
+  playerState: Maybe<PlayerPrivateState>;
+  winner: number;
+  solution: Crime;
+}
+
+export type GameState = SetupState | InProgressState | GameOverState;

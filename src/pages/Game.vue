@@ -2,6 +2,7 @@
   <div class="game">
     <GameSetup v-if="isStateSetup" :state="state" :send="send" />
     <GameInProgress v-else-if="isStateInProgress" :state="state" :send="send" />
+    <GameOver v-else-if="state" :state="state" :send="send" />
     <div class="game__state">{{ JSON.stringify(state, null, 2) }}</div>
   </div>
 </template>
@@ -11,6 +12,7 @@ import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import GameInProgress from '@/components/GameInProgress';
+import GameOver from '@/components/GameOver';
 import GameSetup from '@/components/GameSetup';
 import { ConnectionEvent } from '@/events';
 import { GameState, GameStatus } from '@/state';
@@ -19,8 +21,9 @@ import { Maybe } from '@/types';
 export default defineComponent({
   name: 'Game',
   components: {
-    GameSetup,
     GameInProgress,
+    GameOver,
+    GameSetup,
   },
   setup() {
     const route = useRoute();
@@ -60,7 +63,7 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game {
-  font-size: 1.6rem;
+  font-size: 2.4rem;
   margin: $pad-lg auto $pad-lg;
   padding: $pad-md;
   background-color: #eee;
@@ -69,6 +72,7 @@ export default defineComponent({
   &__state {
     color: #666;
     font-family: 'Courier New';
+    font-size: 1.4rem;
     white-space: pre-wrap;
   }
 }

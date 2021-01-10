@@ -18,7 +18,7 @@ export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
-  accuse: (accusation: Crime) => void;
+  accuse: (role: string, accusation: Crime) => void;
   updateState: () => void;
 }
 
@@ -86,23 +86,31 @@ const SKINS: Dict<Skin> = {
 
 class Player {
   private readonly role: string;
-  private name: string;
-  private connected: boolean;
   private readonly hand: string[];
+  private name: string;
+  private isConnected = true;
+  private failedAccusation: Maybe<Crime> = null;
 
-  constructor(role: string, name: string, connected: boolean, hand: string[]) {
+  constructor(role: string, name: string, hand: string[]) {
     this.role = role;
     this.name = name;
-    this.connected = connected;
     this.hand = hand;
   }
 
-  setIsConnected(connected: boolean) {
-    this.connected = connected;
+  setIsConnected(isConnected: boolean) {
+    this.isConnected = isConnected;
   }
 
   getIsConnected(): boolean {
-    return this.connected;
+    return this.isConnected;
+  }
+
+  kill(accusation: Crime) {
+    this.failedAccusation = accusation;
+  }
+
+  isDed(): boolean {
+    return Boolean(this.failedAccusation);
   }
 
   getRole(): string {
@@ -123,7 +131,8 @@ class Player {
     return {
       role: this.role,
       name: this.name,
-      connected: this.connected,
+      isConnected: this.isConnected,
+      failedAccusation: this.failedAccusation,
     };
   }
 }
@@ -136,6 +145,7 @@ export class Game implements ConnectionObserver {
   private status: GameStatus = GameStatus.Setup;
   private skin: Skin = SKINS.classic;
   private solution: Maybe<Crime> = null;
+  private winner = -1;
 
   addConnection(conn: Connection): void {
     this.connections.push(conn);
@@ -257,7 +267,7 @@ export class Game implements ConnectionObserver {
 
     playerConnections.forEach((conn, i) => {
       const { role, name } = conn.getDescription();
-      const newPlayer: Player = new Player(role, name, true, allHands[i]);
+      const newPlayer: Player = new Player(role, name, allHands[i]);
       this.players.push(newPlayer);
       this.roleToPlayer[role] = newPlayer;
     });
@@ -282,62 +292,85 @@ export class Game implements ConnectionObserver {
     }
   }
 
-  accuse(accusation: Crime): void {
-    // check that our accusation has the correct format
+  accuse(role: string, accusation: Crime): void {
     if (this.status !== GameStatus.InProgress) {
       throw new Error('Accusations can only be made once game has started!');
     }
 
-    console.log('Accusing!');
+    // check that our accusation has the correct format
     this.validateCrimeForCurrentSkin(accusation);
 
-    console.log(isEqual(accusation, this.solution));
+    const player = this.roleToPlayer[role];
+    if (player.isDed()) {
+      return;
+    }
 
-    // log accusation with player?
-    // if correct, game ends and player wins
-    // else, idk... for now just log "sorry"
+    if (isEqual(accusation, this.solution)) {
+      this.winner = this.players.indexOf(player);
+      this.status = GameStatus.GameOver;
+    } else {
+      player.kill(accusation);
+    }
+
+    this.updateState();
   }
 
   getState(): GameState {
-    if (this.status === GameStatus.Setup) {
-      return {
-        status: this.status,
-        connections: this.connections.map(c => c.getDescription()),
-        skin: this.skin,
-        connectionIndex: 0,
-      };
+    switch (this.status) {
+      case GameStatus.Setup:
+        return {
+          status: this.status,
+          skin: this.skin,
+          connections: this.connections.map(c => c.getDescription()),
+          connectionIndex: 0,
+        };
+      case GameStatus.InProgress:
+        return {
+          status: this.status,
+          skin: this.skin,
+          players: this.players.map(p => p.getPublicState()),
+          solution: this.solution,
+          playerState: null,
+        };
+      case GameStatus.GameOver:
+        return {
+          status: this.status,
+          skin: this.skin,
+          players: this.players.map(p => p.getPublicState()),
+          winner: this.winner,
+          solution: this.solution as Crime,
+          playerState: null,
+        };
     }
-    return {
-      status: this.status,
-      players: this.players.map(p => p.getPublicState()),
-      solution: this.solution,
-      playerState: null,
-      skin: this.skin,
-    };
   }
 
   updateState(): void {
     const state = this.getState();
     this.connections.forEach((conn, i) => {
       const role = conn.getRole();
-      if (state.status === GameStatus.InProgress) {
-        if (!role) {
-          conn.sendState(state);
-          return;
+      switch (state.status) {
+        case GameStatus.Setup:
+          conn.sendState({
+            ...state,
+            connectionIndex: i,
+          });
+          break;
+        case GameStatus.InProgress:
+        case GameStatus.GameOver: {
+          if (!role) {
+            conn.sendState(state);
+            return;
+          }
+          const player = this.roleToPlayer[role];
+          conn.sendState({
+            ...state,
+            playerState: {
+              ...player.getPrivateState(),
+              index: this.players.indexOf(player),
+            },
+          });
+          break;
         }
-        const player = this.roleToPlayer[role];
-        conn.sendState({
-          ...state,
-          playerState: {
-            ...player.getPrivateState(),
-            index: this.players.indexOf(player),
-          },
-        });
-      } else {
-        conn.sendState({
-          ...state,
-          connectionIndex: i,
-        });
       }
     });
   }
