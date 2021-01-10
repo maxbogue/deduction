@@ -14,41 +14,63 @@
         {{ playerToString(player) }}
       </div>
     </div>
-    <div class="game-in-progress__cards">
-      <div class="game-in-progress__card-column">
-        <div
-          v-for="role in state.skin.roles"
-          :key="role"
-          class="game-in-progress__card"
-          :class="{ 'game-in-progress__card--selected': role === selectedRole }"
-          @click="selectRole(role)"
-        >
-          {{ role }}
+    <div>
+      <button v-if="currentPlayer" @click="toggleShowPersonalState">
+        Hide/Reveal Personal Info
+      </button>
+    </div>
+    <div id="personalState" style="display: none">
+      <div class="game-in-progress__cards">
+        <div class="game-in-progress__card-column">
+          <div>My Hand:</div>
+          <div v-for="card in state.playerState?.hand" :key="card">
+            {{ card }}
+          </div>
+        </div>
+        <div class="game-in-progress__card-column">
+          <div
+            v-for="role in suspectRoles"
+            :key="role"
+            class="game-in-progress__card"
+            :class="{
+              'game-in-progress__card--selected': role === selectedRole,
+            }"
+            @click="selectRole(role)"
+          >
+            {{ role }}
+          </div>
+        </div>
+        <div class="game-in-progress__card-column">
+          <div
+            v-for="tool in suspectTools"
+            :key="tool"
+            class="game-in-progress__card"
+            :class="{
+              'game-in-progress__card--selected': tool === selectedTool,
+            }"
+            @click="selectTool(tool)"
+          >
+            {{ tool }}
+          </div>
+        </div>
+        <div class="game-in-progress__card-column">
+          <div
+            v-for="place in suspectPlaces"
+            :key="place"
+            class="game-in-progress__card"
+            :class="{
+              'game-in-progress__card--selected': place === selectedPlace,
+            }"
+            @click="selectPlace(place)"
+          >
+            {{ place }}
+          </div>
         </div>
       </div>
-      <div class="game-in-progress__card-column">
-        <div
-          v-for="tool in state.skin.tools"
-          :key="tool"
-          class="game-in-progress__card"
-          :class="{ 'game-in-progress__card--selected': tool === selectedTool }"
-          @click="selectTool(tool)"
-        >
-          {{ tool }}
-        </div>
-      </div>
-      <div class="game-in-progress__card-column">
-        <div
-          v-for="place in state.skin.places"
-          :key="place"
-          class="game-in-progress__card"
-          :class="{
-            'game-in-progress__card--selected': place === selectedPlace,
-          }"
-          @click="selectPlace(place)"
-        >
-          {{ place }}
-        </div>
+      <div v-if="readyToAccuse" class="game-in-progress__accuse">
+        <button class="game-in-progress__accuse__button" @click="accuse">
+          Accuse
+        </button>
       </div>
     </div>
   </div>
@@ -58,7 +80,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { InProgressState, PlayerPublicState } from '@/state';
+import { Crime, InProgressState, PlayerPublicState } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
@@ -90,6 +112,40 @@ export default defineComponent({
         ? this.playerToString(this.currentPlayer)
         : 'observing';
     },
+    readyToAccuse(): boolean {
+      if (!this.currentPlayer) {
+        return false;
+      }
+      return (
+        this.selectedRole !== '' &&
+        this.selectedTool !== '' &&
+        this.selectedPlace !== ''
+      );
+    },
+    suspectRoles(): string[] {
+      if (!this.currentPlayer) {
+        return this.state.skin.roles;
+      }
+      return this.state.skin.roles.filter(
+        n => !this.state.playerState?.hand.includes(n)
+      );
+    },
+    suspectTools(): string[] {
+      if (!this.currentPlayer) {
+        return this.state.skin.tools;
+      }
+      return this.state.skin.tools.filter(
+        n => !this.state.playerState?.hand.includes(n)
+      );
+    },
+    suspectPlaces(): string[] {
+      if (!this.currentPlayer) {
+        return this.state.skin.places;
+      }
+      return this.state.skin.places.filter(
+        n => !this.state.playerState?.hand.includes(n)
+      );
+    },
   },
   methods: {
     classesForPlayer(player: PlayerPublicState) {
@@ -108,6 +164,25 @@ export default defineComponent({
     },
     selectPlace(place: string) {
       this.selectedPlace = place === this.selectedPlace ? '' : place;
+    },
+    accuse() {
+      const crime: Crime = {
+        role: this.selectedRole,
+        tool: this.selectedTool,
+        place: this.selectedPlace,
+      };
+      this.send({
+        type: ConnectionEvents.Accuse,
+        data: crime,
+      });
+    },
+    toggleShowPersonalState() {
+      const x = document.getElementById('personalState');
+      if (x.style.display === 'none') {
+        x.style.display = 'block';
+      } else {
+        x.style.display = 'none';
+      }
     },
     playerToString(player: PlayerPublicState): string {
       const { role, name } = player;
@@ -165,6 +240,15 @@ export default defineComponent({
     &--reconnectable {
       color: blue;
       cursor: pointer;
+    }
+  }
+
+  &__accuse {
+    display: flex;
+    justify-content: center;
+
+    &__button {
+      color: cornflowerblue;
     }
   }
 }
