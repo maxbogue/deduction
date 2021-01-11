@@ -1,6 +1,8 @@
 import isEqual from 'lodash/isEqual';
 
+import { SKINS } from '@/skins';
 import {
+  Card,
   ConnectionDescription,
   Crime,
   GameState,
@@ -9,9 +11,8 @@ import {
   PlayerPublicState,
   Skin,
 } from '@/state';
-
-import { Dict, Maybe } from './types';
-import { pickMany, pickOne, repeat } from './utils';
+import { Dict, Maybe } from '@/types';
+import { pickMany, pickOne, repeat } from '@/utils';
 
 export interface ConnectionObserver {
   setConnectionRole: (conn: Connection, role: string) => void;
@@ -31,67 +32,14 @@ export interface Connection {
   sendState: (gameState: GameState) => void;
 }
 
-const SKINS: Dict<Skin> = {
-  classic: {
-    skinName: 'classic',
-    roles: [
-      'Mlle. Crimson',
-      'Gen. Dijon',
-      'Dr. Grape',
-      'Sr. Tomatillo',
-      'Mrs. Juniper',
-      'Ms. Ivory',
-    ],
-    tools: ['Pistol', 'Knife', 'Bat', 'Wire', 'Hydroflask TM', 'Hammer'],
-    toolDescriptor: 'Weapon',
-    places: [
-      'Breakfast Nook',
-      'Closet',
-      'Office',
-      'Bedroom',
-      'Rec Room',
-      'Den',
-      'Entryway',
-      'Laundry Room',
-      'Master Bath',
-      'Pantry',
-    ],
-  },
-  familyCookies: {
-    skinName: 'familyCookies',
-    roles: ['Doug', 'Harl', 'Steve', 'Katharine', 'Lucy', 'Les', 'Kim'],
-    tools: [
-      'Lebkuchen',
-      'Hazelnut Stick',
-      'Gingerbread',
-      'Spice Bar',
-      'Pecan Puff',
-      'Chocolate Walnut',
-      'Sand Stars',
-      'Almond Thumbprints',
-    ],
-    toolDescriptor: 'Cookie',
-    places: [
-      'Pond Street',
-      'Pittsfield',
-      'Daytona Beach',
-      'Buckingham Drive',
-      'Aurielle Drive',
-      'Nottingham Court',
-      'Redwood City',
-      'Shelburne Bay',
-    ],
-  },
-};
-
 class Player {
   private readonly role: string;
-  private readonly hand: string[];
+  private readonly hand: Card[];
   private name: string;
   private isConnected = true;
   private failedAccusation: Maybe<Crime> = null;
 
-  constructor(role: string, name: string, hand: string[]) {
+  constructor(role: string, name: string, hand: Card[]) {
     this.role = role;
     this.name = name;
     this.hand = hand;
@@ -117,7 +65,7 @@ class Player {
     return this.role;
   }
 
-  getHand(): string[] {
+  getHand(): Card[] {
     return this.hand;
   }
 
@@ -164,10 +112,10 @@ export class Game implements ConnectionObserver {
   }
 
   setConnectionRole(conn: Connection, role: string): void {
-    if (!this.skin.roles.includes(role)) {
-      console.log(`Invalid role ${role} for skin ${this.skin.skinName}`);
-      return;
-    }
+    //if (!this.skin.roles.includes(role)) {
+    //console.log(`Invalid role ${role} for skin ${this.skin.skinName}`);
+    //return;
+    //}
 
     if (this.roleToConnection[role]) {
       return;
@@ -233,7 +181,7 @@ export class Game implements ConnectionObserver {
     this.roleToConnection = {};
   }
 
-  dealCards(numHands: number): string[][] {
+  dealCards(numHands: number): Card[][] {
     const roles = this.skin.roles.slice();
     const tools = this.skin.tools.slice();
     const places = this.skin.places.slice();

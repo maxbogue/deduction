@@ -8,9 +8,9 @@
       :class="classesForRole(role)"
       @click="selectRole(role)"
     >
-      <span>{{ role }}</span>
+      <span>{{ role.name }}</span>
       <span v-if="!isRoleAvailable(role)">
-        [{{ roleToConnection[role].name }}]</span
+        [{{ roleToConnection[role.name].name }}]</span
       >
     </div>
     <button @click="setReady">Ready!</button>
@@ -23,7 +23,7 @@ import debounce from 'lodash/debounce';
 import { defineComponent, PropType } from 'vue';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { ConnectionDescription, SetupState } from '@/state';
+import { ConnectionDescription, RoleCard, SetupState } from '@/state';
 import { Dict } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -61,23 +61,23 @@ export default defineComponent({
     },
   },
   methods: {
-    isRoleAvailable(role: string): boolean {
-      return !this.roleToConnection[role];
+    isRoleAvailable(role: RoleCard): boolean {
+      return !this.roleToConnection[role.name];
     },
-    classesForRole(role: string) {
-      const connection = this.roleToConnection[role];
+    classesForRole(role: RoleCard) {
+      const connection = this.roleToConnection[role.name];
       return {
         'game-setup__role--available': !connection,
         'game-setup__role--ready': connection?.isReady,
       };
     },
-    selectRole(role: string) {
+    selectRole(role: RoleCard) {
       if (!this.isRoleAvailable(role)) {
         return;
       }
       this.send({
         type: ConnectionEvents.SetRole,
-        data: role,
+        data: role.name,
       });
     },
     setName(name: string) {

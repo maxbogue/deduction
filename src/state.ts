@@ -19,12 +19,36 @@ export interface ConnectionDescription {
   isReady: boolean;
 }
 
+export enum CardType {
+  Role = 'Role',
+  Tool = 'Tool',
+  Place = 'Place',
+}
+
+export interface RoleCard {
+  type: CardType.Role;
+  name: string;
+  color: string;
+}
+
+export interface ToolCard {
+  type: CardType.Tool;
+  name: string;
+}
+
+export interface PlaceCard {
+  type: CardType.Place;
+  name: string;
+}
+
+export type Card = RoleCard | ToolCard | PlaceCard;
+
 export interface Skin {
   skinName: string;
-  roles: string[];
-  tools: string[];
+  roles: RoleCard[];
+  tools: ToolCard[];
   toolDescriptor: string;
-  places: string[];
+  places: PlaceCard[];
 }
 
 export interface SetupState {
@@ -35,9 +59,9 @@ export interface SetupState {
 }
 
 export interface Crime {
-  role: string;
-  tool: string;
-  place: string;
+  role: RoleCard;
+  tool: ToolCard;
+  place: PlaceCard;
 }
 
 export interface InProgressState {
@@ -50,7 +74,7 @@ export interface InProgressState {
 
 export interface PlayerPrivateState {
   index: number;
-  hand: string[];
+  hand: Card[];
 }
 
 export interface GameOverState {
