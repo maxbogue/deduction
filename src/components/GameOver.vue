@@ -6,7 +6,7 @@
     <div class="game-in-progress__players">
       <div
         v-for="player in state.players"
-        :key="player.role"
+        :key="player.role.name"
         class="game-in-progress__player"
         :class="classesForPlayer(player)"
       >
@@ -66,7 +66,7 @@ export default defineComponent({
     },
     playerToString(player: PlayerPublicState): string {
       const { role, name } = player;
-      return `${role} [${name}]`;
+      return `${role.name} [${name}]`;
     },
   },
 });

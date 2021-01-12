@@ -55,7 +55,7 @@ export default defineComponent({
     roleToConnection(): Dict<ConnectionDescription> {
       return dictFromList(this.state.connections, (acc, connection) => {
         if (connection.role) {
-          acc[connection.role] = connection;
+          acc[connection.role.name] = connection;
         }
       });
     },

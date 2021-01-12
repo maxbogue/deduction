@@ -20,27 +20,27 @@ export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
-  accuse: (role: string, accusation: Crime) => void;
+  accuse: (role: RoleCard, accusation: Crime) => void;
   updateState: () => void;
 }
 
 export interface Connection {
-  getRole: () => string;
+  getRole: () => Maybe<RoleCard>;
   clearRole: () => void;
-  setRole: (role: string) => void;
+  setRole: (role: RoleCard) => void;
   isReady: () => boolean;
   getDescription: () => ConnectionDescription;
   sendState: (gameState: GameState) => void;
 }
 
 class Player {
-  private readonly role: string;
+  private readonly role: RoleCard;
   private readonly hand: Card[];
   private name: string;
   private isConnected = true;
   private failedAccusation: Maybe<Crime> = null;
 
-  constructor(role: string, name: string, hand: Card[]) {
+  constructor(role: RoleCard, name: string, hand: Card[]) {
     this.role = role;
     this.name = name;
     this.hand = hand;
@@ -60,10 +60,6 @@ class Player {
 
   isDed(): boolean {
     return Boolean(this.failedAccusation);
-  }
-
-  getRole(): string {
-    return this.role;
   }
 
   getHand(): Card[] {
@@ -106,8 +102,8 @@ export class Game implements ConnectionObserver {
     this.connections.splice(i, 1);
     const role = conn.getRole();
     if (role) {
-      this.roleToPlayer[role]?.setIsConnected(false);
-      delete this.roleToConnection[role];
+      this.roleToPlayer[role.name]?.setIsConnected(false);
+      delete this.roleToConnection[role.name];
     }
     this.updateState();
   }
@@ -125,11 +121,11 @@ export class Game implements ConnectionObserver {
     if (this.status === GameStatus.Setup) {
       const oldRole = conn.getRole();
       if (oldRole) {
-        delete this.roleToConnection[oldRole];
+        delete this.roleToConnection[oldRole.name];
       }
 
       this.roleToConnection[role.name] = conn;
-      conn.setRole(role.name);
+      conn.setRole(role);
     } else if (this.status === GameStatus.InProgress) {
       const oldRole = conn.getRole();
       if (oldRole) {
@@ -143,7 +139,7 @@ export class Game implements ConnectionObserver {
       }
 
       this.roleToConnection[role.name] = conn;
-      conn.setRole(role.name);
+      conn.setRole(role);
       player.setIsConnected(true);
     }
   }
@@ -216,9 +212,12 @@ export class Game implements ConnectionObserver {
 
     playerConnections.forEach((conn, i) => {
       const { role, name } = conn.getDescription();
+      if (!role) {
+        return;
+      }
       const newPlayer: Player = new Player(role, name, allHands[i]);
       this.players.push(newPlayer);
-      this.roleToPlayer[role] = newPlayer;
+      this.roleToPlayer[role.name] = newPlayer;
     });
     this.status = GameStatus.InProgress;
   }
@@ -241,7 +240,7 @@ export class Game implements ConnectionObserver {
     }
   }
 
-  accuse(role: string, accusation: Crime): void {
+  accuse(role: RoleCard, accusation: Crime): void {
     if (this.status !== GameStatus.InProgress) {
       throw new Error('Accusations can only be made once game has started!');
     }
@@ -249,7 +248,7 @@ export class Game implements ConnectionObserver {
     // check that our accusation has the correct format
     this.validateCrimeForCurrentSkin(accusation);
 
-    const player = this.roleToPlayer[role];
+    const player = this.roleToPlayer[role.name];
     if (player.isDed()) {
       return;
     }
@@ -310,7 +309,7 @@ export class Game implements ConnectionObserver {
             conn.sendState(state);
             return;
           }
-          const player = this.roleToPlayer[role];
+          const player = this.roleToPlayer[role.name];
           conn.sendState({
             ...state,
             playerState: {

@@ -1,5 +1,5 @@
 <template>
-  <div class="card" :class="{ 'card--selected': selected }">
+  <div class="card" :class="classes" @click="handleClick">
     {{ card.name }}
   </div>
 </template>
@@ -8,6 +8,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import { Card } from '@/state';
+import { Dict } from '@/types';
 
 export default defineComponent({
   name: 'Card',
@@ -20,6 +21,23 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    onClick: {
+      type: Function as PropType<(card: Card) => void>,
+      default: null,
+    },
+  },
+  computed: {
+    classes(): Dict<boolean> {
+      return {
+        'card--selectable': Boolean(this.onClick),
+        'card--selected': this.selected,
+      };
+    },
+  },
+  methods: {
+    handleClick() {
+      this.onClick?.(this.card);
+    },
   },
 });
 </script>
@@ -29,12 +47,15 @@ export default defineComponent({
 
 .card {
   padding: $pad-xs;
-  color: blue;
-  cursor: pointer;
   border: 1px solid transparent;
 
-  &:hover {
-    border: 1px solid black;
+  &--selectable {
+    color: blue;
+    cursor: pointer;
+
+    &:hover {
+      border: 1px solid black;
+    }
   }
 
   &--selected {

@@ -7,14 +7,14 @@ export enum GameStatus {
 }
 
 export interface PlayerPublicState {
-  role: string;
+  role: RoleCard;
   name: string;
   isConnected: boolean;
   failedAccusation: Maybe<Crime>;
 }
 
 export interface ConnectionDescription {
-  role: string;
+  role: Maybe<RoleCard>;
   name: string;
   isReady: boolean;
 }

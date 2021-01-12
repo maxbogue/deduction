@@ -1,8 +1,9 @@
 import WebSocket from 'ws';
 
-import { ConnectionEvent, ConnectionEvents } from './events';
-import { Connection, ConnectionObserver } from './game';
-import { ConnectionDescription, Crime, GameState } from './state';
+import { ConnectionEvent, ConnectionEvents } from '@/events';
+import { Connection, ConnectionObserver } from '@/game';
+import { ConnectionDescription, Crime, GameState, RoleCard } from '@/state';
+import { Maybe } from '@/types';
 
 function validateCrime(crime: Crime) {
   let errors = '';
@@ -29,7 +30,7 @@ function validateCrime(crime: Crime) {
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
   private ws: WebSocket;
-  private role = '';
+  private role: Maybe<RoleCard> = null;
 
   // mutable, only used during setup
   private name = '';
@@ -56,16 +57,16 @@ export class WebSocketConnection implements Connection {
     });
   }
 
-  setRole(role: string): void {
+  setRole(role: RoleCard): void {
     this.role = role;
   }
 
   clearRole(): void {
-    this.setRole('');
+    this.role = null;
     this._isReady = false;
   }
 
-  getRole(): string {
+  getRole(): Maybe<RoleCard> {
     return this.role;
   }
 
@@ -100,6 +101,9 @@ export class WebSocketConnection implements Connection {
         this.observer.start();
         break;
       case ConnectionEvents.Accuse:
+        if (!this.role) {
+          break;
+        }
         validateCrime(event.data);
         this.observer.accuse(this.role, event.data);
         break;

@@ -7,7 +7,7 @@
     <div class="game-in-progress__players">
       <div
         v-for="player in state.players"
-        :key="player.role"
+        :key="player.role.name"
         class="game-in-progress__player"
         :class="classesForPlayer(player)"
         @click="reconnectAsPlayer(player)"
@@ -34,8 +34,8 @@
             v-for="role in suspectRoles"
             :key="role"
             :card="role"
-            :selected="role === selectedRole"
-            @click="selectRole(role)"
+            :selected="selectedRole && role.name === selectedRole.name"
+            :on-click="selectRole"
           />
         </div>
         <div class="game-in-progress__card-column">
@@ -43,8 +43,8 @@
             v-for="tool in suspectTools"
             :key="tool"
             :card="tool"
-            :selected="tool === selectedTool"
-            @click="selectTool(tool)"
+            :selected="selectedTool && tool.name === selectedTool.name"
+            :on-click="selectTool"
           />
         </div>
         <div class="game-in-progress__card-column">
@@ -52,8 +52,8 @@
             v-for="place in suspectPlaces"
             :key="place"
             :card="place"
-            :selected="place === selectedPlace"
-            @click="selectPlace(place)"
+            :selected="selectedPlace && place === selectedPlace"
+            :on-click="selectPlace"
           />
         </div>
       </div>
@@ -157,13 +157,13 @@ export default defineComponent({
       };
     },
     selectRole(role: RoleCard) {
-      this.selectedRole = role === this.selectedRole ? null : role;
+      this.selectedRole = isEqual(role, this.selectedRole) ? null : role;
     },
     selectTool(tool: ToolCard) {
-      this.selectedTool = tool === this.selectedTool ? null : tool;
+      this.selectedTool = isEqual(tool, this.selectedTool) ? null : tool;
     },
     selectPlace(place: PlaceCard) {
-      this.selectedPlace = place === this.selectedPlace ? null : place;
+      this.selectedPlace = isEqual(place, this.selectedPlace) ? null : place;
     },
     accuse() {
       if (!this.selectedRole || !this.selectedTool || !this.selectedPlace) {
@@ -181,7 +181,7 @@ export default defineComponent({
     },
     playerToString(player: PlayerPublicState): string {
       const { role, name } = player;
-      return `${role} [${name}]`;
+      return `${role.name} [${name}]`;
     },
     canReconnectAsPlayer(player: PlayerPublicState): boolean {
       return !this.currentPlayer && !player.isConnected;
@@ -208,21 +208,6 @@ export default defineComponent({
   &__card-column {
     display: flex;
     flex-direction: column;
-  }
-
-  &__card {
-    padding: $pad-xs;
-    color: blue;
-    cursor: pointer;
-    border: 1px solid transparent;
-
-    &:hover {
-      border: 1px solid black;
-    }
-
-    &--selected {
-      color: green;
-    }
   }
 
   &__player {
