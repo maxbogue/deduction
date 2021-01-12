@@ -46,15 +46,21 @@ export default defineComponent({
 @import '@/style/constants';
 
 .card {
-  padding: $pad-xs;
+  padding: $pad-xs $pad-sm;
+  margin: $pad-xs;
   border: 1px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  background-color: #fff;
+  text-align: center;
+  display: inline-block;
+  cursor: default;
 
   &--selectable {
     color: blue;
     cursor: pointer;
 
     &:hover {
-      border: 1px solid black;
+      background-color: #eee;
     }
   }
 
