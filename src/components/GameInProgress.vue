@@ -63,6 +63,39 @@
         </button>
       </div>
     </div>
+    <table border="1px">
+      <tr>
+        <td />
+        <td v-for="player in state.players" :key="player.role">
+          <span
+            style="writing-mode: vertical-lr; text-orientation: sideways-right"
+          >
+            {{ player.role.name }}
+          </span>
+        </td>
+      </tr>
+      <tr>
+        Roles
+      </tr>
+      <tr v-for="role in state.skin.roles" :key="role">
+        <td>{{ role.name }}</td>
+        <td v-for="player in state.players" :key="player.role" />
+      </tr>
+      <tr>
+        Tools
+      </tr>
+      <tr v-for="tool in state.skin.tools" :key="tool">
+        <td>{{ tool.name }}</td>
+        <td v-for="player in state.players" :key="player.role" />
+      </tr>
+      <tr>
+        Places
+      </tr>
+      <tr v-for="place in state.skin.places" :key="place">
+        <td>{{ place.name }}</td>
+        <td v-for="player in state.players" :key="player.role" />
+      </tr>
+    </table>
   </div>
 </template>
 
