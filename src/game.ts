@@ -1,4 +1,4 @@
-import isEqual from 'lodash/isEqual';
+import isEqual from 'lodash/fp/isEqual';
 
 import { SKINS } from '@/skins';
 import {
@@ -9,13 +9,14 @@ import {
   GameStatus,
   PlayerPrivateState,
   PlayerPublicState,
+  RoleCard,
   Skin,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
 import { pickMany, pickOne, repeat } from '@/utils';
 
 export interface ConnectionObserver {
-  setConnectionRole: (conn: Connection, role: string) => void;
+  setConnectionRole: (conn: Connection, role: RoleCard) => void;
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
@@ -111,13 +112,13 @@ export class Game implements ConnectionObserver {
     this.updateState();
   }
 
-  setConnectionRole(conn: Connection, role: string): void {
-    //if (!this.skin.roles.includes(role)) {
-    //console.log(`Invalid role ${role} for skin ${this.skin.skinName}`);
-    //return;
-    //}
+  setConnectionRole(conn: Connection, role: RoleCard): void {
+    if (!this.skin.roles.find(isEqual(role))) {
+      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
+      return;
+    }
 
-    if (this.roleToConnection[role]) {
+    if (this.roleToConnection[role.name]) {
       return;
     }
 
@@ -127,8 +128,8 @@ export class Game implements ConnectionObserver {
         delete this.roleToConnection[oldRole];
       }
 
-      this.roleToConnection[role] = conn;
-      conn.setRole(role);
+      this.roleToConnection[role.name] = conn;
+      conn.setRole(role.name);
     } else if (this.status === GameStatus.InProgress) {
       const oldRole = conn.getRole();
       if (oldRole) {
@@ -136,13 +137,13 @@ export class Game implements ConnectionObserver {
         return;
       }
 
-      const player = this.roleToPlayer[role];
+      const player = this.roleToPlayer[role.name];
       if (!player || player.getIsConnected()) {
         return;
       }
 
-      this.roleToConnection[role] = conn;
-      conn.setRole(role);
+      this.roleToConnection[role.name] = conn;
+      conn.setRole(role.name);
       player.setIsConnected(true);
     }
   }
@@ -225,13 +226,13 @@ export class Game implements ConnectionObserver {
   validateCrimeForCurrentSkin(crime: Crime): void {
     let errors = '';
 
-    if (!this.skin.roles.includes(crime.role)) {
+    if (!this.skin.roles.find(isEqual(crime.role))) {
       errors += `Role ${crime.role} not in current list of suspects ${this.skin.roles}`;
     }
-    if (!this.skin.tools.includes(crime.tool)) {
+    if (!this.skin.tools.find(isEqual(crime.tool))) {
       errors += `Tool ${crime.tool} not in current list of ${this.skin.toolDescriptor}: ${this.skin.tools}`;
     }
-    if (!this.skin.places.includes(crime.place)) {
+    if (!this.skin.places.find(isEqual(crime.place))) {
       errors += `Place ${crime.place} not in current list of places ${this.skin.places}`;
     }
 

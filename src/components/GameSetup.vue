@@ -77,7 +77,7 @@ export default defineComponent({
       }
       this.send({
         type: ConnectionEvents.SetRole,
-        data: role.name,
+        data: role,
       });
     },
     setName(name: string) {

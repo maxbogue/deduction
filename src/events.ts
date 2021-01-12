@@ -1,4 +1,4 @@
-import { Crime } from '@/state';
+import { Crime, RoleCard } from '@/state';
 
 export enum ConnectionEvents {
   SetRole = 'SetRole',
@@ -11,7 +11,7 @@ export enum ConnectionEvents {
 
 export interface SetRoleEvent {
   type: ConnectionEvents.SetRole;
-  data: string;
+  data: RoleCard;
 }
 
 export interface SetNameEvent {
