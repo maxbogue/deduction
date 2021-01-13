@@ -28,6 +28,13 @@
             :card="card"
           />
         </div>
+        <h2>Notepad</h2>
+        <Notepad
+          :skin="state.skin"
+          :players="state.players"
+          :notes="notes"
+          @set-note="setNote"
+        />
         <h2>Accusation</h2>
         <div class="game-in-progress__cards">
           <div class="game-in-progress__card-column">
@@ -65,39 +72,6 @@
         </div>
       </div>
     </div>
-    <table border="1px">
-      <tr>
-        <td />
-        <td v-for="player in state.players" :key="player.role">
-          <span
-            style="writing-mode: vertical-lr; text-orientation: sideways-right"
-          >
-            {{ player.role.name }}
-          </span>
-        </td>
-      </tr>
-      <tr>
-        Roles
-      </tr>
-      <tr v-for="role in state.skin.roles" :key="role">
-        <td>{{ role.name }}</td>
-        <td v-for="player in state.players" :key="player.role" />
-      </tr>
-      <tr>
-        Tools
-      </tr>
-      <tr v-for="tool in state.skin.tools" :key="tool">
-        <td>{{ tool.name }}</td>
-        <td v-for="player in state.players" :key="player.role" />
-      </tr>
-      <tr>
-        Places
-      </tr>
-      <tr v-for="place in state.skin.places" :key="place">
-        <td>{{ place.name }}</td>
-        <td v-for="player in state.players" :key="player.role" />
-      </tr>
-    </table>
   </div>
 </template>
 
@@ -106,6 +80,7 @@ import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
+import Notepad from '@/components/Notepad.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import {
   Card,
@@ -116,19 +91,21 @@ import {
   RoleCard,
   ToolCard,
 } from '@/state';
-import { Maybe } from '@/types';
+import { Dict, Maybe } from '@/types';
 
 interface InProgressData {
   selectedRole: Maybe<RoleCard>;
   selectedTool: Maybe<ToolCard>;
   selectedPlace: Maybe<PlaceCard>;
   showPersonalState: boolean;
+  notes: Dict<Dict<string>>;
 }
 
 export default defineComponent({
   name: 'GameInProgress',
   components: {
     Card: CardComponent,
+    Notepad,
   },
   props: {
     state: {
@@ -145,6 +122,7 @@ export default defineComponent({
     selectedTool: null,
     selectedPlace: null,
     showPersonalState: true,
+    notes: {},
   }),
   computed: {
     currentPlayer(): Maybe<PlayerPublicState> {
@@ -226,6 +204,13 @@ export default defineComponent({
         type: ConnectionEvents.SetRole,
         data: player.role,
       });
+    },
+    setNote(player: PlayerPublicState, card: Card, note: string) {
+      const playerName = player.role.name;
+      if (!this.notes[playerName]) {
+        this.notes[playerName] = {};
+      }
+      this.notes[playerName][card.name] = note;
     },
   },
 });
