@@ -60,7 +60,7 @@
               v-for="place in suspectPlaces"
               :key="place"
               :card="place"
-              :selected="selectedPlace && place === selectedPlace"
+              :selected="selectedPlace && place.name === selectedPlace.name"
               :on-click="selectPlace"
             />
           </div>
