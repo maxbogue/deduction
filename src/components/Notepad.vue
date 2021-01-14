@@ -14,7 +14,7 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, role)"
-          @change="note => setNote(player, role, note)"
+          @update="note => setNote(player, role, note)"
         />
       </td>
     </tr>
@@ -23,7 +23,12 @@
     </tr>
     <tr v-for="tool in skin.tools" :key="tool.name">
       <th>{{ tool.name }}</th>
-      <td v-for="player in players" :key="player.role.name" />
+      <td v-for="player in players" :key="player.role.name">
+        <Note
+          :note="getNote(player, tool)"
+          @update="note => setNote(player, role, note)"
+        />
+      </td>
     </tr>
     <tr>
       <th :colspan="players.length + 1">Places</th>
@@ -33,7 +38,7 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, place)"
-          @change="note => setNote(player, place, note)"
+          @update="note => setNote(player, place, note)"
         />
       </td>
     </tr>
@@ -92,11 +97,11 @@ export default defineComponent({
   td,
   th {
     border: 1px solid black;
-    padding: $pad-sm $pad-sm $pad-xs;
   }
 
   th {
     font-weight: 600;
+    padding: $pad-sm $pad-sm $pad-xs;
   }
 
   td {
