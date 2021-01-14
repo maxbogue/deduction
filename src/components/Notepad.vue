@@ -14,7 +14,9 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, role)"
-          @update="note => setNote(player, role, note)"
+          :show-dropdown="isShownDropdown(player, role)"
+          @update="setNote(player, role, $event)"
+          @toggle-dropdown="toggleDropdown(player, role)"
         />
       </td>
     </tr>
@@ -26,7 +28,9 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, tool)"
-          @update="note => setNote(player, tool, note)"
+          :show-dropdown="isShownDropdown(player, tool)"
+          @update="setNote(player, tool, $event)"
+          @toggle-dropdown="toggleDropdown(player, tool)"
         />
       </td>
     </tr>
@@ -38,7 +42,9 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, place)"
-          @update="note => setNote(player, place, note)"
+          :show-dropdown="isShownDropdown(player, place)"
+          @update="setNote(player, place, $event)"
+          @toggle-dropdown="toggleDropdown(player, place)"
         />
       </td>
     </tr>
@@ -46,11 +52,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
 
 import Note from '@/components/Note.vue';
+import { useEventListener } from '@/composables';
 import { Card, PlayerPublicState, Skin } from '@/state';
 import { Dict } from '@/types';
+
+const makeNoteKey = (player: PlayerPublicState, card: Card) =>
+  `${player.role.name}---${card.name}`;
 
 export default defineComponent({
   name: 'Notepad',
@@ -71,13 +81,31 @@ export default defineComponent({
       required: true,
     },
   },
-  computed: {},
+  setup() {
+    const shownNoteDropdown = ref('');
+
+    useEventListener(document, () => {
+      shownNoteDropdown.value = '';
+    });
+
+    return {
+      shownNoteDropdown,
+    };
+  },
   methods: {
     getNote(player: PlayerPublicState, card: Card): string {
       return this.notes[player.role.name]?.[card.name] ?? '';
     },
     setNote(player: PlayerPublicState, card: Card, note: string) {
       this.$emit('set-note', player, card, note);
+    },
+    toggleDropdown(player: PlayerPublicState, card: Card) {
+      const noteKey = makeNoteKey(player, card);
+      this.shownNoteDropdown =
+        this.shownNoteDropdown === noteKey ? '' : noteKey;
+    },
+    isShownDropdown(player: PlayerPublicState, card: Card) {
+      return this.shownNoteDropdown === makeNoteKey(player, card);
     },
   },
 });

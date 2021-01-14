@@ -14,16 +14,14 @@
         {{ mark }}
       </div>
     </div>
-    <div class="note__content" @click.stop="showDropdown = !showDropdown">
+    <div class="note__content" @click.stop="toggleDropdown">
       {{ note }}
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from 'vue';
-
-import { useEventListener } from '@/composables';
+import { defineComponent, PropType } from 'vue';
 
 export default defineComponent({
   name: 'Note',
@@ -32,17 +30,10 @@ export default defineComponent({
       type: String as PropType<string>,
       default: '',
     },
-  },
-  setup() {
-    const showDropdown = ref(false);
-
-    useEventListener(document, () => {
-      showDropdown.value = false;
-    });
-
-    return {
-      showDropdown,
-    };
+    showDropdown: {
+      type: Boolean,
+      default: false,
+    },
   },
   data: () => ({
     marks: 'x•?123456',
@@ -50,6 +41,9 @@ export default defineComponent({
   methods: {
     toggleMark(mark: string) {
       this.$emit('update', mark);
+    },
+    toggleDropdown() {
+      this.$emit('toggle-dropdown');
     },
   },
 });
@@ -69,7 +63,7 @@ export default defineComponent({
 
   &__dropdown {
     position: absolute;
-    left: 5rem;
+    left: 0;
     top: 0;
     visibility: hidden;
     z-index: 1;
@@ -77,7 +71,7 @@ export default defineComponent({
     max-height: 0;
     padding: 0;
     overflow: hidden;
-    transition: visibility 0s 0.5s, max-width 0.5s, max-height 0.5s;
+    transition: visibility 0s 0.3s, max-width 0.3s, max-height 0.3s;
     background-color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
     display: flex;
@@ -89,7 +83,7 @@ export default defineComponent({
       height: 150px;
       max-width: 150px;
       max-height: 150px;
-      transition: visibility 0s, max-width 0.5s, max-height 0.5s;
+      transition: visibility 0s, max-width 0.3s, max-height 0.3s;
     }
   }
 
