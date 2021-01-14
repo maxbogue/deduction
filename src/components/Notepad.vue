@@ -26,7 +26,7 @@
       <td v-for="player in players" :key="player.role.name">
         <Note
           :note="getNote(player, tool)"
-          @update="note => setNote(player, role, note)"
+          @update="note => setNote(player, tool, note)"
         />
       </td>
     </tr>
