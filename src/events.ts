@@ -1,17 +1,18 @@
-import { Crime, RoleCard } from '@/state';
+import { Card, Crime, PlayerPublicState, RoleCard } from '@/state';
 
 export enum ConnectionEvents {
-  SetRole = 'SetRole',
+  Accuse = 'Accuse',
   SetName = 'SetName',
+  SetNote = 'SetNote',
   SetReady = 'SetReady',
+  SetRole = 'SetRole',
   SetSkin = 'SetSkin',
   Start = 'Start',
-  Accuse = 'Accuse',
 }
 
-export interface SetRoleEvent {
-  type: ConnectionEvents.SetRole;
-  data: RoleCard;
+export interface AccuseEvent {
+  type: ConnectionEvents.Accuse;
+  data: Crime;
 }
 
 export interface SetNameEvent {
@@ -19,9 +20,21 @@ export interface SetNameEvent {
   data: string;
 }
 
+export interface SetNoteEvent {
+  type: ConnectionEvents.SetNote;
+  player: PlayerPublicState;
+  card: Card;
+  note: string;
+}
+
 export interface SetReadyEvent {
   type: ConnectionEvents.SetReady;
   data: boolean;
+}
+
+export interface SetRoleEvent {
+  type: ConnectionEvents.SetRole;
+  data: RoleCard;
 }
 
 export interface SetSkinEvent {
@@ -33,15 +46,11 @@ export interface StartEvent {
   type: ConnectionEvents.Start;
 }
 
-export interface AccuseEvent {
-  type: ConnectionEvents.Accuse;
-  data: Crime;
-}
-
 export type ConnectionEvent =
-  | SetRoleEvent
+  | AccuseEvent
   | SetNameEvent
+  | SetNoteEvent
   | SetReadyEvent
-  | StartEvent
+  | SetRoleEvent
   | SetSkinEvent
-  | AccuseEvent;
+  | StartEvent;

@@ -20,6 +20,12 @@ export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
+  setNote: (
+    role: RoleCard,
+    player: PlayerPublicState,
+    card: Card,
+    note: string
+  ) => void;
   accuse: (role: RoleCard, accusation: Crime) => void;
   updateState: () => void;
 }
@@ -39,6 +45,7 @@ class Player {
   private name: string;
   private isConnected = true;
   private failedAccusation: Maybe<Crime> = null;
+  notes: Dict<Dict<string>> = {};
 
   constructor(role: RoleCard, name: string, hand: Card[]) {
     this.role = role;
@@ -69,6 +76,7 @@ class Player {
   getPrivateState(): Omit<PlayerPrivateState, 'index'> {
     return {
       hand: this.hand,
+      notes: this.notes,
     };
   }
 
@@ -220,6 +228,21 @@ export class Game implements ConnectionObserver {
       this.roleToPlayer[role.name] = newPlayer;
     });
     this.status = GameStatus.InProgress;
+  }
+
+  setNote(
+    role: RoleCard,
+    other: PlayerPublicState,
+    card: Card,
+    note: string
+  ): void {
+    const player = this.roleToPlayer[role.name];
+    const otherRole = other.role.name;
+    if (!player.notes[otherRole]) {
+      player.notes[otherRole] = {};
+    }
+    player.notes[otherRole][card.name] = note;
+    this.updateState();
   }
 
   validateCrimeForCurrentSkin(crime: Crime): void {

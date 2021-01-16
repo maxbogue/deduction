@@ -100,6 +100,16 @@ export class WebSocketConnection implements Connection {
       case ConnectionEvents.Start:
         this.observer.start();
         break;
+      case ConnectionEvents.SetNote:
+        if (this.role) {
+          this.observer.setNote(
+            this.role,
+            event.player,
+            event.card,
+            event.note
+          );
+        }
+        break;
       case ConnectionEvents.Accuse:
         if (!this.role) {
           break;

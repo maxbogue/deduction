@@ -32,7 +32,7 @@
         <Notepad
           :skin="state.skin"
           :players="state.players"
-          :notes="notes"
+          :notes="state.playerState.notes"
           @set-note="setNote"
         />
         <h2>Accusation</h2>
@@ -206,11 +206,12 @@ export default defineComponent({
       });
     },
     setNote(player: PlayerPublicState, card: Card, note: string) {
-      const playerName = player.role.name;
-      if (!this.notes[playerName]) {
-        this.notes[playerName] = {};
-      }
-      this.notes[playerName][card.name] = note;
+      this.send({
+        type: ConnectionEvents.SetNote,
+        player,
+        card,
+        note,
+      });
     },
   },
 });

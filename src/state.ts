@@ -1,23 +1,4 @@
-import { Maybe } from '@/types';
-
-export enum GameStatus {
-  Setup = 'Setup',
-  InProgress = 'InProgress',
-  GameOver = 'GameOver',
-}
-
-export interface PlayerPublicState {
-  role: RoleCard;
-  name: string;
-  isConnected: boolean;
-  failedAccusation: Maybe<Crime>;
-}
-
-export interface ConnectionDescription {
-  role: Maybe<RoleCard>;
-  name: string;
-  isReady: boolean;
-}
+import { Dict, Maybe } from '@/types';
 
 export enum CardType {
   Role = 'Role',
@@ -51,6 +32,37 @@ export interface Skin {
   places: PlaceCard[];
 }
 
+export interface Crime {
+  role: RoleCard;
+  tool: ToolCard;
+  place: PlaceCard;
+}
+
+export interface ConnectionDescription {
+  role: Maybe<RoleCard>;
+  name: string;
+  isReady: boolean;
+}
+
+export interface PlayerPublicState {
+  role: RoleCard;
+  name: string;
+  isConnected: boolean;
+  failedAccusation: Maybe<Crime>;
+}
+
+export interface PlayerPrivateState {
+  index: number;
+  hand: Card[];
+  notes: Dict<Dict<string>>;
+}
+
+export enum GameStatus {
+  Setup = 'Setup',
+  InProgress = 'InProgress',
+  GameOver = 'GameOver',
+}
+
 export interface SetupState {
   status: GameStatus.Setup;
   skin: Skin;
@@ -58,30 +70,19 @@ export interface SetupState {
   connectionIndex: number;
 }
 
-export interface Crime {
-  role: RoleCard;
-  tool: ToolCard;
-  place: PlaceCard;
-}
-
-export interface InProgressState {
-  status: GameStatus.InProgress;
+interface PostSetupState {
   skin: Skin;
   players: PlayerPublicState[];
   playerState: Maybe<PlayerPrivateState>;
+}
+
+export interface InProgressState extends PostSetupState {
+  status: GameStatus.InProgress;
   solution: Maybe<Crime>;
 }
 
-export interface PlayerPrivateState {
-  index: number;
-  hand: Card[];
-}
-
-export interface GameOverState {
+export interface GameOverState extends PostSetupState {
   status: GameStatus.GameOver;
-  skin: Skin;
-  players: PlayerPublicState[];
-  playerState: Maybe<PlayerPrivateState>;
   winner: number;
   solution: Crime;
 }
