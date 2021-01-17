@@ -1,9 +1,13 @@
 <template>
   <div class="game">
-    <GameSetup v-if="isStateSetup" :state="state" :send="send" />
+    <div v-if="!state">Loading...</div>
+    <GameSetup v-else-if="isStateSetup" :state="state" :send="send" />
     <GameInProgress v-else-if="isStateInProgress" :state="state" :send="send" />
-    <GameOver v-else-if="state" :state="state" :send="send" />
-    <div class="game__state">{{ JSON.stringify(state, null, 2) }}</div>
+    <GameOver v-else :state="state" :send="send" />
+    <button @click="showStateJson = !showStateJson">Toggle Json</button>
+    <div v-if="showStateJson" class="game__state">
+      {{ JSON.stringify(state, null, 2) }}
+    </div>
   </div>
 </template>
 
@@ -48,14 +52,13 @@ export default defineComponent({
     );
 
     return {
-      id,
       state,
       send,
       isStateSetup,
       isStateInProgress,
+      showStateJson: ref(false),
     };
   },
-  methods: {},
 });
 </script>
 

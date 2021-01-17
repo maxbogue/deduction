@@ -16,60 +16,55 @@
       </div>
     </div>
     <div v-if="currentPlayer">
-      <button @click="showPersonalState = !showPersonalState">
-        Hide/Reveal Personal Info
-      </button>
-      <div v-if="showPersonalState">
-        <h2>Hand</h2>
-        <div class="game-in-progress__hand">
+      <h2>Hand</h2>
+      <div class="game-in-progress__hand">
+        <Card
+          v-for="card in state.playerSecrets.hand"
+          :key="card"
+          :card="card"
+        />
+      </div>
+      <h2>Notepad</h2>
+      <Notepad
+        :skin="state.skin"
+        :players="state.players"
+        :notes="state.playerSecrets.notes"
+        @set-note="setNote"
+      />
+      <h2>Accusation</h2>
+      <div class="game-in-progress__cards">
+        <div class="game-in-progress__card-column">
           <Card
-            v-for="card in state.playerSecrets.hand"
-            :key="card"
-            :card="card"
+            v-for="role in suspectRoles"
+            :key="role"
+            :card="role"
+            :selected="selectedRole && role.name === selectedRole.name"
+            :on-click="selectRole"
           />
         </div>
-        <h2>Notepad</h2>
-        <Notepad
-          :skin="state.skin"
-          :players="state.players"
-          :notes="state.playerSecrets.notes"
-          @set-note="setNote"
-        />
-        <h2>Accusation</h2>
-        <div class="game-in-progress__cards">
-          <div class="game-in-progress__card-column">
-            <Card
-              v-for="role in suspectRoles"
-              :key="role"
-              :card="role"
-              :selected="selectedRole && role.name === selectedRole.name"
-              :on-click="selectRole"
-            />
-          </div>
-          <div class="game-in-progress__card-column">
-            <Card
-              v-for="tool in suspectTools"
-              :key="tool"
-              :card="tool"
-              :selected="selectedTool && tool.name === selectedTool.name"
-              :on-click="selectTool"
-            />
-          </div>
-          <div class="game-in-progress__card-column">
-            <Card
-              v-for="place in suspectPlaces"
-              :key="place"
-              :card="place"
-              :selected="selectedPlace && place.name === selectedPlace.name"
-              :on-click="selectPlace"
-            />
-          </div>
+        <div class="game-in-progress__card-column">
+          <Card
+            v-for="tool in suspectTools"
+            :key="tool"
+            :card="tool"
+            :selected="selectedTool && tool.name === selectedTool.name"
+            :on-click="selectTool"
+          />
         </div>
-        <div v-if="readyToAccuse" class="game-in-progress__accuse">
-          <button class="game-in-progress__accuse__button" @click="accuse">
-            Accuse
-          </button>
+        <div class="game-in-progress__card-column">
+          <Card
+            v-for="place in suspectPlaces"
+            :key="place"
+            :card="place"
+            :selected="selectedPlace && place.name === selectedPlace.name"
+            :on-click="selectPlace"
+          />
         </div>
+      </div>
+      <div v-if="readyToAccuse" class="game-in-progress__accuse">
+        <button class="game-in-progress__accuse__button" @click="accuse">
+          Accuse
+        </button>
       </div>
     </div>
   </div>
@@ -97,7 +92,6 @@ interface InProgressData {
   selectedRole: Maybe<RoleCard>;
   selectedTool: Maybe<ToolCard>;
   selectedPlace: Maybe<PlaceCard>;
-  showPersonalState: boolean;
   notes: Dict<Dict<string>>;
 }
 
@@ -121,7 +115,6 @@ export default defineComponent({
     selectedRole: null,
     selectedTool: null,
     selectedPlace: null,
-    showPersonalState: true,
     notes: {},
   }),
   computed: {
