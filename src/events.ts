@@ -1,4 +1,4 @@
-import { Card, Crime, PlayerPublicState, RoleCard } from '@/state';
+import { Card, Crime, Player, RoleCard } from '@/state';
 
 export enum ConnectionEvents {
   Accuse = 'Accuse',
@@ -22,7 +22,7 @@ export interface SetNameEvent {
 
 export interface SetNoteEvent {
   type: ConnectionEvents.SetNote;
-  player: PlayerPublicState;
+  player: Player;
   card: Card;
   note: string;
 }

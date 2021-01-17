@@ -56,10 +56,10 @@ import { defineComponent, PropType, ref } from 'vue';
 
 import Note from '@/components/Note.vue';
 import { useEventListener } from '@/composables';
-import { Card, PlayerPublicState, Skin } from '@/state';
+import { Card, Player, Skin } from '@/state';
 import { Dict } from '@/types';
 
-const makeNoteKey = (player: PlayerPublicState, card: Card) =>
+const makeNoteKey = (player: Player, card: Card) =>
   `${player.role.name}---${card.name}`;
 
 export default defineComponent({
@@ -73,7 +73,7 @@ export default defineComponent({
       required: true,
     },
     players: {
-      type: Array as PropType<PlayerPublicState[]>,
+      type: Array as PropType<Player[]>,
       required: true,
     },
     notes: {
@@ -93,18 +93,18 @@ export default defineComponent({
     };
   },
   methods: {
-    getNote(player: PlayerPublicState, card: Card): string {
+    getNote(player: Player, card: Card): string {
       return this.notes[player.role.name]?.[card.name] ?? '';
     },
-    setNote(player: PlayerPublicState, card: Card, note: string) {
+    setNote(player: Player, card: Card, note: string) {
       this.$emit('set-note', player, card, note);
     },
-    toggleDropdown(player: PlayerPublicState, card: Card) {
+    toggleDropdown(player: Player, card: Card) {
       const noteKey = makeNoteKey(player, card);
       this.shownNoteDropdown =
         this.shownNoteDropdown === noteKey ? '' : noteKey;
     },
-    isShownDropdown(player: PlayerPublicState, card: Card) {
+    isShownDropdown(player: Player, card: Card) {
       return this.shownNoteDropdown === makeNoteKey(player, card);
     },
   },

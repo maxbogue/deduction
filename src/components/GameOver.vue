@@ -24,7 +24,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import { ConnectionEvent } from '@/events';
-import { Crime, GameOverState, PlayerPublicState } from '@/state';
+import { Crime, GameOverState, Player } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
@@ -40,18 +40,18 @@ export default defineComponent({
     },
   },
   computed: {
-    currentPlayer(): Maybe<PlayerPublicState> {
-      if (!this.state.playerState) {
+    currentPlayer(): Maybe<Player> {
+      if (!this.state.playerSecrets) {
         return null;
       }
-      return this.state.players[this.state.playerState.index];
+      return this.state.players[this.state.playerSecrets.index];
     },
     connectionPlayer(): string {
       return this.currentPlayer
         ? this.playerToString(this.currentPlayer)
         : 'observing';
     },
-    winner(): PlayerPublicState {
+    winner(): Player {
       return this.state.players[this.state.winner];
     },
     solution(): Crime {
@@ -59,12 +59,12 @@ export default defineComponent({
     },
   },
   methods: {
-    classesForPlayer(player: PlayerPublicState) {
+    classesForPlayer(player: Player) {
       return {
         'game-in-progress__player--disconnected': !player.isConnected,
       };
     },
-    playerToString(player: PlayerPublicState): string {
+    playerToString(player: Player): string {
       const { role, name } = player;
       return `${role.name} [${name}]`;
     },

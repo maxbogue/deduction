@@ -7,8 +7,8 @@ import {
   Crime,
   GameState,
   GameStatus,
-  PlayerPrivateState,
-  PlayerPublicState,
+  Player,
+  PlayerSecrets,
   RoleCard,
   Skin,
 } from '@/state';
@@ -20,12 +20,7 @@ export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
-  setNote: (
-    role: RoleCard,
-    player: PlayerPublicState,
-    card: Card,
-    note: string
-  ) => void;
+  setNote: (role: RoleCard, player: Player, card: Card, note: string) => void;
   accuse: (role: RoleCard, accusation: Crime) => void;
   updateState: () => void;
 }
@@ -39,61 +34,11 @@ export interface Connection {
   sendState: (gameState: GameState) => void;
 }
 
-class Player {
-  private readonly role: RoleCard;
-  private readonly hand: Card[];
-  private name: string;
-  private isConnected = true;
-  private failedAccusation: Maybe<Crime> = null;
-  notes: Dict<Dict<string>> = {};
-
-  constructor(role: RoleCard, name: string, hand: Card[]) {
-    this.role = role;
-    this.name = name;
-    this.hand = hand;
-  }
-
-  setIsConnected(isConnected: boolean) {
-    this.isConnected = isConnected;
-  }
-
-  getIsConnected(): boolean {
-    return this.isConnected;
-  }
-
-  kill(accusation: Crime) {
-    this.failedAccusation = accusation;
-  }
-
-  isDed(): boolean {
-    return Boolean(this.failedAccusation);
-  }
-
-  getHand(): Card[] {
-    return this.hand;
-  }
-
-  getPrivateState(): Omit<PlayerPrivateState, 'index'> {
-    return {
-      hand: this.hand,
-      notes: this.notes,
-    };
-  }
-
-  getPublicState(): PlayerPublicState {
-    return {
-      role: this.role,
-      name: this.name,
-      isConnected: this.isConnected,
-      failedAccusation: this.failedAccusation,
-    };
-  }
-}
-
 export class Game implements ConnectionObserver {
   private readonly connections: Connection[] = [];
   private roleToConnection: Dict<Connection> = {};
   private readonly roleToPlayer: Dict<Player> = {};
+  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
   private readonly players: Player[] = [];
   private status: GameStatus = GameStatus.Setup;
   private skin: Skin = SKINS.classic;
@@ -110,7 +55,10 @@ export class Game implements ConnectionObserver {
     this.connections.splice(i, 1);
     const role = conn.getRole();
     if (role) {
-      this.roleToPlayer[role.name]?.setIsConnected(false);
+      const player = this.roleToPlayer[role.name];
+      if (player) {
+        player.isConnected = false;
+      }
       delete this.roleToConnection[role.name];
     }
     this.updateState();
@@ -142,13 +90,13 @@ export class Game implements ConnectionObserver {
       }
 
       const player = this.roleToPlayer[role.name];
-      if (!player || player.getIsConnected()) {
+      if (!player || player.isConnected) {
         return;
       }
 
       this.roleToConnection[role.name] = conn;
       conn.setRole(role);
-      player.setIsConnected(true);
+      player.isConnected = true;
     }
   }
 
@@ -223,25 +171,25 @@ export class Game implements ConnectionObserver {
       if (!role) {
         return;
       }
-      const newPlayer: Player = new Player(role, name, allHands[i]);
-      this.players.push(newPlayer);
-      this.roleToPlayer[role.name] = newPlayer;
+      const player = { role, name, isConnected: true, failedAccusation: null };
+      this.players.push(player);
+      this.roleToPlayer[role.name] = player;
+      this.roleToPlayerSecrets[role.name] = {
+        index: i,
+        hand: allHands[i],
+        notes: {},
+      };
     });
     this.status = GameStatus.InProgress;
   }
 
-  setNote(
-    role: RoleCard,
-    other: PlayerPublicState,
-    card: Card,
-    note: string
-  ): void {
-    const player = this.roleToPlayer[role.name];
+  setNote(role: RoleCard, other: Player, card: Card, note: string): void {
+    const playerSecrets = this.roleToPlayerSecrets[role.name];
     const otherRole = other.role.name;
-    if (!player.notes[otherRole]) {
-      player.notes[otherRole] = {};
+    if (!playerSecrets.notes[otherRole]) {
+      playerSecrets.notes[otherRole] = {};
     }
-    player.notes[otherRole][card.name] = note;
+    playerSecrets.notes[otherRole][card.name] = note;
     this.updateState();
   }
 
@@ -272,7 +220,7 @@ export class Game implements ConnectionObserver {
     this.validateCrimeForCurrentSkin(accusation);
 
     const player = this.roleToPlayer[role.name];
-    if (player.isDed()) {
+    if (player.failedAccusation) {
       return;
     }
 
@@ -280,7 +228,7 @@ export class Game implements ConnectionObserver {
       this.winner = this.players.indexOf(player);
       this.status = GameStatus.GameOver;
     } else {
-      player.kill(accusation);
+      player.failedAccusation = accusation;
     }
 
     this.updateState();
@@ -299,18 +247,18 @@ export class Game implements ConnectionObserver {
         return {
           status: this.status,
           skin: this.skin,
-          players: this.players.map(p => p.getPublicState()),
+          players: this.players,
           solution: this.solution,
-          playerState: null,
+          playerSecrets: null,
         };
       case GameStatus.GameOver:
         return {
           status: this.status,
           skin: this.skin,
-          players: this.players.map(p => p.getPublicState()),
+          players: this.players,
           winner: this.winner,
           solution: this.solution as Crime,
-          playerState: null,
+          playerSecrets: null,
         };
     }
   }
@@ -332,13 +280,9 @@ export class Game implements ConnectionObserver {
             conn.sendState(state);
             return;
           }
-          const player = this.roleToPlayer[role.name];
           conn.sendState({
             ...state,
-            playerState: {
-              ...player.getPrivateState(),
-              index: this.players.indexOf(player),
-            },
+            playerSecrets: this.roleToPlayerSecrets[role.name],
           });
           break;
         }

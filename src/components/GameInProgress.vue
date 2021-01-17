@@ -23,7 +23,7 @@
         <h2>Hand</h2>
         <div class="game-in-progress__hand">
           <Card
-            v-for="card in state.playerState.hand"
+            v-for="card in state.playerSecrets.hand"
             :key="card"
             :card="card"
           />
@@ -32,7 +32,7 @@
         <Notepad
           :skin="state.skin"
           :players="state.players"
-          :notes="state.playerState.notes"
+          :notes="state.playerSecrets.notes"
           @set-note="setNote"
         />
         <h2>Accusation</h2>
@@ -87,7 +87,7 @@ import {
   Crime,
   InProgressState,
   PlaceCard,
-  PlayerPublicState,
+  Player,
   RoleCard,
   ToolCard,
 } from '@/state';
@@ -125,11 +125,11 @@ export default defineComponent({
     notes: {},
   }),
   computed: {
-    currentPlayer(): Maybe<PlayerPublicState> {
-      if (!this.state.playerState) {
+    currentPlayer(): Maybe<Player> {
+      if (!this.state.playerSecrets) {
         return null;
       }
-      return this.state.players[this.state.playerState.index];
+      return this.state.players[this.state.playerSecrets.index];
     },
     isDed(): boolean {
       return Boolean(this.currentPlayer?.failedAccusation);
@@ -148,7 +148,7 @@ export default defineComponent({
       );
     },
     hand(): Card[] {
-      return this.state.playerState?.hand ?? [];
+      return this.state.playerSecrets?.hand ?? [];
     },
     suspectRoles(): RoleCard[] {
       return this.state.skin.roles.filter(x => !this.hand.find(isEqual(x)));
@@ -161,7 +161,7 @@ export default defineComponent({
     },
   },
   methods: {
-    classesForPlayer(player: PlayerPublicState) {
+    classesForPlayer(player: Player) {
       return {
         'game-in-progress__player--disconnected': !player.isConnected,
         'game-in-progress__player--reconnectable': this.canReconnectAsPlayer(
@@ -192,20 +192,20 @@ export default defineComponent({
         data: crime,
       });
     },
-    playerToString(player: PlayerPublicState): string {
+    playerToString(player: Player): string {
       const { role, name } = player;
       return `${role.name} [${name}]`;
     },
-    canReconnectAsPlayer(player: PlayerPublicState): boolean {
+    canReconnectAsPlayer(player: Player): boolean {
       return !this.currentPlayer && !player.isConnected;
     },
-    reconnectAsPlayer(player: PlayerPublicState) {
+    reconnectAsPlayer(player: Player) {
       this.send({
         type: ConnectionEvents.SetRole,
         data: player.role,
       });
     },
-    setNote(player: PlayerPublicState, card: Card, note: string) {
+    setNote(player: Player, card: Card, note: string) {
       this.send({
         type: ConnectionEvents.SetNote,
         player,

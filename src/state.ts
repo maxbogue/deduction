@@ -44,14 +44,14 @@ export interface ConnectionDescription {
   isReady: boolean;
 }
 
-export interface PlayerPublicState {
+export interface Player {
   role: RoleCard;
   name: string;
   isConnected: boolean;
   failedAccusation: Maybe<Crime>;
 }
 
-export interface PlayerPrivateState {
+export interface PlayerSecrets {
   index: number;
   hand: Card[];
   notes: Dict<Dict<string>>;
@@ -72,8 +72,8 @@ export interface SetupState {
 
 interface PostSetupState {
   skin: Skin;
-  players: PlayerPublicState[];
-  playerState: Maybe<PlayerPrivateState>;
+  players: Player[];
+  playerSecrets: Maybe<PlayerSecrets>;
 }
 
 export interface InProgressState extends PostSetupState {
