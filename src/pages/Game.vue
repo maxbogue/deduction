@@ -1,8 +1,16 @@
 <template>
   <div class="game">
     <div v-if="!state">Loading...</div>
-    <GameSetup v-else-if="isStateSetup" :state="state" :send="send" />
-    <GameInProgress v-else-if="isStateInProgress" :state="state" :send="send" />
+    <GameSetup
+      v-else-if="state.status === GameStatus.Setup"
+      :state="state"
+      :send="send"
+    />
+    <GameInProgress
+      v-else-if="state.status === GameStatus.InProgress"
+      :state="state"
+      :send="send"
+    />
     <GameOver v-else :state="state" :send="send" />
     <button @click="showStateJson = !showStateJson">Toggle Json</button>
     <div v-if="showStateJson" class="game__state">
@@ -15,9 +23,9 @@
 import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-import GameInProgress from '@/components/GameInProgress';
-import GameOver from '@/components/GameOver';
-import GameSetup from '@/components/GameSetup';
+import GameInProgress from '@/components/GameInProgress.vue';
+import GameOver from '@/components/GameOver.vue';
+import GameSetup from '@/components/GameSetup.vue';
 import { ConnectionEvent } from '@/events';
 import { GameState, GameStatus } from '@/state';
 import { Maybe } from '@/types';
@@ -43,19 +51,10 @@ export default defineComponent({
       ws.send(JSON.stringify(event));
     };
 
-    const isStateSetup = computed(
-      () => state.value?.status === GameStatus.Setup
-    );
-
-    const isStateInProgress = computed(
-      () => state.value?.status === GameStatus.InProgress
-    );
-
     return {
+      GameStatus,
       state,
       send,
-      isStateSetup,
-      isStateInProgress,
       showStateJson: ref(false),
     };
   },

@@ -3,7 +3,7 @@
     <input v-model="name" type="text" />
     <div
       v-for="role in state.skin.roles"
-      :key="role"
+      :key="role.name"
       class="game-setup__role"
       :class="classesForRole(role)"
       @click="selectRole(role)"

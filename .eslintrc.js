@@ -155,7 +155,7 @@ module.exports = {
     'vue/require-name-property': 'error',
 
     // These are recommended rules that are warnings by default.
-    'vue/attribute-hyphenation': 'error',
+    'vue/attribute-hyphenation': ['error', 'never'],
     'vue/attributes-order': 'error',
     'vue/component-definition-name-casing': 'error',
     'vue/component-tags-order': 'error',

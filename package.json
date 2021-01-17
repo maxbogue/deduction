@@ -7,14 +7,16 @@
   "scripts": {
     "dev": "node bin/dev-server.js",
     "build": "NODE_ENV=production webpack -p --progress --hide-modules",
-    "prod": "NODE_ENV=production node build/main.js"
+    "prod": "NODE_ENV=production node build/main.js",
+    "lint": "eslint --ext .ts,.vue --fix src",
+    "typecheck": "vuedx-typecheck"
   },
   "lint-staged": {
     "*.(ts|vue)": "eslint --fix"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "vuedx-typecheck && echo && lint-staged"
     }
   },
   "dependencies": {
@@ -38,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
     "@vue/compiler-sfc": "^3.0.5",
+    "@vuedx/typecheck": "^0.6.0",
     "babel-loader": "^8.2.2",
     "chalk": "^4.1.0",
     "css-loader": "^5.0.1",
