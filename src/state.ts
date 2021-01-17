@@ -54,7 +54,7 @@ export interface Player {
 export interface PlayerSecrets {
   index: number;
   hand: Card[];
-  notes: Dict<Dict<string>>;
+  notes: Dict<Dict<string[]>>;
 }
 
 export enum GameStatus {

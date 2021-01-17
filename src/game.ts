@@ -20,7 +20,12 @@ export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
   setSkin: (skinName: string) => void;
   start: () => void;
-  setNote: (role: RoleCard, player: Player, card: Card, note: string) => void;
+  setNote: (
+    role: RoleCard,
+    player: Player,
+    card: Card,
+    marks: string[]
+  ) => void;
   accuse: (role: RoleCard, accusation: Crime) => void;
   updateState: () => void;
 }
@@ -183,13 +188,13 @@ export class Game implements ConnectionObserver {
     this.status = GameStatus.InProgress;
   }
 
-  setNote(role: RoleCard, other: Player, card: Card, note: string): void {
+  setNote(role: RoleCard, other: Player, card: Card, marks: string[]): void {
     const playerSecrets = this.roleToPlayerSecrets[role.name];
     const otherRole = other.role.name;
     if (!playerSecrets.notes[otherRole]) {
       playerSecrets.notes[otherRole] = {};
     }
-    playerSecrets.notes[otherRole][card.name] = note;
+    playerSecrets.notes[otherRole][card.name] = marks;
     this.updateState();
   }
 

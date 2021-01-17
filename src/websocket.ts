@@ -106,7 +106,7 @@ export class WebSocketConnection implements Connection {
             this.role,
             event.player,
             event.card,
-            event.note
+            event.marks
           );
         }
         break;

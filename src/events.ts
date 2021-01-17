@@ -24,7 +24,7 @@ export interface SetNoteEvent {
   type: ConnectionEvents.SetNote;
   player: Player;
   card: Card;
-  note: string;
+  marks: string[];
 }
 
 export interface SetReadyEvent {

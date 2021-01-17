@@ -198,12 +198,12 @@ export default defineComponent({
         data: player.role,
       });
     },
-    setNote(player: Player, card: Card, note: string) {
+    setNote(player: Player, card: Card, marks: string[]) {
       this.send({
         type: ConnectionEvents.SetNote,
         player,
         card,
-        note,
+        marks,
       });
     },
   },

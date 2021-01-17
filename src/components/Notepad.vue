@@ -13,7 +13,7 @@
       <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, card)"
+          :marks="getMarks(player, card)"
           :showDropdown="isShownDropdown(player, card)"
           :onUpdate="note => setNote(player, card, note)"
           :toggleDropdown="() => toggleDropdown(player, card)"
@@ -27,7 +27,7 @@
       <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, card)"
+          :marks="getMarks(player, card)"
           :showDropdown="isShownDropdown(player, card)"
           :onUpdate="note => setNote(player, card, note)"
           :toggleDropdown="() => toggleDropdown(player, card)"
@@ -41,7 +41,7 @@
       <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, card)"
+          :marks="getMarks(player, card)"
           :showDropdown="isShownDropdown(player, card)"
           :onUpdate="note => setNote(player, card, note)"
           :toggleDropdown="() => toggleDropdown(player, card)"
@@ -77,12 +77,12 @@ export default defineComponent({
       required: true,
     },
     notes: {
-      type: Object as PropType<Dict<Dict<string>>>,
+      type: Object as PropType<Dict<Dict<string[]>>>,
       required: true,
     },
     setNote: {
       type: Function as PropType<
-        (player: Player, card: Card, note: string) => void
+        (player: Player, card: Card, marks: string[]) => void
       >,
       required: true,
     },
@@ -99,8 +99,8 @@ export default defineComponent({
     };
   },
   methods: {
-    getNote(player: Player, card: Card): string {
-      return this.notes[player.role.name]?.[card.name] ?? '';
+    getMarks(player: Player, card: Card): string[] {
+      return this.notes[player.role.name]?.[card.name] ?? [];
     },
     toggleDropdown(player: Player, card: Card) {
       const noteKey = makeNoteKey(player, card);

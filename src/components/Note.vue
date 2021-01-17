@@ -1,21 +1,18 @@
 <template>
   <div class="note">
-    <div
-      class="note__dropdown"
-      :class="{ ['note__dropdown--open']: showDropdown }"
-    >
+    <div v-if="showDropdown" class="note__dropdown">
       <div
-        v-for="mark in marks"
+        v-for="mark in ALL_MARKS"
         :key="mark"
         class="note__mark"
-        :class="{ 'note__mark--selected': note.includes(mark) }"
+        :class="{ 'note__mark--selected': marks.includes(mark) }"
         @click.stop="toggleMark(mark)"
       >
         {{ mark }}
       </div>
     </div>
     <div class="note__content" @click.stop="toggleDropdown">
-      {{ note }}
+      {{ marks.join('') }}
     </div>
   </div>
 </template>
@@ -26,16 +23,16 @@ import { defineComponent, PropType } from 'vue';
 export default defineComponent({
   name: 'Note',
   props: {
-    note: {
-      type: String as PropType<string>,
-      default: '',
+    marks: {
+      type: Array as PropType<string[]>,
+      default: () => [],
     },
     showDropdown: {
       type: Boolean,
       default: false,
     },
     onUpdate: {
-      type: Function as PropType<(note: string) => void>,
+      type: Function as PropType<(marks: string[]) => void>,
       required: true,
     },
     toggleDropdown: {
@@ -44,11 +41,15 @@ export default defineComponent({
     },
   },
   data: () => ({
-    marks: 'x•?123456',
+    ALL_MARKS: 'x•?123456',
   }),
   methods: {
     toggleMark(mark: string) {
-      this.onUpdate(mark);
+      if (this.marks.includes(mark)) {
+        this.onUpdate(this.marks.filter(m => m !== mark));
+      } else {
+        this.onUpdate([...this.marks, mark]);
+      }
     },
   },
 });
@@ -70,26 +71,15 @@ export default defineComponent({
     position: absolute;
     left: 0;
     top: 0;
-    visibility: hidden;
+    width: 150px;
+    height: 150px;
     z-index: 1;
-    max-width: 0;
-    max-height: 0;
     padding: 0;
     overflow: hidden;
-    transition: visibility 0s 0.3s, max-width 0.3s, max-height 0.3s;
     background-color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
     display: flex;
     flex-wrap: wrap;
-
-    &--open {
-      visibility: visible;
-      width: 150px;
-      height: 150px;
-      max-width: 150px;
-      max-height: 150px;
-      transition: visibility 0s, max-width 0.3s, max-height 0.3s;
-    }
   }
 
   &__mark {
