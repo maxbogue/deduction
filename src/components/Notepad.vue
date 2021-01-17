@@ -2,49 +2,49 @@
   <table class="notepad">
     <tr>
       <th />
-      <th v-for="player in players" :key="player.role">
+      <th v-for="player in players" :key="player.role.name">
         <div class="notepad__player-header">{{ player.role.name }}</div>
       </th>
     </tr>
     <tr>
       <th :colspan="players.length + 1">Roles</th>
     </tr>
-    <tr v-for="role in skin.roles" :key="role.name">
-      <th>{{ role.name }}</th>
+    <tr v-for="card in skin.roles" :key="card.name">
+      <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, role)"
-          :show-dropdown="isShownDropdown(player, role)"
-          @update="setNote(player, role, $event)"
-          @toggle-dropdown="toggleDropdown(player, role)"
+          :note="getNote(player, card)"
+          :showDropdown="isShownDropdown(player, card)"
+          :onUpdate="note => setNote(player, card, note)"
+          :toggleDropdown="() => toggleDropdown(player, card)"
         />
       </td>
     </tr>
     <tr>
       <th :colspan="players.length + 1">Tools</th>
     </tr>
-    <tr v-for="tool in skin.tools" :key="tool.name">
-      <th>{{ tool.name }}</th>
+    <tr v-for="card in skin.tools" :key="card.name">
+      <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, tool)"
-          :show-dropdown="isShownDropdown(player, tool)"
-          @update="setNote(player, tool, $event)"
-          @toggle-dropdown="toggleDropdown(player, tool)"
+          :note="getNote(player, card)"
+          :showDropdown="isShownDropdown(player, card)"
+          :onUpdate="note => setNote(player, card, note)"
+          :toggleDropdown="() => toggleDropdown(player, card)"
         />
       </td>
     </tr>
     <tr>
       <th :colspan="players.length + 1">Places</th>
     </tr>
-    <tr v-for="place in skin.places" :key="place.name">
-      <th>{{ place.name }}</th>
+    <tr v-for="card in skin.places" :key="card.name">
+      <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
-          :note="getNote(player, place)"
-          :show-dropdown="isShownDropdown(player, place)"
-          @update="setNote(player, place, $event)"
-          @toggle-dropdown="toggleDropdown(player, place)"
+          :note="getNote(player, card)"
+          :showDropdown="isShownDropdown(player, card)"
+          :onUpdate="note => setNote(player, card, note)"
+          :toggleDropdown="() => toggleDropdown(player, card)"
         />
       </td>
     </tr>
@@ -80,6 +80,12 @@ export default defineComponent({
       type: Object as PropType<Dict<Dict<string>>>,
       required: true,
     },
+    setNote: {
+      type: Function as PropType<
+        (player: Player, card: Card, note: string) => void
+      >,
+      required: true,
+    },
   },
   setup() {
     const shownNoteDropdown = ref('');
@@ -95,9 +101,6 @@ export default defineComponent({
   methods: {
     getNote(player: Player, card: Card): string {
       return this.notes[player.role.name]?.[card.name] ?? '';
-    },
-    setNote(player: Player, card: Card, note: string) {
-      this.$emit('set-note', player, card, note);
     },
     toggleDropdown(player: Player, card: Card) {
       const noteKey = makeNoteKey(player, card);

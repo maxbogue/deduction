@@ -34,16 +34,21 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    onUpdate: {
+      type: Function as PropType<(note: string) => void>,
+      required: true,
+    },
+    toggleDropdown: {
+      type: Function as PropType<() => void>,
+      required: true,
+    },
   },
   data: () => ({
     marks: 'x•?123456',
   }),
   methods: {
     toggleMark(mark: string) {
-      this.$emit('update', mark);
-    },
-    toggleDropdown() {
-      this.$emit('toggle-dropdown');
+      this.onUpdate(mark);
     },
   },
 });

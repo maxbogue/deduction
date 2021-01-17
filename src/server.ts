@@ -29,7 +29,7 @@ app.ws('/api/:gameId/', (ws: WebSocket, req: Request) => {
   game.addConnection(new WebSocketConnection(game, ws));
 });
 
-app.get('*', (req, res) => {
+app.get('*', (_, res) => {
   res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 

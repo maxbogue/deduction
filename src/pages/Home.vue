@@ -1,6 +1,6 @@
 <template>
   <form @submit="onSubmit">
-    <input type="text" v-model="gameId">
+    <input v-model="gameId" type="text" />
     <button type="submit">Submit</button>
   </form>
 </template>
@@ -9,6 +9,7 @@
 import { defineComponent } from 'vue';
 
 export default defineComponent({
+  name: 'Home',
   data: () => ({
     gameId: 'foo',
   }),

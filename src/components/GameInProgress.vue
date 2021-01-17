@@ -15,12 +15,12 @@
         {{ playerToString(player) }}
       </div>
     </div>
-    <div v-if="currentPlayer">
+    <div v-if="state.playerSecrets">
       <h2>Hand</h2>
       <div class="game-in-progress__hand">
         <Card
           v-for="card in state.playerSecrets.hand"
-          :key="card"
+          :key="card.name"
           :card="card"
         />
       </div>
@@ -29,35 +29,35 @@
         :skin="state.skin"
         :players="state.players"
         :notes="state.playerSecrets.notes"
-        @set-note="setNote"
+        :setNote="setNote"
       />
       <h2>Accusation</h2>
       <div class="game-in-progress__cards">
         <div class="game-in-progress__card-column">
           <Card
             v-for="role in suspectRoles"
-            :key="role"
+            :key="role.name"
             :card="role"
-            :selected="selectedRole && role.name === selectedRole.name"
-            :on-click="selectRole"
+            :selected="!!selectedRole && role.name === selectedRole.name"
+            :onClick="() => selectRole(role)"
           />
         </div>
         <div class="game-in-progress__card-column">
           <Card
             v-for="tool in suspectTools"
-            :key="tool"
+            :key="tool.name"
             :card="tool"
-            :selected="selectedTool && tool.name === selectedTool.name"
-            :on-click="selectTool"
+            :selected="!!selectedTool && tool.name === selectedTool.name"
+            :onClick="() => selectTool(tool)"
           />
         </div>
         <div class="game-in-progress__card-column">
           <Card
             v-for="place in suspectPlaces"
-            :key="place"
+            :key="place.name"
             :card="place"
-            :selected="selectedPlace && place.name === selectedPlace.name"
-            :on-click="selectPlace"
+            :selected="!!selectedPlace && place.name === selectedPlace.name"
+            :onClick="() => selectPlace(place)"
           />
         </div>
       </div>

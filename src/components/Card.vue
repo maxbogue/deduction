@@ -22,7 +22,7 @@ export default defineComponent({
       default: false,
     },
     onClick: {
-      type: Function as PropType<(card: Card) => void>,
+      type: Function as PropType<() => void>,
       default: null,
     },
   },
@@ -36,7 +36,7 @@ export default defineComponent({
   },
   methods: {
     handleClick() {
-      this.onClick?.(this.card);
+      this.onClick?.();
     },
   },
 });
