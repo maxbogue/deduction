@@ -15,69 +15,73 @@
         {{ playerToString(player) }}
       </div>
     </div>
-    <div v-if="state.playerSecrets">
-      <template v-if="state.turnState.status === TurnStatus.Suggest">
-        <template v-if="currentPlayer === turnPlayer">
-          <h2>Suggest</h2>
-          <SelectCrime :skin="state.skin" :onSelect="suggest" />
-        </template>
-        <div v-else>
-          Waiting for {{ playerToString(turnPlayer) }} to make a suggestion.
-        </div>
+    <h2>Turn: {{ playerToString(turnPlayer) }}</h2>
+    <template v-if="turn.status === TurnStatus.Suggest">
+      <template v-if="currentPlayer === turnPlayer">
+        <h2>Suggest</h2>
+        <SelectCrime :skin="state.skin" :onSelect="suggest" />
       </template>
-      <template v-else-if="state.turnState.status === TurnStatus.Share">
-        <template v-if="currentPlayer === sharePlayer">
-          <div>Choose a card to share:</div>
-          <div class="game-in-progress__hand">
-            <Card
-              v-for="card in shareableCards"
-              :key="card.name"
-              :card="card"
-              :onClick="() => shareCard(card)"
-            />
-          </div>
-        </template>
-        <div v-else-if="sharePlayer">
-          {{ playerToString(turnPlayer) }} suggests
-          {{ crimeToString(state.turnState.suggestion) }}. Waiting for
-          {{ playerToString(sharePlayer) }} to share a card.
-        </div>
-      </template>
-      <template v-else-if="state.turnState.status === TurnStatus.Record">
-        <div v-if="currentPlayer === turnPlayer">
-          <div>
-            You suggested
-            {{ crimeToString(state.turnState.suggestion) }}.
-          </div>
-          <div v-if="state.turnState.sharedCard && sharePlayer">
-            <span>{{ playerToString(sharePlayer) }} shared</span>
-            <Card :card="state.turnState.sharedCard" />
-          </div>
-          <div v-else>No player had a matching card to share.</div>
-          <button class="game-in-progress__accuse-button" @click="endTurn">
-            End Turn
-          </button>
-          <h2>Accusation</h2>
-          <SelectCrime
-            :skin="state.skin"
-            :excludeCards="hand"
-            :onSelect="accuse"
+      <div v-else>
+        Waiting for {{ playerToString(turnPlayer) }} to make a suggestion.
+      </div>
+    </template>
+    <template v-else-if="turn.status === TurnStatus.Share">
+      <template v-if="currentPlayer === sharePlayer">
+        <div>Choose a card to share:</div>
+        <div class="game-in-progress__hand">
+          <Card
+            v-for="card in shareableCards"
+            :key="card.name"
+            :card="card"
+            :onClick="() => shareCard(card)"
           />
         </div>
-        <div v-else>
-          <div>
-            {{ playerToString(turnPlayer) }} suggested
-            {{ crimeToString(state.turnState.suggestion) }}.
-          </div>
-          <div v-if="sharePlayer && sharePlayer !== turnPlayer">
-            {{ playerToString(sharePlayer) }} shared a card.
-          </div>
-          <div v-else>No player had a matching card to share.</div>
-          <div>
-            Waiting for {{ playerToString(turnPlayer) }} to end their turn.
-          </div>
-        </div>
       </template>
+      <div v-else-if="sharePlayer">
+        {{ playerToString(turnPlayer) }} suggests
+        {{ crimeToString(turn.suggestion) }}. Waiting for
+        {{ playerToString(sharePlayer) }} to share a card.
+      </div>
+    </template>
+    <template v-else-if="turn.status === TurnStatus.Record">
+      <div v-if="currentPlayer === turnPlayer">
+        <div>
+          You suggested
+          {{ crimeToString(turn.suggestion) }}.
+        </div>
+        <div v-if="sharedCard && sharePlayer">
+          <span>{{ playerToString(sharePlayer) }} shared</span>
+          <Card :card="sharedCard" />
+        </div>
+        <div v-else>No player had a matching card to share.</div>
+        <button class="game-in-progress__accuse-button" @click="endTurn">
+          End Turn
+        </button>
+        <h2>Accusation</h2>
+        <SelectCrime
+          :skin="state.skin"
+          :excludeCards="hand"
+          :onSelect="accuse"
+        />
+      </div>
+      <div v-else>
+        <div>
+          {{ playerToString(turnPlayer) }} suggested
+          {{ crimeToString(turn.suggestion) }}.
+        </div>
+        <div v-if="sharedCard">
+          <span>You shared</span> <Card :card="sharedCard" />
+        </div>
+        <div v-else-if="sharePlayer && sharePlayer !== turnPlayer">
+          {{ playerToString(sharePlayer) }} shared a card.
+        </div>
+        <div v-else>No player had a matching card to share.</div>
+        <div>
+          Waiting for {{ playerToString(turnPlayer) }} to end their turn.
+        </div>
+      </div>
+    </template>
+    <div v-if="state.playerSecrets">
       <h2>Hand</h2>
       <div class="game-in-progress__hand">
         <Card
@@ -104,7 +108,14 @@ import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import SelectCrime from '@/components/SelectCrime.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { Card, Crime, InProgressState, Player, TurnStatus } from '@/state';
+import {
+  Card,
+  Crime,
+  InProgressState,
+  Player,
+  TurnState,
+  TurnStatus,
+} from '@/state';
 import { Dict, Maybe } from '@/types';
 
 interface InProgressData {
@@ -134,6 +145,9 @@ export default defineComponent({
     notes: {},
   }),
   computed: {
+    turn(): TurnState {
+      return this.state.turnState;
+    },
     currentPlayer(): Maybe<Player> {
       if (!this.state.playerSecrets) {
         return null;
@@ -144,10 +158,15 @@ export default defineComponent({
       return this.state.players[this.state.turnIndex];
     },
     sharePlayer(): Maybe<Player> {
-      if (this.state.turnState.status === TurnStatus.Suggest) {
+      if (this.turn.status === TurnStatus.Suggest) {
         return null;
       }
-      return this.state.players[this.state.turnState.sharePlayerIndex];
+      return this.state.players[this.turn.sharePlayerIndex];
+    },
+    sharedCard(): Maybe<Card> {
+      return this.turn.status === TurnStatus.Record
+        ? this.turn.sharedCard
+        : null;
     },
     isDed(): boolean {
       return Boolean(this.currentPlayer?.failedAccusation);
@@ -161,10 +180,10 @@ export default defineComponent({
       return this.state.playerSecrets?.hand ?? [];
     },
     suggestedCards(): Card[] {
-      if (this.state.turnState.status !== TurnStatus.Share) {
+      if (this.turn.status !== TurnStatus.Share) {
         return [];
       }
-      return Object.values(this.state.turnState.suggestion);
+      return Object.values(this.turn.suggestion);
     },
     shareableCards(): Card[] {
       return this.hand.filter(h =>

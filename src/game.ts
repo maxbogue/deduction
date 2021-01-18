@@ -350,12 +350,12 @@ class GameInProgress extends GamePostSetup {
     return Boolean(role && role.name === turnPlayer.role.name);
   }
 
-  private isSharingPlayer(role: Maybe<RoleCard>): boolean {
-    if (this.turnState.status !== TurnStatus.Share) {
+  private isSharePlayer(role: Maybe<RoleCard>): boolean {
+    if (this.turnState.status === TurnStatus.Suggest) {
       return false;
     }
-    const sharingPlayer = this.players[this.turnState.sharePlayerIndex];
-    return Boolean(role && role.name === sharingPlayer.role.name);
+    const sharePlayer = this.players[this.turnState.sharePlayerIndex];
+    return Boolean(role && role.name === sharePlayer.role.name);
   }
 
   private suggest(suggestion: Crime) {
@@ -459,7 +459,7 @@ class GameInProgress extends GamePostSetup {
         }
         break;
       case ConnectionEvents.ShareCard:
-        if (this.isSharingPlayer(conn.role)) {
+        if (this.isSharePlayer(conn.role)) {
           this.shareCard(event.sharedCard);
         }
         break;
@@ -503,10 +503,8 @@ class GameInProgress extends GamePostSetup {
   }
 
   private getTurnStateForRole(role: Maybe<RoleCard>): TurnState {
-    if (
-      !this.isTurnPlayer(role) &&
-      this.turnState.status === TurnStatus.Record
-    ) {
+    const showSharedCard = this.isTurnPlayer(role) || this.isSharePlayer(role);
+    if (this.turnState.status === TurnStatus.Record && !showSharedCard) {
       return {
         ...this.turnState,
         // Hide the shared card from other players.
