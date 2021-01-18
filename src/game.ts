@@ -1,5 +1,6 @@
 import isEqual from 'lodash/fp/isEqual';
 
+import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { SKINS } from '@/skins';
 import {
   Card,
@@ -16,39 +17,29 @@ import { Dict, Maybe } from '@/types';
 import { pickMany, pickOne, repeat } from '@/utils';
 
 export interface ConnectionObserver {
-  setConnectionRole: (conn: Connection, role: RoleCard) => void;
   removeConnection: (conn: Connection) => void;
-  setSkin: (skinName: string) => void;
-  start: () => void;
-  setNote: (
-    role: RoleCard,
-    player: Player,
-    card: Card,
-    marks: string[]
-  ) => void;
-  accuse: (role: RoleCard, accusation: Crime) => void;
-  updateState: () => void;
+  processEvent: (conn: Connection, event: ConnectionEvent) => void;
 }
 
 export interface Connection {
-  getRole: () => Maybe<RoleCard>;
-  clearRole: () => void;
-  setRole: (role: RoleCard) => void;
-  isReady: () => boolean;
+  name: string;
+  role: Maybe<RoleCard>;
+  isReady: boolean;
   getDescription: () => ConnectionDescription;
   sendState: (gameState: GameState) => void;
 }
 
-export class Game implements ConnectionObserver {
+interface GameObserver {
+  setGame: (game: Game) => void;
+}
+
+export class Room implements ConnectionObserver, GameObserver {
   private readonly connections: Connection[] = [];
-  private roleToConnection: Dict<Connection> = {};
-  private readonly roleToPlayer: Dict<Player> = {};
-  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
-  private readonly players: Player[] = [];
-  private status: GameStatus = GameStatus.Setup;
-  private skin: Skin = SKINS.classic;
-  private solution: Maybe<Crime> = null;
-  private winner = -1;
+  private game: Game;
+
+  constructor() {
+    this.game = new GameSetup(this, this.connections);
+  }
 
   addConnection(conn: Connection): void {
     this.connections.push(conn);
@@ -58,18 +49,57 @@ export class Game implements ConnectionObserver {
   removeConnection(conn: Connection): void {
     const i = this.connections.indexOf(conn);
     this.connections.splice(i, 1);
-    const role = conn.getRole();
-    if (role) {
-      const player = this.roleToPlayer[role.name];
-      if (player) {
-        player.isConnected = false;
-      }
-      delete this.roleToConnection[role.name];
-    }
+    this.game.removeConnection(conn);
     this.updateState();
   }
 
-  setConnectionRole(conn: Connection, role: RoleCard): void {
+  processEvent(conn: Connection, event: ConnectionEvent): void {
+    console.log(event);
+    this.game.processEvent(conn, event);
+    this.updateState();
+  }
+
+  setGame(game: Game): void {
+    this.game = game;
+    this.updateState();
+  }
+
+  updateState(): void {
+    this.connections.forEach((conn, i) => {
+      conn.sendState(this.game.getStateForConnection(conn, i));
+    });
+  }
+}
+
+abstract class Game {
+  protected readonly observer: GameObserver;
+
+  constructor(observer: GameObserver) {
+    this.observer = observer;
+  }
+
+  abstract removeConnection(conn: Connection): void;
+  abstract getStateForConnection(conn: Connection, i: number): GameState;
+  abstract processEvent(conn: Connection, event: ConnectionEvent): void;
+}
+
+class GameSetup extends Game {
+  private readonly connections: Connection[];
+  private roleToConnection: Dict<Connection> = {};
+  private skin: Skin = SKINS.classic;
+
+  constructor(observer: GameObserver, connections: Connection[]) {
+    super(observer);
+    this.connections = connections;
+  }
+
+  removeConnection(conn: Connection): void {
+    if (conn.role) {
+      delete this.roleToConnection[conn.role.name];
+    }
+  }
+
+  private setConnectionRole(conn: Connection, role: RoleCard): void {
     if (!this.skin.roles.find(isEqual(role))) {
       console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
       return;
@@ -79,40 +109,17 @@ export class Game implements ConnectionObserver {
       return;
     }
 
-    if (this.status === GameStatus.Setup) {
-      const oldRole = conn.getRole();
-      if (oldRole) {
-        delete this.roleToConnection[oldRole.name];
-      }
-
-      this.roleToConnection[role.name] = conn;
-      conn.setRole(role);
-    } else if (this.status === GameStatus.InProgress) {
-      const oldRole = conn.getRole();
-      if (oldRole) {
-        // Can't switch roles mid-game.
-        return;
-      }
-
-      const player = this.roleToPlayer[role.name];
-      if (!player || player.isConnected) {
-        return;
-      }
-
-      this.roleToConnection[role.name] = conn;
-      conn.setRole(role);
-      player.isConnected = true;
+    if (conn.role) {
+      delete this.roleToConnection[conn.role.name];
     }
+
+    this.roleToConnection[role.name] = conn;
+    conn.role = role;
   }
 
-  setSkin(skinName: string): void {
+  private setSkin(skinName: string): void {
     if (!SKINS[skinName]) {
       console.log(`Invalid skin ${skinName} for game.`);
-      return;
-    }
-
-    if (this.status !== GameStatus.Setup) {
-      console.log('Too late to change skin. Game has begun!');
       return;
     }
 
@@ -126,25 +133,20 @@ export class Game implements ConnectionObserver {
     }
   }
 
-  resetRoles(): void {
-    if (this.status !== GameStatus.Setup) {
-      console.log('Too late to reset roles! Game has begun!');
-      // option to end game and return to setup state?
-      return;
-    }
-
-    this.connections.forEach(conn => {
-      conn.clearRole();
+  private resetRoles(): void {
+    Object.values(this.roleToConnection).forEach(conn => {
+      conn.role = null;
+      conn.isReady = false;
     });
     this.roleToConnection = {};
   }
 
-  dealCards(numHands: number): Card[][] {
+  private dealCards(numHands: number) {
     const roles = this.skin.roles.slice();
     const tools = this.skin.tools.slice();
     const places = this.skin.places.slice();
 
-    this.solution = {
+    const solution = {
       role: pickOne(roles),
       tool: pickOne(tools),
       place: pickOne(places),
@@ -157,45 +159,146 @@ export class Game implements ConnectionObserver {
     const count = allCards.length;
     const cardsPerHand = Math.floor(count / numHands);
     const getsExtra = count % numHands;
-    return repeat(
+    const hands = repeat(
       (i: number) =>
         pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand),
       numHands
     );
+
+    return { solution, hands };
   }
 
-  start(): void {
-    if (!this.connections.every(c => !c.getRole() || c.isReady())) {
+  private start(): void {
+    const playerConnections = Object.values(this.roleToConnection);
+    if (!playerConnections.every(c => c.isReady)) {
       return;
     }
-    const playerConnections = this.connections.filter(c => c.getRole());
-    const allHands = this.dealCards(playerConnections.length);
 
-    playerConnections.forEach((conn, i) => {
-      const { role, name } = conn.getDescription();
-      if (!role) {
-        return;
+    const { solution, hands } = this.dealCards(playerConnections.length);
+
+    const players = playerConnections.map(
+      (conn: Connection): Player => {
+        const { role, name } = conn.getDescription();
+        if (!role) {
+          throw new TypeError('Role must be set.');
+        }
+        return { role, name, isConnected: true, failedAccusation: null };
       }
-      const player = { role, name, isConnected: true, failedAccusation: null };
-      this.players.push(player);
-      this.roleToPlayer[role.name] = player;
-      this.roleToPlayerSecrets[role.name] = {
+    );
+
+    const game = new GameInProgress(
+      this.observer,
+      this.skin,
+      players,
+      hands,
+      solution
+    );
+    this.observer.setGame(game);
+  }
+
+  processEvent(conn: Connection, event: ConnectionEvent) {
+    switch (event.type) {
+      case ConnectionEvents.SetRole:
+        this.setConnectionRole(conn, event.data);
+        break;
+      case ConnectionEvents.SetName:
+        conn.name = event.data;
+        break;
+      case ConnectionEvents.SetReady:
+        conn.isReady = event.data;
+        break;
+      case ConnectionEvents.SetSkin:
+        this.setSkin(event.data);
+        break;
+      case ConnectionEvents.Start:
+        this.start();
+        break;
+      default:
+        console.error(`Invalid event for ${GameStatus.Setup}: ${event}`);
+    }
+  }
+
+  getStateForConnection(_: Connection, i: number): GameState {
+    return {
+      status: GameStatus.Setup,
+      skin: this.skin,
+      connections: this.connections.map(c => c.getDescription()),
+      connectionIndex: i,
+    };
+  }
+}
+
+class GameInProgress extends Game {
+  private readonly skin: Skin;
+  private readonly players: Player[];
+  private readonly solution: Crime;
+  private readonly roleToPlayer: Dict<Player> = {};
+  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
+
+  constructor(
+    observer: GameObserver,
+    skin: Skin,
+    players: Player[],
+    hands: Card[][],
+    solution: Crime
+  ) {
+    super(observer);
+
+    this.skin = skin;
+    this.players = players;
+    this.solution = solution;
+
+    this.players.forEach((player, i) => {
+      this.roleToPlayer[player.role.name] = player;
+      this.roleToPlayerSecrets[player.role.name] = {
         index: i,
-        hand: allHands[i],
+        hand: hands[i],
         notes: {},
       };
     });
-    this.status = GameStatus.InProgress;
   }
 
-  setNote(role: RoleCard, other: Player, card: Card, marks: string[]): void {
+  removeConnection(conn: Connection): void {
+    if (conn.role) {
+      const player = this.roleToPlayer[conn.role.name];
+      if (player) {
+        player.isConnected = false;
+      }
+    }
+  }
+
+  private setConnectionRole(conn: Connection, role: RoleCard): void {
+    if (!this.skin.roles.find(isEqual(role))) {
+      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
+      return;
+    }
+
+    if (conn.role) {
+      // Can't switch roles mid-game.
+      return;
+    }
+
+    const player = this.roleToPlayer[role.name];
+    if (!player || player.isConnected) {
+      return;
+    }
+
+    conn.role = role;
+    player.isConnected = true;
+  }
+
+  private setNote(
+    role: RoleCard,
+    other: Player,
+    card: Card,
+    marks: string[]
+  ): void {
     const playerSecrets = this.roleToPlayerSecrets[role.name];
     const otherRole = other.role.name;
     if (!playerSecrets.notes[otherRole]) {
       playerSecrets.notes[otherRole] = {};
     }
     playerSecrets.notes[otherRole][card.name] = marks;
-    this.updateState();
   }
 
   validateCrimeForCurrentSkin(crime: Crime): void {
@@ -217,10 +320,6 @@ export class Game implements ConnectionObserver {
   }
 
   accuse(role: RoleCard, accusation: Crime): void {
-    if (this.status !== GameStatus.InProgress) {
-      throw new Error('Accusations can only be made once game has started!');
-    }
-
     // check that our accusation has the correct format
     this.validateCrimeForCurrentSkin(accusation);
 
@@ -229,69 +328,169 @@ export class Game implements ConnectionObserver {
       return;
     }
 
-    if (isEqual(accusation, this.solution)) {
-      this.winner = this.players.indexOf(player);
-      this.status = GameStatus.GameOver;
-    } else {
+    if (!isEqual(accusation, this.solution)) {
       player.failedAccusation = accusation;
+      return;
     }
 
-    this.updateState();
+    const winner = this.players.indexOf(player);
+    const playerSecrets = this.players.map(
+      p => this.roleToPlayerSecrets[p.role.name]
+    );
+
+    const game = new GameOver(
+      this.observer,
+      this.skin,
+      this.players,
+      playerSecrets,
+      this.solution,
+      winner
+    );
+    this.observer.setGame(game);
   }
 
-  getState(): GameState {
-    switch (this.status) {
-      case GameStatus.Setup:
-        return {
-          status: this.status,
-          skin: this.skin,
-          connections: this.connections.map(c => c.getDescription()),
-          connectionIndex: 0,
-        };
-      case GameStatus.InProgress:
-        return {
-          status: this.status,
-          skin: this.skin,
-          players: this.players,
-          solution: this.solution,
-          playerSecrets: null,
-        };
-      case GameStatus.GameOver:
-        return {
-          status: this.status,
-          skin: this.skin,
-          players: this.players,
-          winner: this.winner,
-          solution: this.solution as Crime,
-          playerSecrets: null,
-        };
-    }
-  }
-
-  updateState(): void {
-    const state = this.getState();
-    this.connections.forEach((conn, i) => {
-      const role = conn.getRole();
-      switch (state.status) {
-        case GameStatus.Setup:
-          conn.sendState({
-            ...state,
-            connectionIndex: i,
-          });
-          break;
-        case GameStatus.InProgress:
-        case GameStatus.GameOver: {
-          if (!role) {
-            conn.sendState(state);
-            return;
-          }
-          conn.sendState({
-            ...state,
-            playerSecrets: this.roleToPlayerSecrets[role.name],
-          });
+  processEvent(conn: Connection, event: ConnectionEvent): void {
+    switch (event.type) {
+      case ConnectionEvents.SetRole:
+        this.setConnectionRole(conn, event.data);
+        break;
+      case ConnectionEvents.SetName:
+        conn.name = event.data;
+        break;
+      case ConnectionEvents.SetNote:
+        if (conn.role) {
+          this.setNote(conn.role, event.player, event.card, event.marks);
+        }
+        break;
+      case ConnectionEvents.Accuse:
+        if (!conn.role) {
           break;
         }
+        this.validateCrime(event.data);
+        this.accuse(conn.role, event.data);
+        break;
+      default:
+        console.error(`Invalid event for ${GameStatus.InProgress}: ${event}`);
+    }
+  }
+
+  private validateCrime(crime: Crime) {
+    let errors = '';
+    if (!crime.role) {
+      errors += 'Missing suspect. ';
+    }
+    if (!crime.tool) {
+      errors += 'Missing tool. ';
+    }
+    if (!crime.place) {
+      errors += 'Missing place. ';
+    }
+
+    const foundKeys = Object.keys(crime).length;
+    if (foundKeys !== 3) {
+      errors += `Found ${foundKeys}. Expected 3.`;
+    }
+
+    if (errors) {
+      throw new Error(errors);
+    }
+  }
+
+  getStateForConnection(conn: Connection): GameState {
+    return {
+      status: GameStatus.InProgress,
+      skin: this.skin,
+      players: this.players,
+      solution: this.solution,
+      playerSecrets: conn.role
+        ? this.roleToPlayerSecrets[conn.role.name]
+        : null,
+    };
+  }
+}
+
+class GameOver extends Game {
+  private readonly roleToPlayer: Dict<Player> = {};
+  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
+  private readonly players: Player[] = [];
+  private skin: Skin;
+  private solution: Crime;
+  private winner: number;
+
+  constructor(
+    observer: GameObserver,
+    skin: Skin,
+    players: Player[],
+    playerSecrets: PlayerSecrets[],
+    solution: Crime,
+    winner: number
+  ) {
+    super(observer);
+
+    this.skin = skin;
+    this.players = players;
+    this.solution = solution;
+    this.winner = winner;
+
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      this.roleToPlayer[player.role.name] = players[i];
+      this.roleToPlayerSecrets[player.role.name] = playerSecrets[i];
+    }
+  }
+
+  removeConnection(conn: Connection): void {
+    if (conn.role) {
+      const player = this.roleToPlayer[conn.role.name];
+      if (player) {
+        player.isConnected = false;
       }
-    });
+    }
+  }
+
+  private setConnectionRole(conn: Connection, role: RoleCard): void {
+    if (!this.skin.roles.find(isEqual(role))) {
+      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
+      return;
+    }
+
+    if (conn.role) {
+      // Can't switch roles mid-game.
+      return;
+    }
+
+    const player = this.roleToPlayer[role.name];
+    if (!player || player.isConnected) {
+      return;
+    }
+
+    conn.role = role;
+    player.isConnected = true;
+  }
+
+  processEvent(conn: Connection, event: ConnectionEvent): void {
+    switch (event.type) {
+      case ConnectionEvents.SetRole:
+        this.setConnectionRole(conn, event.data);
+        break;
+      case ConnectionEvents.SetName:
+        conn.name = event.data;
+        break;
+      default:
+        console.log('Event not found in processEvent', event);
+    }
+  }
+
+  getStateForConnection(conn: Connection): GameState {
+    return {
+      status: GameStatus.GameOver,
+      skin: this.skin,
+      players: this.players,
+      winner: this.winner,
+      solution: this.solution,
+      playerSecrets: conn.role
+        ? this.roleToPlayerSecrets[conn.role.name]
+        : null,
+    };
   }
 }

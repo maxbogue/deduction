@@ -245,7 +245,10 @@ module.exports = {
     // Upgrade to error.
     '@typescript-eslint/no-unused-vars': 'error',
     // Disallow using variables before they're declared.
-    '@typescript-eslint/no-use-before-define': ['error', { functions: false }],
+    '@typescript-eslint/no-use-before-define': [
+      'error',
+      { classes: false, functions: false },
+    ],
     // Disallow constructors that don't do anything.
     '@typescript-eslint/no-useless-constructor': 'error',
   },

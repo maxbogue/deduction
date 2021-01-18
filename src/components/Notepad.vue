@@ -90,7 +90,7 @@ export default defineComponent({
   setup() {
     const shownNoteDropdown = ref('');
 
-    useEventListener(document, () => {
+    useEventListener(document, 'click', () => {
       shownNoteDropdown.value = '';
     });
 
