@@ -3,7 +3,7 @@ import expressWs from 'express-ws';
 import path from 'path';
 import WebSocket from 'ws';
 
-import { Game } from './game';
+import { Room } from './game';
 import { Dict } from './types';
 import { WebSocketConnection } from './websocket';
 
@@ -18,15 +18,15 @@ app.get('/js/:filename', (req: Request, res: Response) => {
 //app.use('/robots.txt', express.static('static/robots.txt'));
 app.use('/static', express.static('static'));
 
-const gamesById: Dict<Game> = {};
+const roomsById: Dict<Room> = {};
 
-app.ws('/api/:gameId/', (ws: WebSocket, req: Request) => {
-  const { gameId } = req.params;
-  if (!gamesById[gameId]) {
-    gamesById[gameId] = new Game();
+app.ws('/api/:roomId/', (ws: WebSocket, req: Request) => {
+  const { roomId } = req.params;
+  if (!roomsById[roomId]) {
+    roomsById[roomId] = new Room();
   }
-  const game = gamesById[gameId];
-  game.addConnection(new WebSocketConnection(game, ws));
+  const room = roomsById[roomId];
+  room.addConnection(new WebSocketConnection(room, ws));
 });
 
 app.get('*', (_, res) => {
