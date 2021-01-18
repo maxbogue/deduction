@@ -354,7 +354,7 @@ class GameInProgress extends GamePostSetup {
     if (this.turnState.status !== TurnStatus.Share) {
       return false;
     }
-    const sharingPlayer = this.players[this.turnState.sharingPlayerIndex];
+    const sharingPlayer = this.players[this.turnState.sharePlayerIndex];
     return Boolean(role && role.name === sharingPlayer.role.name);
   }
 
@@ -373,14 +373,15 @@ class GameInProgress extends GamePostSetup {
         this.turnState = {
           status: TurnStatus.Share,
           suggestion,
-          sharingPlayerIndex: playerIndex,
+          sharePlayerIndex: playerIndex,
         };
         return;
       }
     }
     this.turnState = {
       status: TurnStatus.Record,
-      sharedPlayerIndex: this.turnIndex,
+      suggestion,
+      sharePlayerIndex: this.turnIndex,
       sharedCard: null,
     };
   }
@@ -394,7 +395,8 @@ class GameInProgress extends GamePostSetup {
 
     this.turnState = {
       status: TurnStatus.Record,
-      sharedPlayerIndex: this.turnState.sharingPlayerIndex,
+      suggestion: this.turnState.suggestion,
+      sharePlayerIndex: this.turnState.sharePlayerIndex,
       sharedCard: card,
     };
   }

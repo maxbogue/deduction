@@ -19,47 +19,14 @@
       <template v-if="state.turnState.status === TurnStatus.Suggest">
         <template v-if="currentPlayer === turnPlayer">
           <h2>Suggest</h2>
-          <div class="game-in-progress__cards">
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="role in state.skin.roles"
-                :key="role.name"
-                :card="role"
-                :selected="!!selectedRole && role.name === selectedRole.name"
-                :onClick="() => selectRole(role)"
-              />
-            </div>
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="tool in state.skin.tools"
-                :key="tool.name"
-                :card="tool"
-                :selected="!!selectedTool && tool.name === selectedTool.name"
-                :onClick="() => selectTool(tool)"
-              />
-            </div>
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="place in state.skin.places"
-                :key="place.name"
-                :card="place"
-                :selected="!!selectedPlace && place.name === selectedPlace.name"
-                :onClick="() => selectPlace(place)"
-              />
-            </div>
-          </div>
-          <div v-if="readyToAccuse" class="game-in-progress__accuse">
-            <button class="game-in-progress__accuse-button" @click="suggest">
-              Suggest
-            </button>
-          </div>
+          <SelectCrime :skin="state.skin" :onSelect="suggest" />
         </template>
         <div v-else>
           Waiting for {{ playerToString(turnPlayer) }} to make a suggestion.
         </div>
       </template>
       <template v-else-if="state.turnState.status === TurnStatus.Share">
-        <template v-if="currentPlayer === sharingPlayer">
+        <template v-if="currentPlayer === sharePlayer">
           <div>Choose a card to share:</div>
           <div class="game-in-progress__hand">
             <Card
@@ -70,53 +37,45 @@
             />
           </div>
         </template>
-        <div v-else-if="sharingPlayer">
-          Waiting for {{ playerToString(sharingPlayer) }} to share a card.
+        <div v-else-if="sharePlayer">
+          {{ playerToString(turnPlayer) }} suggests
+          {{ crimeToString(state.turnState.suggestion) }}. Waiting for
+          {{ playerToString(sharePlayer) }} to share a card.
         </div>
       </template>
       <template v-else-if="state.turnState.status === TurnStatus.Record">
-        <template v-if="currentPlayer === turnPlayer">
+        <div v-if="currentPlayer === turnPlayer">
+          <div>
+            You suggested
+            {{ crimeToString(state.turnState.suggestion) }}.
+          </div>
+          <div v-if="state.turnState.sharedCard && sharePlayer">
+            <span>{{ playerToString(sharePlayer) }} shared</span>
+            <Card :card="state.turnState.sharedCard" />
+          </div>
+          <div v-else>No player had a matching card to share.</div>
           <button class="game-in-progress__accuse-button" @click="endTurn">
             End Turn
           </button>
           <h2>Accusation</h2>
-          <div class="game-in-progress__cards">
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="role in suspectRoles"
-                :key="role.name"
-                :card="role"
-                :selected="!!selectedRole && role.name === selectedRole.name"
-                :onClick="() => selectRole(role)"
-              />
-            </div>
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="tool in suspectTools"
-                :key="tool.name"
-                :card="tool"
-                :selected="!!selectedTool && tool.name === selectedTool.name"
-                :onClick="() => selectTool(tool)"
-              />
-            </div>
-            <div class="game-in-progress__card-column">
-              <Card
-                v-for="place in suspectPlaces"
-                :key="place.name"
-                :card="place"
-                :selected="!!selectedPlace && place.name === selectedPlace.name"
-                :onClick="() => selectPlace(place)"
-              />
-            </div>
-          </div>
-          <div v-if="readyToAccuse" class="game-in-progress__accuse">
-            <button class="game-in-progress__accuse-button" @click="accuse">
-              Accuse
-            </button>
-          </div>
-        </template>
+          <SelectCrime
+            :skin="state.skin"
+            :excludeCards="hand"
+            :onSelect="accuse"
+          />
+        </div>
         <div v-else>
-          Waiting for {{ playerToString(turnPlayer) }} to end their turn.
+          <div>
+            {{ playerToString(turnPlayer) }} suggested
+            {{ crimeToString(state.turnState.suggestion) }}.
+          </div>
+          <div v-if="sharePlayer && sharePlayer !== turnPlayer">
+            {{ playerToString(sharePlayer) }} shared a card.
+          </div>
+          <div v-else>No player had a matching card to share.</div>
+          <div>
+            Waiting for {{ playerToString(turnPlayer) }} to end their turn.
+          </div>
         </div>
       </template>
       <h2>Hand</h2>
@@ -139,29 +98,17 @@
 </template>
 
 <script lang="ts">
-import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
+import SelectCrime from '@/components/SelectCrime.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import {
-  Card,
-  Crime,
-  InProgressState,
-  PlaceCard,
-  Player,
-  RoleCard,
-  ToolCard,
-  TurnStatus,
-} from '@/state';
+import { Card, Crime, InProgressState, Player, TurnStatus } from '@/state';
 import { Dict, Maybe } from '@/types';
 
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
-  selectedRole: Maybe<RoleCard>;
-  selectedTool: Maybe<ToolCard>;
-  selectedPlace: Maybe<PlaceCard>;
   notes: Dict<Dict<string>>;
 }
 
@@ -170,6 +117,7 @@ export default defineComponent({
   components: {
     Card: CardComponent,
     Notepad,
+    SelectCrime,
   },
   props: {
     state: {
@@ -183,9 +131,6 @@ export default defineComponent({
   },
   data: (): InProgressData => ({
     TurnStatus,
-    selectedRole: null,
-    selectedTool: null,
-    selectedPlace: null,
     notes: {},
   }),
   computed: {
@@ -198,11 +143,11 @@ export default defineComponent({
     turnPlayer(): Player {
       return this.state.players[this.state.turnIndex];
     },
-    sharingPlayer(): Maybe<Player> {
-      if (this.state.turnState.status !== TurnStatus.Share) {
+    sharePlayer(): Maybe<Player> {
+      if (this.state.turnState.status === TurnStatus.Suggest) {
         return null;
       }
-      return this.state.players[this.state.turnState.sharingPlayerIndex];
+      return this.state.players[this.state.turnState.sharePlayerIndex];
     },
     isDed(): boolean {
       return Boolean(this.currentPlayer?.failedAccusation);
@@ -211,14 +156,6 @@ export default defineComponent({
       return this.currentPlayer
         ? this.playerToString(this.currentPlayer)
         : 'observing';
-    },
-    readyToAccuse(): boolean {
-      if (!this.currentPlayer || this.isDed) {
-        return false;
-      }
-      return Boolean(
-        this.selectedRole && this.selectedTool && this.selectedPlace
-      );
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
@@ -234,15 +171,6 @@ export default defineComponent({
         this.suggestedCards.find(c => c.name === h.name)
       );
     },
-    suspectRoles(): RoleCard[] {
-      return this.state.skin.roles.filter(x => !this.hand.find(isEqual(x)));
-    },
-    suspectTools(): ToolCard[] {
-      return this.state.skin.tools.filter(x => !this.hand.find(isEqual(x)));
-    },
-    suspectPlaces(): PlaceCard[] {
-      return this.state.skin.places.filter(x => !this.hand.find(isEqual(x)));
-    },
   },
   methods: {
     classesForPlayer(player: Player) {
@@ -253,26 +181,10 @@ export default defineComponent({
         ),
       };
     },
-    selectRole(role: RoleCard) {
-      this.selectedRole = isEqual(role, this.selectedRole) ? null : role;
-    },
-    selectTool(tool: ToolCard) {
-      this.selectedTool = isEqual(tool, this.selectedTool) ? null : tool;
-    },
-    selectPlace(place: PlaceCard) {
-      this.selectedPlace = isEqual(place, this.selectedPlace) ? null : place;
-    },
-    suggest() {
-      if (!this.selectedRole || !this.selectedTool || !this.selectedPlace) {
-        return;
-      }
+    suggest(suggestion: Crime) {
       this.send({
         type: ConnectionEvents.Suggest,
-        suggestion: {
-          role: this.selectedRole,
-          tool: this.selectedTool,
-          place: this.selectedPlace,
-        },
+        suggestion,
       });
     },
     shareCard(card: Card) {
@@ -284,23 +196,11 @@ export default defineComponent({
     endTurn() {
       this.send({ type: ConnectionEvents.EndTurn });
     },
-    accuse() {
-      if (!this.selectedRole || !this.selectedTool || !this.selectedPlace) {
-        return;
-      }
-      const crime: Crime = {
-        role: this.selectedRole,
-        tool: this.selectedTool,
-        place: this.selectedPlace,
-      };
+    accuse(crime: Crime) {
       this.send({
         type: ConnectionEvents.Accuse,
         data: crime,
       });
-    },
-    playerToString(player: Player): string {
-      const { role, name } = player;
-      return `${role.name} [${name}]`;
     },
     canReconnectAsPlayer(player: Player): boolean {
       return !this.currentPlayer && !player.isConnected;
@@ -318,6 +218,14 @@ export default defineComponent({
         card,
         marks,
       });
+    },
+    playerToString(player: Player): string {
+      const { role, name } = player;
+      return `${role.name} [${name}]`;
+    },
+    crimeToString(crime: Crime): string {
+      const { role, tool, place } = crime;
+      return `${role.name} in the ${place.name} with the ${tool.name}`;
     },
   },
 });
@@ -340,16 +248,6 @@ export default defineComponent({
     flex-wrap: wrap;
   }
 
-  &__cards {
-    display: flex;
-    justify-content: space-around;
-  }
-
-  &__card-column {
-    display: flex;
-    flex-direction: column;
-  }
-
   &__player {
     color: green;
 
@@ -361,15 +259,6 @@ export default defineComponent({
       color: blue;
       cursor: pointer;
     }
-  }
-
-  &__accuse {
-    display: flex;
-    justify-content: center;
-  }
-
-  &__accuse-button {
-    color: cornflowerblue;
   }
 }
 </style>

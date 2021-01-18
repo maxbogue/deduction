@@ -70,12 +70,13 @@ export interface TurnSuggestState {
 export interface TurnShareState {
   status: TurnStatus.Share;
   suggestion: Crime;
-  sharingPlayerIndex: number;
+  sharePlayerIndex: number;
 }
 
 export interface TurnRecordState {
   status: TurnStatus.Record;
-  sharedPlayerIndex: number;
+  suggestion: Crime;
+  sharePlayerIndex: number;
   sharedCard: Maybe<Card>;
 }
 
