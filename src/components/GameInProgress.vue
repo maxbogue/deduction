@@ -16,6 +16,109 @@
       </div>
     </div>
     <div v-if="state.playerSecrets">
+      <template v-if="state.turnState.status === TurnStatus.Suggest">
+        <template v-if="currentPlayer === turnPlayer">
+          <h2>Suggest</h2>
+          <div class="game-in-progress__cards">
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="role in state.skin.roles"
+                :key="role.name"
+                :card="role"
+                :selected="!!selectedRole && role.name === selectedRole.name"
+                :onClick="() => selectRole(role)"
+              />
+            </div>
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="tool in state.skin.tools"
+                :key="tool.name"
+                :card="tool"
+                :selected="!!selectedTool && tool.name === selectedTool.name"
+                :onClick="() => selectTool(tool)"
+              />
+            </div>
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="place in state.skin.places"
+                :key="place.name"
+                :card="place"
+                :selected="!!selectedPlace && place.name === selectedPlace.name"
+                :onClick="() => selectPlace(place)"
+              />
+            </div>
+          </div>
+          <div v-if="readyToAccuse" class="game-in-progress__accuse">
+            <button class="game-in-progress__accuse-button" @click="suggest">
+              Suggest
+            </button>
+          </div>
+        </template>
+        <div v-else>
+          Waiting for {{ playerToString(turnPlayer) }} to make a suggestion.
+        </div>
+      </template>
+      <template v-else-if="state.turnState.status === TurnStatus.Share">
+        <template v-if="currentPlayer === sharingPlayer">
+          <div>Choose a card to share:</div>
+          <div class="game-in-progress__hand">
+            <Card
+              v-for="card in shareableCards"
+              :key="card.name"
+              :card="card"
+              :onClick="() => shareCard(card)"
+            />
+          </div>
+        </template>
+        <div v-else-if="sharingPlayer">
+          Waiting for {{ playerToString(sharingPlayer) }} to share a card.
+        </div>
+      </template>
+      <template v-else-if="state.turnState.status === TurnStatus.Record">
+        <template v-if="currentPlayer === turnPlayer">
+          <button class="game-in-progress__accuse-button" @click="endTurn">
+            End Turn
+          </button>
+          <h2>Accusation</h2>
+          <div class="game-in-progress__cards">
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="role in suspectRoles"
+                :key="role.name"
+                :card="role"
+                :selected="!!selectedRole && role.name === selectedRole.name"
+                :onClick="() => selectRole(role)"
+              />
+            </div>
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="tool in suspectTools"
+                :key="tool.name"
+                :card="tool"
+                :selected="!!selectedTool && tool.name === selectedTool.name"
+                :onClick="() => selectTool(tool)"
+              />
+            </div>
+            <div class="game-in-progress__card-column">
+              <Card
+                v-for="place in suspectPlaces"
+                :key="place.name"
+                :card="place"
+                :selected="!!selectedPlace && place.name === selectedPlace.name"
+                :onClick="() => selectPlace(place)"
+              />
+            </div>
+          </div>
+          <div v-if="readyToAccuse" class="game-in-progress__accuse">
+            <button class="game-in-progress__accuse-button" @click="accuse">
+              Accuse
+            </button>
+          </div>
+        </template>
+        <div v-else>
+          Waiting for {{ playerToString(turnPlayer) }} to end their turn.
+        </div>
+      </template>
       <h2>Hand</h2>
       <div class="game-in-progress__hand">
         <Card
@@ -31,41 +134,6 @@
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
-      <h2>Accusation</h2>
-      <div class="game-in-progress__cards">
-        <div class="game-in-progress__card-column">
-          <Card
-            v-for="role in suspectRoles"
-            :key="role.name"
-            :card="role"
-            :selected="!!selectedRole && role.name === selectedRole.name"
-            :onClick="() => selectRole(role)"
-          />
-        </div>
-        <div class="game-in-progress__card-column">
-          <Card
-            v-for="tool in suspectTools"
-            :key="tool.name"
-            :card="tool"
-            :selected="!!selectedTool && tool.name === selectedTool.name"
-            :onClick="() => selectTool(tool)"
-          />
-        </div>
-        <div class="game-in-progress__card-column">
-          <Card
-            v-for="place in suspectPlaces"
-            :key="place.name"
-            :card="place"
-            :selected="!!selectedPlace && place.name === selectedPlace.name"
-            :onClick="() => selectPlace(place)"
-          />
-        </div>
-      </div>
-      <div v-if="readyToAccuse" class="game-in-progress__accuse">
-        <button class="game-in-progress__accuse__button" @click="accuse">
-          Accuse
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -85,10 +153,12 @@ import {
   Player,
   RoleCard,
   ToolCard,
+  TurnStatus,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
 
 interface InProgressData {
+  TurnStatus: typeof TurnStatus;
   selectedRole: Maybe<RoleCard>;
   selectedTool: Maybe<ToolCard>;
   selectedPlace: Maybe<PlaceCard>;
@@ -112,6 +182,7 @@ export default defineComponent({
     },
   },
   data: (): InProgressData => ({
+    TurnStatus,
     selectedRole: null,
     selectedTool: null,
     selectedPlace: null,
@@ -123,6 +194,15 @@ export default defineComponent({
         return null;
       }
       return this.state.players[this.state.playerSecrets.index];
+    },
+    turnPlayer(): Player {
+      return this.state.players[this.state.turnIndex];
+    },
+    sharingPlayer(): Maybe<Player> {
+      if (this.state.turnState.status !== TurnStatus.Share) {
+        return null;
+      }
+      return this.state.players[this.state.turnState.sharingPlayerIndex];
     },
     isDed(): boolean {
       return Boolean(this.currentPlayer?.failedAccusation);
@@ -142,6 +222,17 @@ export default defineComponent({
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
+    },
+    suggestedCards(): Card[] {
+      if (this.state.turnState.status !== TurnStatus.Share) {
+        return [];
+      }
+      return Object.values(this.state.turnState.suggestion);
+    },
+    shareableCards(): Card[] {
+      return this.hand.filter(h =>
+        this.suggestedCards.find(c => c.name === h.name)
+      );
     },
     suspectRoles(): RoleCard[] {
       return this.state.skin.roles.filter(x => !this.hand.find(isEqual(x)));
@@ -170,6 +261,28 @@ export default defineComponent({
     },
     selectPlace(place: PlaceCard) {
       this.selectedPlace = isEqual(place, this.selectedPlace) ? null : place;
+    },
+    suggest() {
+      if (!this.selectedRole || !this.selectedTool || !this.selectedPlace) {
+        return;
+      }
+      this.send({
+        type: ConnectionEvents.Suggest,
+        suggestion: {
+          role: this.selectedRole,
+          tool: this.selectedTool,
+          place: this.selectedPlace,
+        },
+      });
+    },
+    shareCard(card: Card) {
+      this.send({
+        type: ConnectionEvents.ShareCard,
+        sharedCard: card,
+      });
+    },
+    endTurn() {
+      this.send({ type: ConnectionEvents.EndTurn });
     },
     accuse() {
       if (!this.selectedRole || !this.selectedTool || !this.selectedPlace) {
@@ -253,10 +366,10 @@ export default defineComponent({
   &__accuse {
     display: flex;
     justify-content: center;
+  }
 
-    &__button {
-      color: cornflowerblue;
-    }
+  &__accuse-button {
+    color: cornflowerblue;
   }
 }
 </style>

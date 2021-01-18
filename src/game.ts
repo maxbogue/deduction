@@ -1,3 +1,4 @@
+import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
@@ -12,6 +13,8 @@ import {
   PlayerSecrets,
   RoleCard,
   Skin,
+  TurnState,
+  TurnStatus,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
 import { pickMany, pickOne, repeat } from '@/utils';
@@ -61,7 +64,6 @@ export class Room implements ConnectionObserver, GameObserver {
 
   setGame(game: Game): void {
     this.game = game;
-    this.updateState();
   }
 
   updateState(): void {
@@ -230,8 +232,9 @@ class GameSetup extends Game {
 
 abstract class GamePostSetup extends Game {
   protected readonly skin: Skin;
-  protected readonly players: Player[];
   protected readonly solution: Crime;
+  protected readonly players: Player[];
+  protected readonly playerSecrets: PlayerSecrets[];
   protected readonly roleToPlayer: Dict<Player> = {};
   protected readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
 
@@ -245,8 +248,9 @@ abstract class GamePostSetup extends Game {
     super(observer);
 
     this.skin = skin;
-    this.players = players;
     this.solution = solution;
+    this.players = players;
+    this.playerSecrets = playerSecrets;
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
@@ -286,6 +290,9 @@ abstract class GamePostSetup extends Game {
 }
 
 class GameInProgress extends GamePostSetup {
+  private turnIndex = 0;
+  private turnState: TurnState = { status: TurnStatus.Suggest };
+
   constructor(
     observer: GameObserver,
     skin: Skin,
@@ -320,7 +327,7 @@ class GameInProgress extends GamePostSetup {
     playerSecrets.notes[otherRole][card.name] = marks;
   }
 
-  validateCrimeForCurrentSkin(crime: Crime): void {
+  private validateCrimeForCurrentSkin(crime: Crime): void {
     let errors = '';
 
     if (!this.skin.roles.find(isEqual(crime.role))) {
@@ -338,7 +345,70 @@ class GameInProgress extends GamePostSetup {
     }
   }
 
-  accuse(role: RoleCard, accusation: Crime): void {
+  private isTurnPlayer(role: Maybe<RoleCard>): boolean {
+    const turnPlayer = this.players[this.turnIndex];
+    return Boolean(role && role.name === turnPlayer.role.name);
+  }
+
+  private isSharingPlayer(role: Maybe<RoleCard>): boolean {
+    if (this.turnState.status !== TurnStatus.Share) {
+      return false;
+    }
+    const sharingPlayer = this.players[this.turnState.sharingPlayerIndex];
+    return Boolean(role && role.name === sharingPlayer.role.name);
+  }
+
+  private suggest(suggestion: Crime) {
+    if (this.turnState.status !== TurnStatus.Suggest) {
+      return;
+    }
+
+    const cards = Object.values(suggestion);
+
+    const n = this.players.length;
+    for (let i = 1; i < n; i++) {
+      const playerIndex = (i + this.turnIndex) % n;
+      const { hand } = this.playerSecrets[playerIndex];
+      if (intersectionBy(c => c.name, cards, hand).length > 0) {
+        this.turnState = {
+          status: TurnStatus.Share,
+          suggestion,
+          sharingPlayerIndex: playerIndex,
+        };
+        return;
+      }
+    }
+    this.turnState = {
+      status: TurnStatus.Record,
+      sharedPlayerIndex: this.turnIndex,
+      sharedCard: null,
+    };
+  }
+
+  private shareCard(card: Card) {
+    if (this.turnState.status !== TurnStatus.Share) {
+      return;
+    }
+
+    //TODO validate the card
+
+    this.turnState = {
+      status: TurnStatus.Record,
+      sharedPlayerIndex: this.turnState.sharingPlayerIndex,
+      sharedCard: card,
+    };
+  }
+
+  private endTurn() {
+    if (this.turnState.status !== TurnStatus.Record) {
+      return;
+    }
+
+    this.turnIndex = (this.turnIndex + 1) % this.players.length;
+    this.turnState = { status: TurnStatus.Suggest };
+  }
+
+  private accuse(role: RoleCard, accusation: Crime): void {
     // check that our accusation has the correct format
     this.validateCrimeForCurrentSkin(accusation);
 
@@ -381,6 +451,21 @@ class GameInProgress extends GamePostSetup {
           this.setNote(conn.role, event.player, event.card, event.marks);
         }
         break;
+      case ConnectionEvents.Suggest:
+        if (this.isTurnPlayer(conn.role)) {
+          this.suggest(event.suggestion);
+        }
+        break;
+      case ConnectionEvents.ShareCard:
+        if (this.isSharingPlayer(conn.role)) {
+          this.shareCard(event.sharedCard);
+        }
+        break;
+      case ConnectionEvents.EndTurn:
+        if (this.isTurnPlayer(conn.role)) {
+          this.endTurn();
+        }
+        break;
       case ConnectionEvents.Accuse:
         if (!conn.role) {
           break;
@@ -415,12 +500,28 @@ class GameInProgress extends GamePostSetup {
     }
   }
 
+  private getTurnStateForRole(role: Maybe<RoleCard>): TurnState {
+    if (
+      !this.isTurnPlayer(role) &&
+      this.turnState.status === TurnStatus.Record
+    ) {
+      return {
+        ...this.turnState,
+        // Hide the shared card from other players.
+        sharedCard: null,
+      };
+    }
+    return this.turnState;
+  }
+
   getStateForConnection(conn: Connection): GameState {
     return {
       status: GameStatus.InProgress,
       skin: this.skin,
       players: this.players,
       solution: this.solution,
+      turnIndex: this.turnIndex,
+      turnState: this.getTurnStateForRole(conn.role),
       playerSecrets: conn.role
         ? this.roleToPlayerSecrets[conn.role.name]
         : null,

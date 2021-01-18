@@ -57,6 +57,30 @@ export interface PlayerSecrets {
   notes: Dict<Dict<string[]>>;
 }
 
+export enum TurnStatus {
+  Suggest = 'Suggest',
+  Share = 'Share',
+  Record = 'Record',
+}
+
+export interface TurnSuggestState {
+  status: TurnStatus.Suggest;
+}
+
+export interface TurnShareState {
+  status: TurnStatus.Share;
+  suggestion: Crime;
+  sharingPlayerIndex: number;
+}
+
+export interface TurnRecordState {
+  status: TurnStatus.Record;
+  sharedPlayerIndex: number;
+  sharedCard: Maybe<Card>;
+}
+
+export type TurnState = TurnSuggestState | TurnShareState | TurnRecordState;
+
 export enum GameStatus {
   Setup = 'Setup',
   InProgress = 'InProgress',
@@ -79,6 +103,8 @@ interface PostSetupState {
 export interface InProgressState extends PostSetupState {
   status: GameStatus.InProgress;
   solution: Maybe<Crime>;
+  turnIndex: number;
+  turnState: TurnState;
 }
 
 export interface GameOverState extends PostSetupState {
