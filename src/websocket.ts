@@ -1,6 +1,5 @@
 import WebSocket from 'ws';
 
-import { ConnectionEvent } from '@/events';
 import { Connection, ConnectionObserver } from '@/game';
 import { ConnectionDescription, GameState, RoleCard } from '@/state';
 import { Maybe } from '@/types';
@@ -23,7 +22,7 @@ export class WebSocketConnection implements Connection {
     ws.on('message', (message: string) => {
       try {
         const event = JSON.parse(message);
-        this.processEvent(event);
+        this.observer.processEvent(this, event);
       } catch (e: unknown) {
         console.log(e instanceof Error ? e.message : e);
       }
@@ -41,10 +40,6 @@ export class WebSocketConnection implements Connection {
       name: this.name,
       isReady: this.isReady,
     };
-  }
-
-  processEvent(event: ConnectionEvent): void {
-    this.observer.processEvent(this, event);
   }
 
   sendState(state: GameState): void {

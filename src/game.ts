@@ -228,18 +228,18 @@ class GameSetup extends Game {
   }
 }
 
-class GameInProgress extends Game {
-  private readonly skin: Skin;
-  private readonly players: Player[];
-  private readonly solution: Crime;
-  private readonly roleToPlayer: Dict<Player> = {};
-  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
+abstract class GamePostSetup extends Game {
+  protected readonly skin: Skin;
+  protected readonly players: Player[];
+  protected readonly solution: Crime;
+  protected readonly roleToPlayer: Dict<Player> = {};
+  protected readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
 
   constructor(
     observer: GameObserver,
     skin: Skin,
     players: Player[],
-    hands: Card[][],
+    playerSecrets: PlayerSecrets[],
     solution: Crime
   ) {
     super(observer);
@@ -248,14 +248,11 @@ class GameInProgress extends Game {
     this.players = players;
     this.solution = solution;
 
-    this.players.forEach((player, i) => {
-      this.roleToPlayer[player.role.name] = player;
-      this.roleToPlayerSecrets[player.role.name] = {
-        index: i,
-        hand: hands[i],
-        notes: {},
-      };
-    });
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      this.roleToPlayer[player.role.name] = players[i];
+      this.roleToPlayerSecrets[player.role.name] = playerSecrets[i];
+    }
   }
 
   removeConnection(conn: Connection): void {
@@ -267,7 +264,7 @@ class GameInProgress extends Game {
     }
   }
 
-  private setConnectionRole(conn: Connection, role: RoleCard): void {
+  protected setConnectionRole(conn: Connection, role: RoleCard): void {
     if (!this.skin.roles.find(isEqual(role))) {
       console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
       return;
@@ -285,6 +282,28 @@ class GameInProgress extends Game {
 
     conn.role = role;
     player.isConnected = true;
+  }
+}
+
+class GameInProgress extends GamePostSetup {
+  constructor(
+    observer: GameObserver,
+    skin: Skin,
+    players: Player[],
+    hands: Card[][],
+    solution: Crime
+  ) {
+    super(
+      observer,
+      skin,
+      players,
+      hands.map((hand, i) => ({
+        index: i,
+        hand,
+        notes: {},
+      })),
+      solution
+    );
   }
 
   private setNote(
@@ -409,13 +428,8 @@ class GameInProgress extends Game {
   }
 }
 
-class GameOver extends Game {
-  private readonly roleToPlayer: Dict<Player> = {};
-  private readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
-  private readonly players: Player[] = [];
-  private skin: Skin;
-  private solution: Crime;
-  private winner: number;
+class GameOver extends GamePostSetup {
+  private readonly winner: number;
 
   constructor(
     observer: GameObserver,
@@ -425,47 +439,8 @@ class GameOver extends Game {
     solution: Crime,
     winner: number
   ) {
-    super(observer);
-
-    this.skin = skin;
-    this.players = players;
-    this.solution = solution;
+    super(observer, skin, players, playerSecrets, solution);
     this.winner = winner;
-
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      this.roleToPlayer[player.role.name] = players[i];
-      this.roleToPlayerSecrets[player.role.name] = playerSecrets[i];
-    }
-  }
-
-  removeConnection(conn: Connection): void {
-    if (conn.role) {
-      const player = this.roleToPlayer[conn.role.name];
-      if (player) {
-        player.isConnected = false;
-      }
-    }
-  }
-
-  private setConnectionRole(conn: Connection, role: RoleCard): void {
-    if (!this.skin.roles.find(isEqual(role))) {
-      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
-      return;
-    }
-
-    if (conn.role) {
-      // Can't switch roles mid-game.
-      return;
-    }
-
-    const player = this.roleToPlayer[role.name];
-    if (!player || player.isConnected) {
-      return;
-    }
-
-    conn.role = role;
-    player.isConnected = true;
   }
 
   processEvent(conn: Connection, event: ConnectionEvent): void {
