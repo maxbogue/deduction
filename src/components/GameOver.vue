@@ -15,7 +15,20 @@
     </div>
     <div>
       <div>Winner is {{ playerToString(winner) }}!</div>
-      <div>Solution: {{ solution }}</div>
+      <h2>Solution</h2>
+      <div class="game-in-progress__cards">
+        <div class="game-in-progress__hand">
+          <Card v-for="card in solution" :key="card.name" :card="card" />
+        </div>
+      </div>
+      <h2>Notepad</h2>
+      <Notepad
+        v-if="state.playerSecrets"
+        :skin="state.skin"
+        :players="state.players"
+        :notes="state.playerSecrets.notes"
+        :setNote="setNote"
+      />
     </div>
   </div>
 </template>
@@ -23,12 +36,18 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { ConnectionEvent } from '@/events';
-import { Crime, GameOverState, Player } from '@/state';
+import CardComponent from '@/components/Card.vue';
+import Notepad from '@/components/Notepad.vue';
+import { ConnectionEvent, ConnectionEvents } from '@/events';
+import { Card, Crime, GameOverState, Player } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'GameOver',
+  components: {
+    Card: CardComponent,
+    Notepad,
+  },
   props: {
     state: {
       type: Object as PropType<GameOverState>,
@@ -67,6 +86,14 @@ export default defineComponent({
     playerToString(player: Player): string {
       const { role, name } = player;
       return `${role.name} [${name}]`;
+    },
+    setNote(player: Player, card: Card, marks: string[]) {
+      this.send({
+        type: ConnectionEvents.SetNote,
+        player,
+        card,
+        marks,
+      });
     },
   },
 });
