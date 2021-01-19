@@ -1,18 +1,18 @@
 <template>
   <div class="game-in-progress">
-    <div class="game-in-progress__connection-player">
-      You {{ isDed ? 'were' : 'are' }} {{ connectionPlayer }}
-      <span v-if="isDed">&#x1F47B;</span>
-    </div>
     <div class="game-in-progress__players">
       <div
-        v-for="player in state.players"
+        v-for="(player, i) in state.players"
         :key="player.role.name"
-        class="game-in-progress__player"
-        :class="classesForPlayer(player)"
         @click="reconnectAsPlayer(player)"
       >
-        {{ playerToString(player) }}
+        <span v-if="i > 0">&nbsp;|&nbsp;</span>
+        <span
+          class="game-in-progress__player"
+          :class="classesForPlayer(player)"
+          >{{ playerToString(player) }}</span
+        >
+        <span v-if="player.failedAccusation">&#x1F47B;</span>
       </div>
     </div>
     <h2>Turn: {{ playerToString(turnPlayer) }}</h2>
@@ -168,9 +168,6 @@ export default defineComponent({
         ? this.turn.sharedCard
         : null;
     },
-    isDed(): boolean {
-      return Boolean(this.currentPlayer?.failedAccusation);
-    },
     connectionPlayer(): string {
       return this.currentPlayer
         ? this.playerToString(this.currentPlayer)
@@ -194,6 +191,7 @@ export default defineComponent({
   methods: {
     classesForPlayer(player: Player) {
       return {
+        'game-in-progress__player--you': player === this.currentPlayer,
         'game-in-progress__player--disconnected': !player.isConnected,
         'game-in-progress__player--reconnectable': this.canReconnectAsPlayer(
           player
@@ -267,8 +265,18 @@ export default defineComponent({
     flex-wrap: wrap;
   }
 
+  &__players {
+    display: flex;
+    justify-content: center;
+    font-size: 1.8rem;
+  }
+
   &__player {
     color: green;
+
+    &--you {
+      text-decoration: underline;
+    }
 
     &--disconnected {
       color: red;
