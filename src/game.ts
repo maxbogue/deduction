@@ -406,7 +406,10 @@ class GameInProgress extends GamePostSetup {
       return;
     }
 
-    this.turnIndex = (this.turnIndex + 1) % this.players.length;
+    do {
+      this.turnIndex = (this.turnIndex + 1) % this.players.length;
+    } while (this.players[this.turnIndex].failedAccusation);
+
     this.turnState = { status: TurnStatus.Suggest };
   }
 
@@ -419,25 +422,36 @@ class GameInProgress extends GamePostSetup {
       return;
     }
 
-    if (!isEqual(accusation, this.solution)) {
-      player.failedAccusation = accusation;
+    if (isEqual(accusation, this.solution)) {
+      this.gameOver(player);
       return;
     }
 
-    const winner = this.players.indexOf(player);
+    player.failedAccusation = accusation;
+    const playersLeft = this.players.filter(p => !p.failedAccusation);
+    if (playersLeft.length > 1) {
+      this.endTurn();
+      return;
+    }
+
+    this.gameOver(playersLeft[0]);
+  }
+
+  private gameOver(winner: Player) {
     const playerSecrets = this.players.map(
       p => this.roleToPlayerSecrets[p.role.name]
     );
 
-    const game = new GameOver(
-      this.observer,
-      this.skin,
-      this.players,
-      playerSecrets,
-      this.solution,
-      winner
+    this.observer.setGame(
+      new GameOver(
+        this.observer,
+        this.skin,
+        this.players,
+        playerSecrets,
+        this.solution,
+        this.players.indexOf(winner)
+      )
     );
-    this.observer.setGame(game);
   }
 
   processEvent(conn: Connection, event: ConnectionEvent): void {
