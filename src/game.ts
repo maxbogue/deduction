@@ -268,6 +268,20 @@ abstract class GamePostSetup extends Game {
     }
   }
 
+  protected setNote(
+    role: RoleCard,
+    playerColumn: Player,
+    card: Card,
+    marks: string[]
+  ): void {
+    const playerSecrets = this.roleToPlayerSecrets[role.name];
+    const playerColumnRole = playerColumn.role.name;
+    if (!playerSecrets.notes[playerColumnRole]) {
+      playerSecrets.notes[playerColumnRole] = {};
+    }
+    playerSecrets.notes[playerColumnRole][card.name] = marks;
+  }
+
   protected setConnectionRole(conn: Connection, role: RoleCard): void {
     if (!this.skin.roles.find(isEqual(role))) {
       console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
@@ -311,20 +325,6 @@ class GameInProgress extends GamePostSetup {
       })),
       solution
     );
-  }
-
-  private setNote(
-    role: RoleCard,
-    other: Player,
-    card: Card,
-    marks: string[]
-  ): void {
-    const playerSecrets = this.roleToPlayerSecrets[role.name];
-    const otherRole = other.role.name;
-    if (!playerSecrets.notes[otherRole]) {
-      playerSecrets.notes[otherRole] = {};
-    }
-    playerSecrets.notes[otherRole][card.name] = marks;
   }
 
   private validateCrimeForCurrentSkin(crime: Crime): void {
@@ -551,6 +551,11 @@ class GameOver extends GamePostSetup {
         break;
       case ConnectionEvents.SetName:
         conn.name = event.data;
+        break;
+      case ConnectionEvents.SetNote:
+        if (conn.role) {
+          this.setNote(conn.role, event.player, event.card, event.marks);
+        }
         break;
       default:
         console.log('Event not found in processEvent', event);
