@@ -26,6 +26,14 @@
       </div>
     </template>
     <template v-else-if="turn.status === TurnStatus.Share">
+      <div v-if="currentPlayer === turnPlayer">
+        You suggested
+        {{ crimeToString(turn.suggestion) }}.
+      </div>
+      <div v-else>
+        {{ playerToString(turnPlayer) }} suggested
+        {{ crimeToString(turn.suggestion) }}.
+      </div>
       <template v-if="currentPlayer === sharePlayer">
         <div>Choose a card to share:</div>
         <div class="game-in-progress__hand">
@@ -38,9 +46,8 @@
         </div>
       </template>
       <div v-else-if="sharePlayer">
-        {{ playerToString(turnPlayer) }} suggests
-        {{ crimeToString(turn.suggestion) }}. Waiting for
-        {{ playerToString(sharePlayer) }} to share a card.
+        Waiting for {{ sharePlayer ? playerToString(sharePlayer) : '' }} to
+        share a card.
       </div>
     </template>
     <template v-else-if="turn.status === TurnStatus.Record">
@@ -252,8 +259,9 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-in-progress {
+  text-align: center;
+
   h2 {
-    text-align: center;
     font-size: 1.4em;
     margin: $pad-lg 0 $pad-xs;
   }
