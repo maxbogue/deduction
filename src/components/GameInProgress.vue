@@ -1,20 +1,10 @@
 <template>
   <div class="game-in-progress">
-    <div class="game-in-progress__players">
-      <div
-        v-for="(player, i) in state.players"
-        :key="player.role.name"
-        @click="reconnectAsPlayer(player)"
-      >
-        <span v-if="i > 0">&nbsp;|&nbsp;</span>
-        <span
-          class="game-in-progress__player"
-          :class="classesForPlayer(player)"
-          >{{ playerToString(player) }}</span
-        >
-        <span v-if="player.failedAccusation">&#x1F47B;</span>
-      </div>
-    </div>
+    <Players
+      :players="state.players"
+      :currentPlayer="currentPlayer"
+      :onReconnect="reconnectAsPlayer"
+    />
     <h2>Turn: {{ playerToString(turnPlayer) }}</h2>
     <template v-if="turn.status === TurnStatus.Suggest">
       <template v-if="currentPlayer === turnPlayer">
@@ -113,6 +103,7 @@ import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
+import Players from '@/components/Players.vue';
 import SelectCrime from '@/components/SelectCrime.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import {
@@ -135,6 +126,7 @@ export default defineComponent({
   components: {
     Card: CardComponent,
     Notepad,
+    Players,
     SelectCrime,
   },
   props: {
@@ -196,15 +188,6 @@ export default defineComponent({
     },
   },
   methods: {
-    classesForPlayer(player: Player) {
-      return {
-        'game-in-progress__player--you': player === this.currentPlayer,
-        'game-in-progress__player--disconnected': !player.isConnected,
-        'game-in-progress__player--reconnectable': this.canReconnectAsPlayer(
-          player
-        ),
-      };
-    },
     suggest(suggestion: Crime) {
       this.send({
         type: ConnectionEvents.Suggest,
@@ -225,9 +208,6 @@ export default defineComponent({
         type: ConnectionEvents.Accuse,
         data: crime,
       });
-    },
-    canReconnectAsPlayer(player: Player): boolean {
-      return !this.currentPlayer && !player.isConnected;
     },
     reconnectAsPlayer(player: Player) {
       this.send({
@@ -271,29 +251,6 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-  }
-
-  &__players {
-    display: flex;
-    justify-content: center;
-    font-size: 1.8rem;
-  }
-
-  &__player {
-    color: green;
-
-    &--you {
-      text-decoration: underline;
-    }
-
-    &--disconnected {
-      color: red;
-    }
-
-    &--reconnectable {
-      color: blue;
-      cursor: pointer;
-    }
   }
 }
 </style>
