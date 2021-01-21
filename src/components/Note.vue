@@ -20,6 +20,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+const ALL_MARKS = ['✖️', '•', '?', '1', '2', '3', '4', '5', '6'];
+const MUTEX_MARKS = ['✖️', '•', '?'];
+
 export default defineComponent({
   name: 'Note',
   props: {
@@ -41,12 +44,17 @@ export default defineComponent({
     },
   },
   data: () => ({
-    ALL_MARKS: 'x•?123456',
+    ALL_MARKS,
   }),
   methods: {
     toggleMark(mark: string) {
       if (this.marks.includes(mark)) {
         this.onUpdate(this.marks.filter(m => m !== mark));
+      } else if (MUTEX_MARKS.includes(mark)) {
+        this.onUpdate([
+          ...this.marks.filter(m => !MUTEX_MARKS.includes(m)),
+          mark,
+        ]);
       } else {
         this.onUpdate([...this.marks, mark]);
       }
@@ -93,16 +101,9 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
 
-    &:hover {
-      background-color: #ccf;
-    }
-
     &--selected {
-      background-color: #eee;
-
-      &:hover {
-        background-color: #aaf;
-      }
+      background-color: #666;
+      color: #fff;
     }
   }
 }
