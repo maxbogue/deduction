@@ -1,5 +1,6 @@
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
+import sortBy from 'lodash/fp/sortBy';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { SKINS } from '@/skins';
@@ -163,7 +164,10 @@ class GameSetup extends Game {
     const getsExtra = count % numHands;
     const hands = repeat(
       (i: number) =>
-        pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand),
+        sortBy(
+          ['type', 'name'],
+          pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand)
+        ),
       numHands
     );
 
