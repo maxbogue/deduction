@@ -51,15 +51,20 @@
           <Card :card="sharedCard" />
         </div>
         <div v-else>No player had a matching card to share.</div>
-        <button class="game-in-progress__accuse-button" @click="endTurn">
-          End Turn
-        </button>
-        <h2>Accusation</h2>
-        <SelectCrime
-          :skin="state.skin"
-          :excludeCards="hand"
-          :onSelect="accuse"
-        />
+        <div class="game-in-progress__turn-buttons">
+          <button @click="endTurn">End Turn</button>
+          <button @click="showAccuse = true">Accuse</button>
+        </div>
+        <template v-if="showAccuse">
+          <h2>Accusation</h2>
+          <SelectCrime
+            class="game-in-progress__accuse"
+            :skin="state.skin"
+            :excludeCards="hand"
+            buttonText="Final Accusation"
+            :onSelect="accuse"
+          />
+        </template>
       </div>
       <div v-else>
         <div>
@@ -119,6 +124,7 @@ import { Dict, Maybe } from '@/types';
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
   notes: Dict<Dict<string>>;
+  showAccuse: boolean;
 }
 
 export default defineComponent({
@@ -142,6 +148,7 @@ export default defineComponent({
   data: (): InProgressData => ({
     TurnStatus,
     notes: {},
+    showAccuse: false,
   }),
   computed: {
     turn(): TurnState {
@@ -185,6 +192,11 @@ export default defineComponent({
       return this.hand.filter(h =>
         this.suggestedCards.find(c => c.name === h.name)
       );
+    },
+  },
+  watch: {
+    turnPlayer() {
+      this.showAccuse = false;
     },
   },
   methods: {
@@ -235,12 +247,10 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/style/constants';
 
 .game-in-progress {
-  text-align: center;
-
   h2 {
     font-size: 1.4em;
     margin: $pad-lg 0 $pad-xs;
@@ -251,6 +261,22 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  &__turn-buttons {
+    margin-top: $pad-xs;
+
+    > :not(:first-child) {
+      margin-left: $pad-xs;
+    }
+  }
+
+  &__accuse::v-deep .select-crime__button {
+    background-color: rgba(255, 24, 12, 0.5);
+
+    &[disabled] {
+      background-color: transparent;
+    }
   }
 }
 </style>

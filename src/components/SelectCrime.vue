@@ -12,15 +12,6 @@
       </div>
       <div class="select-crime__column">
         <Card
-          v-for="tool in tools"
-          :key="tool.name"
-          :card="tool"
-          :selected="!!selectedTool && tool.name === selectedTool.name"
-          :onClick="() => selectTool(tool)"
-        />
-      </div>
-      <div class="select-crime__column">
-        <Card
           v-for="place in places"
           :key="place.name"
           :card="place"
@@ -28,10 +19,26 @@
           :onClick="() => selectPlace(place)"
         />
       </div>
+      <div class="select-crime__column">
+        <Card
+          v-for="tool in tools"
+          :key="tool.name"
+          :card="tool"
+          :selected="!!selectedTool && tool.name === selectedTool.name"
+          :onClick="() => selectTool(tool)"
+        />
+      </div>
     </div>
-    <div v-if="crime" class="select-crime__select">
-      <button class="select-crime__button" @click="onSelect(crime)">
-        Select
+    <div class="select-crime__select">
+      <button
+        v-if="crime"
+        class="select-crime__button"
+        @click="onSelect(crime)"
+      >
+        {{ buttonText }}
+      </button>
+      <button v-else class="select-crime__button" disabled>
+        {{ buttonText }}
       </button>
     </div>
   </div>
@@ -64,6 +71,10 @@ export default defineComponent({
     excludeCards: {
       type: Array as PropType<Card[]>,
       default: () => [],
+    },
+    buttonText: {
+      type: String as PropType<string>,
+      default: 'Select',
     },
     onSelect: {
       type: Function as PropType<(crime: Crime) => void>,
@@ -110,7 +121,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '@/style/constants';
 
 .select-crime {
@@ -122,15 +133,18 @@ export default defineComponent({
   &__column {
     display: flex;
     flex-direction: column;
+    width: 33%;
+    align-items: center;
+
+    > * {
+      min-width: 100px;
+    }
   }
 
   &__select {
     display: flex;
     justify-content: center;
-  }
-
-  &__button {
-    color: cornflowerblue;
+    margin-top: $pad-md;
   }
 }
 </style>

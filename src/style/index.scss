@@ -1,5 +1,20 @@
+@import './constants';
+
 html {
   // Use e.g. 1.6rem in the DOM to get 16px.
   font-size: 10px;
   font-family: 'Crimson Text', serif;
+}
+
+button {
+  font-size: 1em;
+  font-family: 'Crimson Text', serif;
+  padding: $pad-xs $pad-sm;
+  cursor: pointer;
+  border-radius: 3px;
+  border-width: 1px;
+
+  &[disabled] {
+    cursor: not-allowed;
+  }
 }

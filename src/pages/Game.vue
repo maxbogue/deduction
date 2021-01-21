@@ -12,7 +12,9 @@
       :send="send"
     />
     <GameOver v-else :state="state" :send="send" />
-    <button @click="showStateJson = !showStateJson">Toggle Json</button>
+    <button class="game__toggle-state" @click="showStateJson = !showStateJson">
+      Toggle State
+    </button>
     <div v-if="showStateJson" class="game__state">
       {{ JSON.stringify(state, null, 2) }}
     </div>
@@ -66,15 +68,22 @@ export default defineComponent({
 
 .game {
   font-size: 2.4rem;
+  text-align: center;
   margin: $pad-lg auto $pad-lg;
   padding: $pad-md;
   background-color: #eee;
   width: 800px;
 
+  &__toggle-state {
+    margin-top: $pad-lg;
+  }
+
   &__state {
     color: #666;
     font-family: 'Courier New';
     font-size: 1.4rem;
+    text-align: left;
+    padding: $pad-lg;
     white-space: pre-wrap;
   }
 }
