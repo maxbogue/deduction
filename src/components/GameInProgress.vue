@@ -264,10 +264,10 @@ export default defineComponent({
   }
 
   &__turn-buttons {
-    margin-top: $pad-xs;
+    margin-top: $pad-sm;
 
     > :not(:first-child) {
-      margin-left: $pad-xs;
+      margin-left: $pad-sm;
     }
   }
 

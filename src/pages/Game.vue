@@ -12,9 +12,11 @@
       :send="send"
     />
     <GameOver v-else :state="state" :send="send" />
-    <button class="game__toggle-state" @click="showStateJson = !showStateJson">
-      Toggle State
-    </button>
+    <hr />
+    <div class="game__buttons">
+      <button @click="restart">Restart</button>
+      <button @click="showStateJson = !showStateJson">Debug</button>
+    </div>
     <div v-if="showStateJson" class="game__state">
       {{ JSON.stringify(state, null, 2) }}
     </div>
@@ -28,7 +30,7 @@ import { useRoute } from 'vue-router';
 import GameInProgress from '@/components/GameInProgress.vue';
 import GameOver from '@/components/GameOver.vue';
 import GameSetup from '@/components/GameSetup.vue';
-import { ConnectionEvent } from '@/events';
+import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { GameState, GameStatus } from '@/state';
 import { Maybe } from '@/types';
 
@@ -53,10 +55,17 @@ export default defineComponent({
       ws.send(JSON.stringify(event));
     };
 
+    const restart = () => {
+      if (confirm('Are you sure you want to restart the game?')) {
+        send({ type: ConnectionEvents.Restart });
+      }
+    };
+
     return {
       GameStatus,
       state,
       send,
+      restart,
       showStateJson: ref(false),
     };
   },
@@ -70,12 +79,14 @@ export default defineComponent({
   font-size: 2.4rem;
   text-align: center;
   margin: $pad-lg auto $pad-lg;
-  padding: $pad-md;
+  padding: $pad-md $pad-lg;
   background-color: #eee;
   width: 800px;
 
-  &__toggle-state {
-    margin-top: $pad-lg;
+  &__buttons {
+    > :not(:first-child) {
+      margin-left: $pad-sm;
+    }
   }
 
   &__state {

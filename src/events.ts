@@ -3,6 +3,7 @@ import { Card, Crime, Player, RoleCard } from '@/state';
 export enum ConnectionEvents {
   Accuse = 'Accuse',
   EndTurn = 'EndTurn',
+  Restart = 'Restart',
   SetName = 'SetName',
   SetNote = 'SetNote',
   SetReady = 'SetReady',
@@ -20,6 +21,10 @@ export interface AccuseEvent {
 
 export interface EndTurnEvent {
   type: ConnectionEvents.EndTurn;
+}
+
+export interface RestartEvent {
+  type: ConnectionEvents.Restart;
 }
 
 export interface SetNameEvent {
@@ -66,6 +71,7 @@ export interface SuggestEvent {
 export type ConnectionEvent =
   | AccuseEvent
   | EndTurnEvent
+  | RestartEvent
   | SetNameEvent
   | SetNoteEvent
   | SetReadyEvent

@@ -59,7 +59,13 @@ export class Room implements ConnectionObserver, GameObserver {
 
   processEvent(conn: Connection, event: ConnectionEvent): void {
     console.log(event);
-    this.game.processEvent(conn, event);
+    switch (event.type) {
+      case ConnectionEvents.Restart:
+        this.game = new GameSetup(this, this.connections);
+        break;
+      default:
+        this.game.processEvent(conn, event);
+    }
     this.updateState();
   }
 
