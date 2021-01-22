@@ -71,7 +71,7 @@ export default defineComponent({
     },
     canStart(): boolean {
       return (
-        this.playerConnections.length >= 3 &&
+        this.playerConnections.length > 1 &&
         this.playerConnections.every(c => c.isReady)
       );
     },

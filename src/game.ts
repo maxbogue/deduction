@@ -184,7 +184,7 @@ class GameSetup extends Game {
   private start(): void {
     const playerConnections = Object.values(this.roleToConnection);
     if (
-      playerConnections.length < 3 ||
+      playerConnections.length < 2 ||
       !playerConnections.every(c => c.isReady)
     ) {
       return;

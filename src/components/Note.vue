@@ -1,3 +1,5 @@
+<!-- eslint-disable vue/no-v-html -->
+
 <template>
   <div class="note">
     <div v-if="showDropdown" class="note__dropdown">
@@ -7,12 +9,12 @@
         class="note__mark"
         :class="{ 'note__mark--selected': marks.includes(mark) }"
         @click.stop="toggleMark(mark)"
-      >
-        {{ mark }}
-      </div>
+        v-html="mark"
+      />
     </div>
     <div class="note__content" @click.stop="toggleDropdown">
-      {{ marks.join('') }}
+      <div class="note__mutex" v-html="mutexMark" />
+      <div class="note__numbers">{{ numberMarks.join('') }}</div>
     </div>
   </div>
 </template>
@@ -20,8 +22,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-const ALL_MARKS = ['✖️', '•', '?', '1', '2', '3', '4', '5', '6'];
-const MUTEX_MARKS = ['✖️', '•', '?'];
+const X = '&#x2716;';
+const ALL_MARKS = [X, '•', '?', '1', '2', '3', '4', '5', '6'];
+const MUTEX_MARKS = [X, '•', '?'];
 
 export default defineComponent({
   name: 'Note',
@@ -46,6 +49,14 @@ export default defineComponent({
   data: () => ({
     ALL_MARKS,
   }),
+  computed: {
+    mutexMark(): string {
+      return this.marks.filter(m => MUTEX_MARKS.includes(m))[0] || '';
+    },
+    numberMarks(): string[] {
+      return this.marks.filter(m => !MUTEX_MARKS.includes(m)).sort();
+    },
+  },
   methods: {
     toggleMark(mark: string) {
       if (this.marks.includes(mark)) {
@@ -73,6 +84,21 @@ export default defineComponent({
   &__content {
     min-height: 5rem;
     min-width: 5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__mutex {
+    font-weight: 600;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__numbers {
+    font-size: 1.4rem;
+    line-height: 1;
   }
 
   &__dropdown {

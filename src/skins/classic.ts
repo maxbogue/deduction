@@ -34,6 +34,16 @@ export const classic: Skin = {
       name: 'Ms. Ivory',
       color: '',
     },
+    {
+      type: CardType.Role,
+      name: 'Chef Taupe',
+      color: '',
+    },
+    {
+      type: CardType.Role,
+      name: 'Lady Chartreuse',
+      color: '',
+    },
   ],
   tools: [
     {
