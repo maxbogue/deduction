@@ -1,5 +1,6 @@
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
+import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
 import { ConnectionEvent, ConnectionEvents } from '@/events';
@@ -204,7 +205,7 @@ class GameSetup extends Game {
     const game = new GameInProgress(
       this.observer,
       this.skin,
-      players,
+      shuffle(players),
       hands,
       solution
     );

@@ -13,8 +13,12 @@
         [{{ roleToConnection[role.name].name }}]</span
       >
     </div>
-    <button @click="setReady">Ready!</button>
-    <button @click="startGame">Start!</button>
+    <div class="game-setup__buttons">
+      <button :disabled="!canReady" @click="toggleReady">
+        {{ connection.isReady ? 'Unready' : 'Ready' }}
+      </button>
+      <button :disabled="!canStart" @click="startGame">Start</button>
+    </div>
   </div>
 </template>
 
@@ -59,6 +63,18 @@ export default defineComponent({
         }
       });
     },
+    playerConnections(): ConnectionDescription[] {
+      return this.state.connections.filter(c => c.role);
+    },
+    canReady(): boolean {
+      return Boolean(this.connection.role && this.name);
+    },
+    canStart(): boolean {
+      return (
+        this.playerConnections.length >= 3 &&
+        this.playerConnections.every(c => c.isReady)
+      );
+    },
   },
   methods: {
     isRoleAvailable(role: RoleCard): boolean {
@@ -86,10 +102,10 @@ export default defineComponent({
         data: name,
       });
     },
-    setReady() {
+    toggleReady() {
       this.send({
         type: ConnectionEvents.SetReady,
-        data: true,
+        data: !this.connection.isReady,
       });
     },
     startGame() {
@@ -102,6 +118,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@import '@/style/constants';
+
 .game-setup {
   &__role {
     &--ready {
@@ -111,6 +129,14 @@ export default defineComponent({
     &--available {
       color: blue;
       cursor: pointer;
+    }
+  }
+
+  &__buttons {
+    margin-top: $pad-md;
+
+    > :not(:first-child) {
+      margin-left: $pad-sm;
     }
   }
 }

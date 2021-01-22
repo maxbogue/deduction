@@ -271,7 +271,7 @@ export default defineComponent({
     }
   }
 
-  &__accuse::v-deep .select-crime__button {
+  &__accuse :deep(.select-crime__button) {
     background-color: rgba(255, 24, 12, 0.5);
 
     &[disabled] {
