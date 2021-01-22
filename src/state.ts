@@ -103,7 +103,6 @@ interface PostSetupState {
 
 export interface InProgressState extends PostSetupState {
   status: GameStatus.InProgress;
-  solution: Maybe<Crime>;
   turnIndex: number;
   turnState: TurnState;
 }

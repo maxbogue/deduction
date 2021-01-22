@@ -547,7 +547,6 @@ class GameInProgress extends GamePostSetup {
       status: GameStatus.InProgress,
       skin: this.skin,
       players: this.players,
-      solution: this.solution,
       turnIndex: this.turnIndex,
       turnState: this.getTurnStateForRole(conn.role),
       playerSecrets: conn.role
