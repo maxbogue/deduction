@@ -58,14 +58,11 @@ export default defineComponent({
   &--selectable {
     color: blue;
     cursor: pointer;
-
-    &:hover {
-      background-color: #eee;
-    }
   }
 
   &--selected {
-    color: green;
+    background-color: #333;
+    color: #fff;
   }
 }
 </style>

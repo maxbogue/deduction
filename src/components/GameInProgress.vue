@@ -194,11 +194,6 @@ export default defineComponent({
       );
     },
   },
-  watch: {
-    turnPlayer() {
-      this.showAccuse = false;
-    },
-  },
   methods: {
     suggest(suggestion: Crime) {
       this.send({
@@ -213,6 +208,7 @@ export default defineComponent({
       });
     },
     endTurn() {
+      this.showAccuse = false;
       this.send({ type: ConnectionEvents.EndTurn });
     },
     accuse(crime: Crime) {

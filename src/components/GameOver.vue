@@ -13,14 +13,23 @@
           <Card v-for="card in solution" :key="card.name" :card="card" />
         </div>
       </div>
-      <h2>Notepad</h2>
-      <Notepad
-        v-if="state.playerSecrets"
-        :skin="state.skin"
-        :players="state.players"
-        :notes="state.playerSecrets.notes"
-        :setNote="setNote"
-      />
+      <template v-if="state.playerSecrets">
+        <h2>Hand</h2>
+        <div class="game-in-progress__hand">
+          <Card
+            v-for="card in state.playerSecrets.hand"
+            :key="card.name"
+            :card="card"
+          />
+        </div>
+        <h2>Notepad</h2>
+        <Notepad
+          :skin="state.skin"
+          :players="state.players"
+          :notes="state.playerSecrets.notes"
+          :setNote="setNote"
+        />
+      </template>
     </div>
   </div>
 </template>

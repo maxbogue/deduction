@@ -3,7 +3,7 @@
     <tr>
       <th />
       <th v-for="player in players" :key="player.role.name">
-        <div class="notepad__player-header">{{ player.role.name }}</div>
+        <div class="notepad__player-header">{{ player.name }}</div>
       </th>
     </tr>
     <tr>
@@ -21,9 +21,9 @@
       </td>
     </tr>
     <tr>
-      <th :colspan="players.length + 1">Tools</th>
+      <th :colspan="players.length + 1">Places</th>
     </tr>
-    <tr v-for="card in skin.tools" :key="card.name">
+    <tr v-for="card in skin.places" :key="card.name">
       <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
@@ -35,9 +35,9 @@
       </td>
     </tr>
     <tr>
-      <th :colspan="players.length + 1">Places</th>
+      <th :colspan="players.length + 1">Tools</th>
     </tr>
-    <tr v-for="card in skin.places" :key="card.name">
+    <tr v-for="card in skin.tools" :key="card.name">
       <th>{{ card.name }}</th>
       <td v-for="player in players" :key="player.role.name">
         <Note
