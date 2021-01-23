@@ -145,7 +145,7 @@ export default defineComponent({
 
   &__player-header {
     writing-mode: vertical-lr;
-    text-orientation: sideways-right;
+    white-space: nowrap;
   }
 }
 </style>
