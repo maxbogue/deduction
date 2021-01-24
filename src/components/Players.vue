@@ -1,14 +1,14 @@
 <template>
   <div class="players">
     <div
-      v-for="(player, i) in players"
+      v-for="player in players"
       :key="player.role.name"
+      class="players__player"
+      :class="classesForPlayer(player)"
       @click="onReconnect(player)"
     >
-      <span v-if="i > 0">&nbsp;|&nbsp;</span>
-      <span class="players__player" :class="classesForPlayer(player)">{{
-        playerToString(player)
-      }}</span>
+      <RoleColor :role="player.role" />
+      <div class="players__player-name">{{ playerToString(player) }}</div>
       <span v-if="player.failedAccusation">&#x1F47B;</span>
     </div>
   </div>
@@ -17,11 +17,15 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+import RoleColor from '@/components/RoleColor.vue';
 import { Player } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Players',
+  components: {
+    RoleColor,
+  },
   props: {
     players: {
       type: Array as PropType<Player[]>,
@@ -36,7 +40,6 @@ export default defineComponent({
       required: true,
     },
   },
-  computed: {},
   methods: {
     classesForPlayer(player: Player) {
       return {
@@ -61,11 +64,13 @@ export default defineComponent({
 
 .players {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  font-size: 1.8rem;
 
   &__player {
-    color: green;
+    display: flex;
+    align-items: center;
+    cursor: default;
 
     &--you {
       text-decoration: underline;

@@ -247,10 +247,9 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-in-progress {
-  h2 {
-    font-size: 1.4em;
-    margin: $pad-lg 0 $pad-xs;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   &__hand {
     display: flex;

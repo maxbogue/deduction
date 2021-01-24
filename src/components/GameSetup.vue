@@ -1,18 +1,28 @@
 <template>
-  <div>
-    <input v-model="name" type="text" />
-    <div
-      v-for="role in state.skin.roles"
-      :key="role.name"
-      class="game-setup__role"
-      :class="classesForRole(role)"
-      @click="selectRole(role)"
-    >
-      <span>{{ role.name }}</span>
-      <span v-if="!isRoleAvailable(role)">
-        [{{ roleToConnection[role.name].name }}]</span
+  <div class="game-setup">
+    <h2>Role</h2>
+    <div class="game-setup__roles">
+      <div
+        v-for="role in state.skin.roles"
+        :key="role.name"
+        class="game-setup__role"
+        :class="classesForRole(role)"
+        @click="selectRole(role)"
       >
+        <RoleColor :role="role" />
+        <div>
+          <span>{{ role.name }}</span>
+          <span v-if="!isRoleAvailable(role)">
+            [{{ roleToConnection[role.name].name }}]</span
+          >
+        </div>
+      </div>
     </div>
+    <h2>Name</h2>
+    <form @submit.prevent="saveName">
+      <input v-model="name" type="text" :disabled="!connection.role" />
+      <button type="submit" class="game-setup__save-name">Save</button>
+    </form>
     <div class="game-setup__buttons">
       <button :disabled="!canReady" @click="toggleReady">
         {{ connection.isReady ? 'Unready' : 'Ready' }}
@@ -23,9 +33,9 @@
 </template>
 
 <script lang="ts">
-import debounce from 'lodash/debounce';
 import { defineComponent, PropType } from 'vue';
 
+import RoleColor from '@/components/RoleColor.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { ConnectionDescription, RoleCard, SetupState } from '@/state';
 import { Dict } from '@/types';
@@ -33,6 +43,9 @@ import { dictFromList } from '@/utils';
 
 export default defineComponent({
   name: 'GameSetup',
+  components: {
+    RoleColor,
+  },
   props: {
     state: {
       type: Object as PropType<SetupState>,
@@ -43,18 +56,12 @@ export default defineComponent({
       required: true,
     },
   },
+  data: () => ({
+    name: '',
+  }),
   computed: {
     connection(): ConnectionDescription {
       return this.state.connections[this.state.connectionIndex];
-    },
-    name: {
-      get(): string {
-        return this.connection.name;
-      },
-      set: debounce(function (name: string) {
-        // @ts-expect-error `this` type not defined correctly in Lodash.
-        this.setName(name);
-      }, 200),
     },
     roleToConnection(): Dict<ConnectionDescription> {
       return dictFromList(this.state.connections, (acc, connection) => {
@@ -67,7 +74,7 @@ export default defineComponent({
       return this.state.connections.filter(c => c.role);
     },
     canReady(): boolean {
-      return Boolean(this.connection.role && this.name);
+      return Boolean(this.connection.role && this.connection.name);
     },
     canStart(): boolean {
       return (
@@ -96,10 +103,10 @@ export default defineComponent({
         data: role,
       });
     },
-    setName(name: string) {
+    saveName() {
       this.send({
         type: ConnectionEvents.SetName,
-        data: name,
+        data: this.name,
       });
     },
     toggleReady() {
@@ -121,7 +128,22 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__save-name {
+    margin-left: $pad-xs;
+  }
+
+  &__roles {
+    text-align: left;
+  }
+
   &__role {
+    display: flex;
+    align-items: center;
+
     &--ready {
       color: green;
     }

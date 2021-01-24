@@ -7,42 +7,42 @@ export const classic: Skin = {
     {
       type: CardType.Role,
       name: 'Mlle. Crimson',
-      color: '',
+      color: '#a20101',
+    },
+    {
+      type: CardType.Role,
+      name: 'Lady Tangerine',
+      color: '#fe8e16',
     },
     {
       type: CardType.Role,
       name: 'Gen. Dijon',
-      color: '',
-    },
-    {
-      type: CardType.Role,
-      name: 'Dr. Grape',
-      color: '',
+      color: '#ffc20a',
     },
     {
       type: CardType.Role,
       name: 'Sr. Tomatillo',
-      color: '',
+      color: '#a7c035',
     },
     {
       type: CardType.Role,
       name: 'Mrs. Juniper',
-      color: '',
+      color: '#7277ac',
     },
     {
       type: CardType.Role,
-      name: 'Ms. Ivory',
-      color: '',
+      name: 'Dr. Grape',
+      color: '#8c38a8',
+    },
+    {
+      type: CardType.Role,
+      name: 'Ms. Fuschia',
+      color: '#cc0088',
     },
     {
       type: CardType.Role,
       name: 'Chef Taupe',
-      color: '',
-    },
-    {
-      type: CardType.Role,
-      name: 'Lady Chartreuse',
-      color: '',
+      color: '#b19b81',
     },
   ],
   tools: [

@@ -6,6 +6,12 @@ html {
   font-family: 'Crimson Text', serif;
 }
 
+input[type="text"] {
+  font-family: 'Crimson Text', serif;
+  font-size: 1em;
+  padding: $pad-xs $pad-sm;
+}
+
 button {
   font-size: 1em;
   font-family: 'Crimson Text', serif;
@@ -17,6 +23,11 @@ button {
   &[disabled] {
     cursor: not-allowed;
   }
+}
+
+h2 {
+  font-size: 1.4em;
+  margin: $pad-lg 0 $pad-xs;
 }
 
 hr {
