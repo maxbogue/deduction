@@ -78,6 +78,7 @@ export interface TurnRecordState {
   suggestion: Crime;
   sharePlayerIndex: number;
   sharedCard: Maybe<Card>;
+  playerIsReady: Dict<boolean>;
 }
 
 export type TurnState = TurnSuggestState | TurnShareState | TurnRecordState;

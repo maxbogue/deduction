@@ -19,7 +19,7 @@ import {
   TurnStatus,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
-import { pickMany, pickOne, repeat } from '@/utils';
+import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
 
 export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
@@ -397,6 +397,11 @@ class GameInProgress extends GamePostSetup {
       suggestion,
       sharePlayerIndex: this.turnIndex,
       sharedCard: null,
+      playerIsReady: dictFromList(this.players, (dict, p) => {
+        if (!p.failedAccusation) {
+          dict[p.role.name] = false;
+        }
+      }),
     };
   }
 
@@ -412,14 +417,37 @@ class GameInProgress extends GamePostSetup {
       suggestion: this.turnState.suggestion,
       sharePlayerIndex: this.turnState.sharePlayerIndex,
       sharedCard: card,
+      playerIsReady: dictFromList(this.players, (dict, p) => {
+        if (!p.failedAccusation) {
+          dict[p.role.name] = false;
+        }
+      }),
     };
   }
 
-  private endTurn() {
+  private checkIfReady() {
     if (this.turnState.status !== TurnStatus.Record) {
       return;
     }
 
+    if (Object.values(this.turnState.playerIsReady).every(x => x)) {
+      this.endTurn();
+    }
+  }
+
+  private setIsReady(role: RoleCard, isReady: boolean) {
+    if (this.turnState.status !== TurnStatus.Record) {
+      return;
+    }
+
+    const player = this.roleToPlayer[role.name];
+    if (!player.failedAccusation) {
+      this.turnState.playerIsReady[role.name] = isReady;
+      this.checkIfReady();
+    }
+  }
+
+  private endTurn() {
     do {
       this.turnIndex = (this.turnIndex + 1) % this.players.length;
     } while (this.players[this.turnIndex].failedAccusation);
@@ -428,6 +456,10 @@ class GameInProgress extends GamePostSetup {
   }
 
   private accuse(role: RoleCard, accusation: Crime): void {
+    if (this.turnState.status !== TurnStatus.Record) {
+      return;
+    }
+
     // check that our accusation has the correct format
     this.validateCrimeForCurrentSkin(accusation);
 
@@ -444,11 +476,11 @@ class GameInProgress extends GamePostSetup {
     player.failedAccusation = accusation;
     const playersLeft = this.players.filter(p => !p.failedAccusation);
     if (playersLeft.length > 1) {
-      this.endTurn();
-      return;
+      delete this.turnState.playerIsReady[player.role.name];
+      this.checkIfReady();
+    } else {
+      this.gameOver(playersLeft[0]);
     }
-
-    this.gameOver(playersLeft[0]);
   }
 
   private gameOver(winner: Player) {
@@ -491,9 +523,9 @@ class GameInProgress extends GamePostSetup {
           this.shareCard(event.sharedCard);
         }
         break;
-      case ConnectionEvents.EndTurn:
-        if (this.isTurnPlayer(conn.role)) {
-          this.endTurn();
+      case ConnectionEvents.SetReady:
+        if (conn.role) {
+          this.setIsReady(conn.role, event.data);
         }
         break;
       case ConnectionEvents.Accuse:
