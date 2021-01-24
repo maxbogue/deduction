@@ -60,23 +60,34 @@ export class Room implements ConnectionObserver, GameObserver {
 
   processEvent(conn: Connection, event: ConnectionEvent): void {
     console.log(event);
+    let updateAll = true;
     switch (event.type) {
       case ConnectionEvents.Restart:
         this.game = new GameSetup(this, this.connections);
         break;
       default:
-        this.game.processEvent(conn, event);
+        updateAll = this.game.processEvent(conn, event);
     }
-    this.updateState();
+    if (updateAll) {
+      this.updateState();
+    } else {
+      this.updateStateForConnection(conn);
+    }
   }
 
   setGame(game: Game): void {
     this.game = game;
   }
 
+  updateStateForConnection(conn: Connection): void {
+    conn.sendState(
+      this.game.getStateForConnection(conn, this.connections.indexOf(conn))
+    );
+  }
+
   updateState(): void {
-    this.connections.forEach((conn, i) => {
-      conn.sendState(this.game.getStateForConnection(conn, i));
+    this.connections.forEach((c, i) => {
+      c.sendState(this.game.getStateForConnection(c, i));
     });
   }
 }
@@ -90,7 +101,8 @@ abstract class Game {
 
   abstract removeConnection(conn: Connection): void;
   abstract getStateForConnection(conn: Connection, i: number): GameState;
-  abstract processEvent(conn: Connection, event: ConnectionEvent): void;
+  // Returns whether to update state for all connections or just `conn`.
+  abstract processEvent(conn: Connection, event: ConnectionEvent): boolean;
 }
 
 class GameSetup extends Game {
@@ -212,7 +224,7 @@ class GameSetup extends Game {
     this.observer.setGame(game);
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent) {
+  processEvent(conn: Connection, event: ConnectionEvent): boolean {
     switch (event.type) {
       case ConnectionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
@@ -232,6 +244,7 @@ class GameSetup extends Game {
       default:
         console.error(`Invalid event for ${GameStatus.Setup}: ${event}`);
     }
+    return true;
   }
 
   getStateForConnection(_: Connection, i: number): GameState {
@@ -500,7 +513,7 @@ class GameInProgress extends GamePostSetup {
     );
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): void {
+  processEvent(conn: Connection, event: ConnectionEvent): boolean {
     switch (event.type) {
       case ConnectionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
@@ -512,7 +525,7 @@ class GameInProgress extends GamePostSetup {
         if (conn.role) {
           this.setNote(conn.role, event.player, event.card, event.marks);
         }
-        break;
+        return false;
       case ConnectionEvents.Suggest:
         if (this.isTurnPlayer(conn.role)) {
           this.suggest(event.suggestion);
@@ -538,6 +551,7 @@ class GameInProgress extends GamePostSetup {
       default:
         console.error(`Invalid event for ${GameStatus.InProgress}: ${event}`);
     }
+    return true;
   }
 
   private validateCrime(crime: Crime) {
@@ -603,7 +617,7 @@ class GameOver extends GamePostSetup {
     this.winner = winner;
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): void {
+  processEvent(conn: Connection, event: ConnectionEvent): boolean {
     switch (event.type) {
       case ConnectionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
@@ -615,10 +629,11 @@ class GameOver extends GamePostSetup {
         if (conn.role) {
           this.setNote(conn.role, event.player, event.card, event.marks);
         }
-        break;
+        return false;
       default:
         console.log('Event not found in processEvent', event);
     }
+    return true;
   }
 
   getStateForConnection(conn: Connection): GameState {
