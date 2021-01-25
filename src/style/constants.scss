@@ -1,4 +1,22 @@
+$screen-xs-min: 480px;
+$screen-sm-min: 768px;
+$screen-md-min: 992px;
+$screen-lg-min: 1200px;
+
 $pad-xs: 0.6rem;
 $pad-sm: 1.2rem;
 $pad-md: 1.6rem;
 $pad-lg: 2.4rem;
+
+$block-spacing: 24px;
+$block-padding: 24px;
+
+$container-sm: 720px + $block-spacing * 2;
+$container-md: 940px + $block-spacing * 2;
+$container-lg: 1140px + $block-spacing * 2;
+
+$font-weight-light: 100;
+$font-weight-normal: 300;
+$font-weight-bold: 500;
+
+$line-height: 1.5;

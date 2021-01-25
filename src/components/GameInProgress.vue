@@ -61,7 +61,7 @@
         />
       </template>
     </template>
-    <div v-if="state.playerSecrets">
+    <template v-if="state.playerSecrets">
       <h2>Hand</h2>
       <div class="game-in-progress__hand">
         <Card
@@ -77,7 +77,7 @@
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
-    </div>
+    </template>
   </div>
 </template>
 
@@ -250,6 +250,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  padding: $pad-md $pad-lg;
 
   &__hand {
     display: flex;
@@ -260,10 +262,6 @@ export default defineComponent({
 
   &__turn-buttons {
     margin-top: $pad-sm;
-
-    > :not(:first-child) {
-      margin-left: $pad-sm;
-    }
   }
 
   &__accuse :deep(.select-crime__button) {

@@ -1,54 +1,56 @@
 <template>
-  <table class="notepad">
-    <tr>
-      <th />
-      <th v-for="player in players" :key="player.role.name">
-        <div class="notepad__player-header">{{ player.name }}</div>
-      </th>
-    </tr>
-    <tr>
-      <th :colspan="players.length + 1">Roles</th>
-    </tr>
-    <tr v-for="card in skin.roles" :key="card.name">
-      <th>{{ card.name }}</th>
-      <td v-for="player in players" :key="player.role.name">
-        <Note
-          :marks="getMarks(player, card)"
-          :showDropdown="isShownDropdown(player, card)"
-          :onUpdate="note => setNote(player, card, note)"
-          :toggleDropdown="() => toggleDropdown(player, card)"
-        />
-      </td>
-    </tr>
-    <tr>
-      <th :colspan="players.length + 1">Places</th>
-    </tr>
-    <tr v-for="card in skin.places" :key="card.name">
-      <th>{{ card.name }}</th>
-      <td v-for="player in players" :key="player.role.name">
-        <Note
-          :marks="getMarks(player, card)"
-          :showDropdown="isShownDropdown(player, card)"
-          :onUpdate="note => setNote(player, card, note)"
-          :toggleDropdown="() => toggleDropdown(player, card)"
-        />
-      </td>
-    </tr>
-    <tr>
-      <th :colspan="players.length + 1">Tools</th>
-    </tr>
-    <tr v-for="card in skin.tools" :key="card.name">
-      <th>{{ card.name }}</th>
-      <td v-for="player in players" :key="player.role.name">
-        <Note
-          :marks="getMarks(player, card)"
-          :showDropdown="isShownDropdown(player, card)"
-          :onUpdate="note => setNote(player, card, note)"
-          :toggleDropdown="() => toggleDropdown(player, card)"
-        />
-      </td>
-    </tr>
-  </table>
+  <div class="notepad">
+    <table>
+      <tr>
+        <th />
+        <th v-for="player in players" :key="player.role.name">
+          <div class="notepad__player-header">{{ player.name }}</div>
+        </th>
+      </tr>
+      <tr>
+        <th :colspan="players.length + 1">Roles</th>
+      </tr>
+      <tr v-for="card in skin.roles" :key="card.name">
+        <th>{{ card.name }}</th>
+        <td v-for="player in players" :key="player.role.name">
+          <Note
+            :marks="getMarks(player, card)"
+            :showDropdown="isShownDropdown(player, card)"
+            :onUpdate="note => setNote(player, card, note)"
+            :toggleDropdown="() => toggleDropdown(player, card)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <th :colspan="players.length + 1">Places</th>
+      </tr>
+      <tr v-for="card in skin.places" :key="card.name">
+        <th>{{ card.name }}</th>
+        <td v-for="player in players" :key="player.role.name">
+          <Note
+            :marks="getMarks(player, card)"
+            :showDropdown="isShownDropdown(player, card)"
+            :onUpdate="note => setNote(player, card, note)"
+            :toggleDropdown="() => toggleDropdown(player, card)"
+          />
+        </td>
+      </tr>
+      <tr>
+        <th :colspan="players.length + 1">Tools</th>
+      </tr>
+      <tr v-for="card in skin.tools" :key="card.name">
+        <th>{{ card.name }}</th>
+        <td v-for="player in players" :key="player.role.name">
+          <Note
+            :marks="getMarks(player, card)"
+            :showDropdown="isShownDropdown(player, card)"
+            :onUpdate="note => setNote(player, card, note)"
+            :toggleDropdown="() => toggleDropdown(player, card)"
+          />
+        </td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <script lang="ts">
@@ -118,12 +120,17 @@ export default defineComponent({
 @import '@/style/constants';
 
 .notepad {
-  border-collapse: collapse;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
-  background-color: #fff;
   text-align: center;
   cursor: default;
-  margin: 0 auto;
+  margin: 0 (-$pad-lg);
+  overflow: auto;
+  max-width: calc(100% + #{$pad-lg * 2});
+
+  table {
+    border-collapse: collapse;
+    background-color: #fff;
+  }
 
   td,
   th {

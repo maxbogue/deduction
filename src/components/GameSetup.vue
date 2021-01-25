@@ -131,6 +131,7 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: $pad-md $pad-lg;
 
   &__save-name {
     margin-left: $pad-xs;
@@ -155,11 +156,7 @@ export default defineComponent({
   }
 
   &__buttons {
-    margin-top: $pad-md;
-
-    > :not(:first-child) {
-      margin-left: $pad-sm;
-    }
+    margin-top: $pad-xs;
   }
 }
 </style>

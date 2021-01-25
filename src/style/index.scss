@@ -1,5 +1,9 @@
 @import './constants';
 
+* {
+  box-sizing: border-box;
+}
+
 html {
   // Use e.g. 1.6rem in the DOM to get 16px.
   font-size: 10px;
@@ -16,6 +20,7 @@ button {
   font-size: 1em;
   font-family: 'Crimson Text', serif;
   padding: $pad-xs $pad-sm;
+  margin: $pad-xs;
   cursor: pointer;
   border-radius: 3px;
   border-width: 1px;
@@ -32,5 +37,9 @@ h2 {
 
 hr {
   border: 1px dashed #999;
-  margin: 1em;
+  margin: 0.5em;
+}
+
+.center {
+  text-align: center;
 }

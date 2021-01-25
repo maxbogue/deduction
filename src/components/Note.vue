@@ -23,8 +23,8 @@
 import { defineComponent, PropType } from 'vue';
 
 const X = '&#x2716;';
-const ALL_MARKS = [X, '•', '?', '1', '2', '3', '4', '5', '6'];
-const MUTEX_MARKS = [X, '•', '?'];
+const ALL_MARKS = ['?', '•', X, '1', '2', '3', '4', '5', '6'];
+const MUTEX_MARKS = ['?', '•', X];
 
 export default defineComponent({
   name: 'Note',
@@ -103,7 +103,7 @@ export default defineComponent({
 
   &__dropdown {
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
     width: 150px;
     height: 150px;

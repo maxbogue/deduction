@@ -127,14 +127,31 @@ export default defineComponent({
 .select-crime {
   &__cards {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
+    justify-content: space-between;
+
+    @media (min-width: $screen-sm-min) {
+      flex-direction: row;
+      justify-content: space-around;
+      width: $container-sm;
+    }
   }
 
   &__column {
     display: flex;
-    flex-direction: column;
-    width: 33%;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: $pad-sm 0;
+
+    @media (min-width: $screen-sm-min) {
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 33%;
+    }
 
     > * {
       min-width: 100px;

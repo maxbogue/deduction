@@ -107,5 +107,6 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-over {
+  padding: $pad-md $pad-lg;
 }
 </style>

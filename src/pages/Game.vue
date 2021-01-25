@@ -79,14 +79,18 @@ export default defineComponent({
   font-size: 2.4rem;
   text-align: center;
   margin: $pad-lg auto $pad-lg;
-  padding: $pad-md $pad-lg;
   background-color: #eee;
-  width: 800px;
 
-  &__buttons {
-    > :not(:first-child) {
-      margin-left: $pad-sm;
-    }
+  @media (min-width: $screen-sm-min) {
+    width: $container-sm;
+  }
+
+  @media (min-width: $screen-md-min) {
+    width: $container-md;
+  }
+
+  @media (min-width: $screen-lg-min) {
+    width: $container-lg;
   }
 
   &__state {
