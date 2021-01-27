@@ -26,6 +26,5 @@ export default defineComponent({
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
   width: 1em;
   height: 1em;
-  margin: 0.8rem;
 }
 </style>

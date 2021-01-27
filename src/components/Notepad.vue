@@ -4,7 +4,10 @@
       <tr>
         <th />
         <th v-for="player in players" :key="player.role.name">
-          <div class="notepad__player-header">{{ player.name }}</div>
+          <div class="notepad__player-header">
+            <RoleColor class="notepad__player-color" :role="player.role" />
+            <span>{{ player.name }}</span>
+          </div>
         </th>
       </tr>
       <tr>
@@ -57,6 +60,7 @@
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
 import Note from '@/components/Note.vue';
+import RoleColor from '@/components/RoleColor.vue';
 import { useEventListener } from '@/composables';
 import { Card, Player, Skin } from '@/state';
 import { Dict, Maybe } from '@/types';
@@ -81,6 +85,7 @@ export default defineComponent({
   name: 'Notepad',
   components: {
     Note,
+    RoleColor,
   },
   props: {
     skin: {
@@ -184,6 +189,10 @@ export default defineComponent({
     transform-origin: 0% 0% 0px;
   }
 
+  tr:first-child > th {
+    vertical-align: top;
+  }
+
   td,
   th {
     border: 1px solid black;
@@ -208,6 +217,10 @@ export default defineComponent({
   &__player-header {
     writing-mode: vertical-lr;
     white-space: nowrap;
+  }
+
+  &__player-color {
+    margin-bottom: 1.2rem;
   }
 }
 </style>

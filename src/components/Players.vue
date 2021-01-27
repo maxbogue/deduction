@@ -7,7 +7,7 @@
       :class="classesForPlayer(player)"
       @click="onReconnect(player)"
     >
-      <RoleColor :role="player.role" />
+      <RoleColor class="players__player-color" :role="player.role" />
       <div class="players__player-name">{{ playerToString(player) }}</div>
       <span v-if="player.failedAccusation">&#x1F47B;</span>
     </div>
@@ -84,6 +84,10 @@ export default defineComponent({
       color: blue;
       cursor: pointer;
     }
+  }
+
+  &__player-color {
+    margin: 0.8rem;
   }
 }
 </style>
