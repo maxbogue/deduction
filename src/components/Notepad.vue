@@ -1,6 +1,6 @@
 <template>
   <div class="notepad">
-    <table>
+    <table :style="colorVars">
       <tr>
         <th />
         <th v-for="player in players" :key="player.role.name">
@@ -60,9 +60,22 @@ import Note from '@/components/Note.vue';
 import { useEventListener } from '@/composables';
 import { Card, Player, Skin } from '@/state';
 import { Dict } from '@/types';
+import { dictFromList } from '@/utils';
 
 const makeNoteKey = (player: Player, card: Card) =>
   `${player.role.name}---${card.name}`;
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) {
+    throw new Error(`bad player color: ${hex}`);
+  }
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  };
+}
 
 export default defineComponent({
   name: 'Notepad',
@@ -99,6 +112,14 @@ export default defineComponent({
     return {
       shownNoteDropdown,
     };
+  },
+  computed: {
+    colorVars(): Dict<string> {
+      return dictFromList(this.players, (acc, player, i) => {
+        const { r, g, b } = hexToRgb(player.role.color);
+        acc[`--color-${i + 1}`] = `rgba(${r}, ${g}, ${b}, 0.1)`;
+      });
+    },
   },
   methods: {
     getMarks(player: Player, card: Card): string[] {
@@ -140,13 +161,16 @@ export default defineComponent({
   th {
     font-weight: 600;
     padding: $pad-sm $pad-sm $pad-xs;
+    white-space: nowrap;
   }
 
   td {
     cursor: pointer;
 
-    &:hover {
-      background-color: #eee;
+    @for $i from 1 through 10 {
+      &:nth-of-type(#{$i}) {
+        background-color: #{var(--color- + $i)};
+      }
     }
   }
 
