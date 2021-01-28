@@ -11,6 +11,7 @@ import {
   Crime,
   GameState,
   GameStatus,
+  Mark,
   Player,
   PlayerSecrets,
   RoleCard,
@@ -299,7 +300,7 @@ abstract class GamePostSetup extends Game {
     role: RoleCard,
     playerColumn: Player,
     card: Card,
-    marks: string[]
+    marks: Mark[]
   ): void {
     const playerSecrets = this.roleToPlayerSecrets[role.name];
     const playerColumnRole = playerColumn.role.name;
@@ -330,6 +331,31 @@ abstract class GamePostSetup extends Game {
   }
 }
 
+function initNotes(
+  skin: Skin,
+  players: Player[],
+  i: number,
+  hand: Card[]
+): Dict<Dict<Mark[]>> {
+  const notes: Dict<Dict<Mark[]>> = {};
+  players.forEach((player, j) => {
+    const d: Dict<Mark[]> = {};
+    const f = (card: Card) => {
+      const inHand = hand.includes(card);
+      if (i === j) {
+        d[card.name] = [inHand ? Mark.D : Mark.X];
+      } else if (inHand) {
+        d[card.name] = [Mark.X];
+      }
+    };
+    skin.roles.forEach(f);
+    skin.places.forEach(f);
+    skin.tools.forEach(f);
+    notes[player.role.name] = d;
+  });
+  return notes;
+}
+
 class GameInProgress extends GamePostSetup {
   private turnIndex = 0;
   private turnState: TurnState = { status: TurnStatus.Suggest };
@@ -348,7 +374,7 @@ class GameInProgress extends GamePostSetup {
       hands.map((hand, i) => ({
         index: i,
         hand,
-        notes: {},
+        notes: initNotes(skin, players, i, hand),
       })),
       solution
     );

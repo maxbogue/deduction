@@ -22,15 +22,17 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-const X = '&#x2716;';
-const ALL_MARKS = ['?', '•', X, '1', '2', '3', '4', '5', '6'];
-const MUTEX_MARKS = ['?', '•', X];
+import { Mark as M } from '@/state';
+import { Maybe } from '@/types';
+
+const ALL_MARKS = [M.Q, M.D, M.X, M.E, M.N1, M.N2, M.N3, M.N4, M.N5];
+const MUTEX_MARKS = [M.Q, M.D, M.X, M.E];
 
 export default defineComponent({
   name: 'Note',
   props: {
     marks: {
-      type: Array as PropType<string[]>,
+      type: Array as PropType<M[]>,
       default: () => [],
     },
     showDropdown: {
@@ -38,7 +40,7 @@ export default defineComponent({
       default: false,
     },
     onUpdate: {
-      type: Function as PropType<(marks: string[]) => void>,
+      type: Function as PropType<(marks: M[]) => void>,
       required: true,
     },
     toggleDropdown: {
@@ -50,15 +52,15 @@ export default defineComponent({
     ALL_MARKS,
   }),
   computed: {
-    mutexMark(): string {
-      return this.marks.filter(m => MUTEX_MARKS.includes(m))[0] || '';
+    mutexMark(): Maybe<M> {
+      return this.marks.filter(m => MUTEX_MARKS.includes(m))[0] || null;
     },
-    numberMarks(): string[] {
+    numberMarks(): M[] {
       return this.marks.filter(m => !MUTEX_MARKS.includes(m)).sort();
     },
   },
   methods: {
-    toggleMark(mark: string) {
+    toggleMark(mark: M) {
       if (this.marks.includes(mark)) {
         this.onUpdate(this.marks.filter(m => m !== mark));
       } else if (MUTEX_MARKS.includes(mark)) {

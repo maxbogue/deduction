@@ -51,10 +51,22 @@ export interface Player {
   failedAccusation: Maybe<Crime>;
 }
 
+export enum Mark {
+  Q = '?',
+  D = '•',
+  X = '&#x2716;',
+  E = '!',
+  N1 = '1',
+  N2 = '2',
+  N3 = '3',
+  N4 = '4',
+  N5 = '5',
+}
+
 export interface PlayerSecrets {
   index: number;
   hand: Card[];
-  notes: Dict<Dict<string[]>>;
+  notes: Dict<Dict<Mark[]>>;
 }
 
 export enum TurnStatus {

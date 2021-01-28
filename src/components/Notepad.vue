@@ -62,7 +62,7 @@ import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 import Note from '@/components/Note.vue';
 import RoleColor from '@/components/RoleColor.vue';
 import { useEventListener } from '@/composables';
-import { Card, Player, Skin } from '@/state';
+import { Card, Mark, Player, Skin } from '@/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -97,12 +97,12 @@ export default defineComponent({
       required: true,
     },
     notes: {
-      type: Object as PropType<Dict<Dict<string[]>>>,
+      type: Object as PropType<Dict<Dict<Mark[]>>>,
       required: true,
     },
     setNote: {
       type: Function as PropType<
-        (player: Player, card: Card, marks: string[]) => void
+        (player: Player, card: Card, marks: Mark[]) => void
       >,
       required: true,
     },
@@ -158,7 +158,7 @@ export default defineComponent({
     },
   },
   methods: {
-    getMarks(player: Player, card: Card): string[] {
+    getMarks(player: Player, card: Card): Mark[] {
       return this.notes[player.role.name]?.[card.name] ?? [];
     },
     toggleDropdown(player: Player, card: Card) {

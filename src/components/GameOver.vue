@@ -41,7 +41,7 @@ import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { Card, Crime, GameOverState, Player } from '@/state';
+import { Card, Crime, GameOverState, Mark, Player } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
@@ -91,7 +91,7 @@ export default defineComponent({
       const { role, name } = player;
       return `${role.name} [${name}]`;
     },
-    setNote(player: Player, card: Card, marks: string[]) {
+    setNote(player: Player, card: Card, marks: Mark[]) {
       this.send({
         type: ConnectionEvents.SetNote,
         player,

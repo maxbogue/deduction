@@ -101,6 +101,7 @@ import {
   Card,
   Crime,
   InProgressState,
+  Mark,
   Player,
   TurnState,
   TurnStatus,
@@ -237,7 +238,7 @@ export default defineComponent({
         data: player.role,
       });
     },
-    setNote(player: Player, card: Card, marks: string[]) {
+    setNote(player: Player, card: Card, marks: Mark[]) {
       this.send({
         type: ConnectionEvents.SetNote,
         player,
