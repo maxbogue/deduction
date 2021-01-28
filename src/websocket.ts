@@ -43,6 +43,10 @@ export class WebSocketConnection implements Connection {
   }
 
   sendState(state: GameState): void {
-    this.ws.send(JSON.stringify(state));
+    try {
+      this.ws.send(JSON.stringify(state));
+    } catch (err: unknown) {
+      console.error(err);
+    }
   }
 }

@@ -43,13 +43,20 @@
         <Card v-if="sharedCard" :card="sharedCard" />
       </div>
       <div v-else>No player had a matching card to share.</div>
-      <div class="game-in-progress__turn-buttons">
+      <div v-if="currentPlayer" class="game-in-progress__turn-buttons">
         <button @click="toggleReady">
           {{ isReady ? 'Unready' : 'Ready' }}
         </button>
         <button v-if="isYourTurn" @click="showAccuse = true">Accuse</button>
       </div>
-      <div>{{ numReadyPlayers }}/{{ state.players.length }} Ready</div>
+      <div class="game-in-progress__unready-players">
+        <span>Waiting for: </span>
+        <RoleColor
+          v-for="player in unreadyPlayers"
+          :key="player.role.name"
+          :role="player.role"
+        />
+      </div>
       <template v-if="showAccuse">
         <h2>Accusation</h2>
         <SelectCrime
@@ -87,6 +94,7 @@ import { defineComponent, PropType } from 'vue';
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
+import RoleColor from '@/components/RoleColor.vue';
 import SelectCrime from '@/components/SelectCrime.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import {
@@ -98,6 +106,7 @@ import {
   TurnStatus,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
+import { dictFromList } from '@/utils';
 
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
@@ -111,6 +120,7 @@ export default defineComponent({
     Card: CardComponent,
     Notepad,
     Players,
+    RoleColor,
     SelectCrime,
   },
   props: {
@@ -181,11 +191,18 @@ export default defineComponent({
           this.turn.playerIsReady[this.currentPlayer.role.name]
       );
     },
-    numReadyPlayers(): number {
+    roleToPlayer(): Dict<Player> {
+      return dictFromList(this.state.players, (acc, p) => {
+        acc[p.role.name] = p;
+      });
+    },
+    unreadyPlayers(): Player[] {
       if (this.turn.status !== TurnStatus.Record) {
-        return 0;
+        return [];
       }
-      return Object.values(this.turn.playerIsReady).filter(Boolean).length;
+      return Object.entries(this.turn.playerIsReady)
+        .filter(e => !e[1])
+        .map(e => this.roleToPlayer[e[0]]);
     },
   },
   methods: {
@@ -258,6 +275,15 @@ export default defineComponent({
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  &__unready-players {
+    display: flex;
+    align-items: center;
+
+    > :not(:first-child) {
+      margin-left: $pad-xs;
+    }
   }
 
   &__turn-buttons {
