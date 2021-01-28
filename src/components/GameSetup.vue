@@ -153,6 +153,10 @@ export default defineComponent({
       color: blue;
       cursor: pointer;
     }
+
+    .role-color {
+      margin: 0.8rem;
+    }
   }
 
   &__buttons {
