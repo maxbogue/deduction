@@ -42,6 +42,9 @@
         <span>{{ sharePlayer ? getPlayerName(sharePlayer) : '' }} shared</span>
         <Card v-if="sharedCard" :card="sharedCard" />
       </div>
+      <div v-else-if="sharePlayer !== turnPlayer">
+        {{ sharePlayer ? getPlayerName(sharePlayer) : '' }} shared a card.
+      </div>
       <div v-else>No player had a matching card to share.</div>
       <div v-if="currentPlayer" class="game-in-progress__turn-buttons">
         <button @click="toggleReady">
@@ -69,6 +72,13 @@
       </template>
     </template>
     <template v-if="state.playerSecrets">
+      <h2>Notepad</h2>
+      <Notepad
+        :skin="state.skin"
+        :players="state.players"
+        :notes="state.playerSecrets.notes"
+        :setNote="setNote"
+      />
       <h2>Hand</h2>
       <div class="game-in-progress__hand">
         <Card
@@ -77,13 +87,6 @@
           :card="card"
         />
       </div>
-      <h2>Notepad</h2>
-      <Notepad
-        :skin="state.skin"
-        :players="state.players"
-        :notes="state.playerSecrets.notes"
-        :setNote="setNote"
-      />
     </template>
   </div>
 </template>
@@ -268,7 +271,6 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
   padding: $pad-md $pad-lg;
 
   &__hand {
