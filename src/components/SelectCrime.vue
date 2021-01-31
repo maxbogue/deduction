@@ -49,7 +49,8 @@ import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
-import { Card, Crime, PlaceCard, RoleCard, Skin, ToolCard } from '@/state';
+import { safeInject, SkinKey } from '@/composables';
+import { Card, Crime, PlaceCard, RoleCard, ToolCard } from '@/state';
 import { Maybe } from '@/types';
 
 interface InProgressData {
@@ -64,10 +65,6 @@ export default defineComponent({
     Card: CardComponent,
   },
   props: {
-    skin: {
-      type: Object as PropType<Skin>,
-      required: true,
-    },
     excludeCards: {
       type: Array as PropType<Card[]>,
       default: () => [],
@@ -80,6 +77,12 @@ export default defineComponent({
       type: Function as PropType<(crime: Crime) => void>,
       required: true,
     },
+  },
+  setup() {
+    const skin = safeInject(SkinKey);
+    return {
+      skin,
+    };
   },
   data: (): InProgressData => ({
     selectedRole: null,

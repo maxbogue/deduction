@@ -31,7 +31,7 @@ export default defineComponent({
       type: Array as PropType<Player[]>,
       required: true,
     },
-    currentPlayer: {
+    yourPlayer: {
       type: Object as PropType<Maybe<Player>>,
       default: null,
     },
@@ -43,13 +43,13 @@ export default defineComponent({
   methods: {
     classesForPlayer(player: Player) {
       return {
-        'players__player--you': player === this.currentPlayer,
+        'players__player--you': player === this.yourPlayer,
         'players__player--disconnected': !player.isConnected,
         'players__player--reconnectable': this.canReconnectAsPlayer(player),
       };
     },
     canReconnectAsPlayer(player: Player): boolean {
-      return !this.currentPlayer && !player.isConnected;
+      return !this.yourPlayer && !player.isConnected;
     },
     playerToString(player: Player): string {
       const { role, name } = player;

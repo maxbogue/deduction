@@ -2,7 +2,7 @@
   <div class="game-over">
     <Players
       :players="state.players"
-      :currentPlayer="currentPlayer"
+      :yourPlayer="yourPlayer"
       :onReconnect="reconnectAsPlayer"
     />
     <h2>Game Over!</h2>
@@ -60,15 +60,15 @@ export default defineComponent({
     },
   },
   computed: {
-    currentPlayer(): Maybe<Player> {
+    yourPlayer(): Maybe<Player> {
       if (!this.state.playerSecrets) {
         return null;
       }
       return this.state.players[this.state.playerSecrets.index];
     },
     connectionPlayer(): string {
-      return this.currentPlayer
-        ? this.playerToString(this.currentPlayer)
+      return this.yourPlayer
+        ? this.playerToString(this.yourPlayer)
         : 'observing';
     },
     winner(): Player {

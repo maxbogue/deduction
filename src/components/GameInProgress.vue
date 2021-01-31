@@ -2,75 +2,35 @@
   <div class="game-in-progress">
     <Players
       :players="state.players"
-      :currentPlayer="currentPlayer"
+      :yourPlayer="yourPlayer"
       :onReconnect="reconnectAsPlayer"
     />
     <h2>Turn: {{ playerToString(turnPlayer) }}</h2>
-    <template v-if="turn.status === TurnStatus.Suggest">
-      <template v-if="isYourTurn">
-        <h2>Suggest</h2>
-        <SelectCrime :skin="state.skin" :onSelect="suggest" />
-      </template>
-      <div v-else>Waiting for {{ turnPlayer.name }} to make a suggestion.</div>
-    </template>
-    <template v-else-if="turn.status === TurnStatus.Share">
-      <div>
-        {{ getPlayerName(turnPlayer) }} suggested
-        {{ crimeToString(turn.suggestion) }}.
-      </div>
-      <template v-if="currentPlayer === sharePlayer">
-        <div>Choose a card to share:</div>
-        <div class="game-in-progress__hand">
-          <Card
-            v-for="card in shareableCards"
-            :key="card.name"
-            :card="card"
-            :onClick="() => shareCard(card)"
-          />
-        </div>
-      </template>
-      <div v-else-if="sharePlayer">
-        Waiting for {{ sharePlayer ? sharePlayer.name : '' }} to share a card.
-      </div>
-    </template>
-    <template v-else-if="turn.status === TurnStatus.Record">
-      <div>
-        {{ getPlayerName(turnPlayer) }} suggested
-        {{ crimeToString(turn.suggestion) }}.
-      </div>
-      <div v-if="sharedCard">
-        <span>{{ sharePlayer ? getPlayerName(sharePlayer) : '' }} shared</span>
-        <Card v-if="sharedCard" :card="sharedCard" />
-      </div>
-      <div v-else-if="sharePlayer !== turnPlayer">
-        {{ sharePlayer ? getPlayerName(sharePlayer) : '' }} shared a card.
-      </div>
-      <div v-else>No player had a matching card to share.</div>
-      <div v-if="currentPlayer" class="game-in-progress__turn-buttons">
-        <button @click="toggleReady">
-          {{ isReady ? 'Unready' : 'Ready' }}
-        </button>
-        <button v-if="isYourTurn" @click="showAccuse = true">Accuse</button>
-      </div>
-      <div class="game-in-progress__unready-players">
-        <span>Waiting for: </span>
-        <RoleColor
-          v-for="player in unreadyPlayers"
-          :key="player.role.name"
-          :role="player.role"
-        />
-      </div>
-      <template v-if="showAccuse">
-        <h2>Accusation</h2>
-        <SelectCrime
-          class="game-in-progress__accuse"
-          :skin="state.skin"
-          :excludeCards="hand"
-          buttonText="Final Accusation"
-          :onSelect="accuse"
-        />
-      </template>
-    </template>
+    <TurnSuggest
+      v-if="turn.status === TurnStatus.Suggest"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :onSuggest="suggest"
+    />
+    <TurnShare
+      v-else-if="turn.status === TurnStatus.Share"
+      :turn="turn"
+      :players="state.players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :onShareCard="shareCard"
+    />
+    <TurnRecord
+      v-else-if="turn.status === TurnStatus.Record"
+      :turn="turn"
+      :players="state.players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :setIsReady="setIsReady"
+      :onAccuse="accuse"
+    />
     <template v-if="state.playerSecrets">
       <h2>Notepad</h2>
       <Notepad
@@ -92,13 +52,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, PropType, provide } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
-import RoleColor from '@/components/RoleColor.vue';
-import SelectCrime from '@/components/SelectCrime.vue';
+import TurnRecord from '@/components/TurnRecord.vue';
+import TurnShare from '@/components/TurnShare.vue';
+import TurnSuggest from '@/components/TurnSuggest.vue';
+import { SkinKey } from '@/composables';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import {
   Card,
@@ -110,12 +72,10 @@ import {
   TurnStatus,
 } from '@/state';
 import { Dict, Maybe } from '@/types';
-import { dictFromList } from '@/utils';
 
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
   notes: Dict<Dict<string>>;
-  showAccuse: boolean;
 }
 
 export default defineComponent({
@@ -124,8 +84,9 @@ export default defineComponent({
     Card: CardComponent,
     Notepad,
     Players,
-    RoleColor,
-    SelectCrime,
+    TurnRecord,
+    TurnShare,
+    TurnSuggest,
   },
   props: {
     state: {
@@ -137,16 +98,18 @@ export default defineComponent({
       required: true,
     },
   },
+  setup(props) {
+    provide(SkinKey, props.state.skin);
+  },
   data: (): InProgressData => ({
     TurnStatus,
     notes: {},
-    showAccuse: false,
   }),
   computed: {
     turn(): TurnState {
       return this.state.turnState;
     },
-    currentPlayer(): Maybe<Player> {
+    yourPlayer(): Maybe<Player> {
       if (!this.state.playerSecrets) {
         return null;
       }
@@ -156,7 +119,7 @@ export default defineComponent({
       return this.state.players[this.state.turnIndex];
     },
     isYourTurn(): boolean {
-      return this.currentPlayer === this.turnPlayer;
+      return this.yourPlayer === this.turnPlayer;
     },
     sharePlayer(): Maybe<Player> {
       if (this.turn.status === TurnStatus.Suggest) {
@@ -164,49 +127,13 @@ export default defineComponent({
       }
       return this.state.players[this.turn.sharePlayerIndex];
     },
-    sharedCard(): Maybe<Card> {
-      return this.turn.status === TurnStatus.Record
-        ? this.turn.sharedCard
-        : null;
-    },
     connectionPlayer(): string {
-      return this.currentPlayer
-        ? this.playerToString(this.currentPlayer)
+      return this.yourPlayer
+        ? this.playerToString(this.yourPlayer)
         : 'observing';
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
-    },
-    suggestedCards(): Card[] {
-      if (this.turn.status !== TurnStatus.Share) {
-        return [];
-      }
-      return Object.values(this.turn.suggestion);
-    },
-    shareableCards(): Card[] {
-      return this.hand.filter(h =>
-        this.suggestedCards.find(c => c.name === h.name)
-      );
-    },
-    isReady(): boolean {
-      return Boolean(
-        this.currentPlayer &&
-          this.turn.status === TurnStatus.Record &&
-          this.turn.playerIsReady[this.currentPlayer.role.name]
-      );
-    },
-    roleToPlayer(): Dict<Player> {
-      return dictFromList(this.state.players, (acc, p) => {
-        acc[p.role.name] = p;
-      });
-    },
-    unreadyPlayers(): Player[] {
-      if (this.turn.status !== TurnStatus.Record) {
-        return [];
-      }
-      return Object.entries(this.turn.playerIsReady)
-        .filter(e => !e[1])
-        .map(e => this.roleToPlayer[e[0]]);
     },
   },
   methods: {
@@ -222,11 +149,10 @@ export default defineComponent({
         sharedCard: card,
       });
     },
-    toggleReady() {
-      this.showAccuse = false;
+    setIsReady(isReady: boolean) {
       this.send({
         type: ConnectionEvents.SetReady,
-        data: !this.isReady,
+        data: isReady,
       });
     },
     accuse(crime: Crime) {
@@ -250,7 +176,7 @@ export default defineComponent({
       });
     },
     getPlayerName(player: Player): string {
-      return player === this.currentPlayer ? 'You' : player.name;
+      return player === this.yourPlayer ? 'You' : player.name;
     },
     playerToString(player: Player): string {
       const { role, name } = player;
