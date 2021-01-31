@@ -15,7 +15,7 @@
         />
       </div>
     </template>
-    <div v-else>Waiting for {{ sharePlayer.name }} to share a card.</div>
+    <div v-else>{{ sharePlayer.name }} is choosing a card.</div>
   </div>
 </template>
 

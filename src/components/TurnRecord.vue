@@ -9,7 +9,7 @@
       <Card :card="sharedCard" />
     </div>
     <div v-else-if="sharePlayer !== turnPlayer">
-      {{ getPlayerName(sharePlayer) }} shared a card.
+      {{ getPlayerName(sharePlayer) }} has shared a card.
     </div>
     <div v-else>No player had a matching card to share.</div>
     <div v-if="yourPlayer" class="turn-record__buttons">
