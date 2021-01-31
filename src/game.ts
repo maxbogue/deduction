@@ -205,20 +205,26 @@ class GameSetup extends Game {
 
     const { solution, hands } = this.dealCards(playerConnections.length);
 
-    const players = playerConnections.map(
-      (conn: Connection): Player => {
+    const players = shuffle(playerConnections).map(
+      (conn: Connection, i: number): Player => {
         const { role, name } = conn.getDescription();
         if (!role) {
           throw new TypeError('Role must be set.');
         }
-        return { role, name, isConnected: true, failedAccusation: null };
+        return {
+          role,
+          name,
+          isConnected: true,
+          failedAccusation: null,
+          handSize: hands[i].length,
+        };
       }
     );
 
     const game = new GameInProgress(
       this.observer,
       this.skin,
-      shuffle(players),
+      players,
       hands,
       solution
     );

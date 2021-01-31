@@ -5,7 +5,9 @@
         <th />
         <th v-for="player in players" :key="player.role.name">
           <div class="notepad__player-header">
-            <RoleColor class="notepad__player-color" :role="player.role" />
+            <RoleColor class="notepad__player-color" :role="player.role">
+              {{ player.handSize }}
+            </RoleColor>
             <span>{{ player.name }}</span>
           </div>
         </th>

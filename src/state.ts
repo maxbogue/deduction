@@ -49,6 +49,7 @@ export interface Player {
   name: string;
   isConnected: boolean;
   failedAccusation: Maybe<Crime>;
+  handSize: number;
 }
 
 export enum Mark {

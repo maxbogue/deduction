@@ -1,5 +1,7 @@
 <template>
-  <span class="role-color" :style="{ backgroundColor: role.color }" />
+  <span class="role-color" :style="{ backgroundColor: role.color }"
+    ><slot
+  /></span>
 </template>
 
 <script lang="ts">
@@ -22,9 +24,14 @@ export default defineComponent({
 @import '@/style/constants';
 
 .role-color {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
-  width: 1em;
-  height: 1em;
+  width: 2.4rem;
+  height: 2.4rem;
+  color: white;
+  font-size: 0.6em;
+  text-align: center;
 }
 </style>
