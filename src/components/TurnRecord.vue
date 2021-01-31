@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="turn-record">
     <div>
       {{ getPlayerName(turnPlayer) }} suggested
       {{ crimeToString(turn.suggestion) }}.
@@ -141,6 +141,8 @@ export default defineComponent({
 @import '@/style/constants';
 
 .turn-record {
+  @include flex-column;
+
   &__unready-players {
     display: flex;
     align-items: center;

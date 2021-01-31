@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="turn-suggest">
     <template v-if="yourPlayer === turnPlayer">
       <h2>Suggest</h2>
       <SelectCrime :onSelect="onSuggest" />
@@ -36,3 +36,11 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+@import '@/style/constants';
+
+.turn-suggest {
+  @include flex-column;
+}
+</style>

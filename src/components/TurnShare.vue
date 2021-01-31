@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="turn-share">
     <div>
       {{ getPlayerName(turnPlayer) }} suggested
       {{ crimeToString(turn.suggestion) }}.
@@ -86,6 +86,8 @@ export default defineComponent({
 @import '@/style/constants';
 
 .turn-share {
+  @include flex-column;
+
   &__cards {
     display: flex;
     justify-content: center;

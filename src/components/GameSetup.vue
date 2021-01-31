@@ -128,9 +128,7 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-setup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  @include flex-column;
   padding: $pad-md $pad-lg;
 
   &__save-name {

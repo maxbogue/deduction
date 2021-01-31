@@ -63,9 +63,7 @@ export default defineComponent({
 @import '@/style/constants';
 
 .players {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  @include flex-column;
 
   &__player {
     display: flex;

@@ -194,9 +194,7 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game-in-progress {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  @include flex-column;
   padding: $pad-md $pad-lg;
 
   &__hand {
