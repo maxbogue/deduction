@@ -37,6 +37,14 @@
         :onSelect="onAccuse"
       />
     </template>
+    <div
+      v-if="yourPlayer"
+      class="turn-record__toast"
+      :style="{ backgroundColor: yourPlayer.role.color }"
+      @click="setIsReady(!isReady)"
+    >
+      {{ isReady ? 'no wait' : 'im ready bro' }}
+    </div>
   </div>
 </template>
 
@@ -152,6 +160,18 @@ export default defineComponent({
     &[disabled] {
       background-color: transparent;
     }
+  }
+
+  &__toast {
+    position: fixed;
+    bottom: $pad-sm;
+    z-index: 10;
+    opacity: 90%;
+    padding: 12px;
+    left: 0;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    cursor: pointer;
   }
 }
 </style>
