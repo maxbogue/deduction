@@ -114,6 +114,11 @@ class GameSetup extends Game {
   constructor(observer: GameObserver, connections: Connection[]) {
     super(observer);
     this.connections = connections;
+    this.connections.forEach(conn => {
+      if (conn.role) {
+        this.setConnectionRole(conn, conn.role);
+      }
+    });
   }
 
   removeConnection(conn: Connection): void {
