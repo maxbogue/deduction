@@ -1,6 +1,7 @@
 <template>
   <div class="game">
     <div v-if="!state">Loading...</div>
+    <div v-else-if="!connected">Reconnecting...</div>
     <GameSetup
       v-else-if="state.status === GameStatus.Setup"
       :state="state"
