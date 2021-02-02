@@ -24,15 +24,15 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, Ref, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import GameInProgress from '@/components/GameInProgress.vue';
 import GameOver from '@/components/GameOver.vue';
 import GameSetup from '@/components/GameSetup.vue';
+import { useWebSocket } from '@/composables/websocket';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { GameState, GameStatus } from '@/state';
-import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Game',
@@ -44,16 +44,11 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const id = computed(() => route.params.id);
-    const state: Ref<Maybe<GameState>> = ref(null);
+    const url = computed(() => `ws://${window.location.host}/api/${id.value}/`);
 
-    const ws = new WebSocket(`ws://${window.location.host}/api/${id.value}/`);
-    ws.addEventListener('message', event => {
-      state.value = JSON.parse(event.data);
-    });
-
-    const send = (event: ConnectionEvent) => {
-      ws.send(JSON.stringify(event));
-    };
+    const { connected, state, send } = useWebSocket<GameState, ConnectionEvent>(
+      url
+    );
 
     const restart = () => {
       if (confirm('Are you sure you want to restart the game?')) {
@@ -63,6 +58,7 @@ export default defineComponent({
 
     return {
       GameStatus,
+      connected,
       state,
       send,
       restart,
