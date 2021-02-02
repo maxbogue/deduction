@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import GameInProgress from '@/components/GameInProgress.vue';
@@ -33,7 +33,18 @@ import GameOver from '@/components/GameOver.vue';
 import GameSetup from '@/components/GameSetup.vue';
 import { useWebSocket } from '@/composables/websocket';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { GameState, GameStatus } from '@/state';
+import { GameState, GameStatus, RoleCard } from '@/state';
+import { Maybe } from '@/types';
+
+function roleFromState(state: GameState): Maybe<RoleCard> {
+  if (state.status === GameStatus.Setup) {
+    return state.connections[state.connectionIndex].role;
+  }
+  if (!state.playerSecrets) {
+    return null;
+  }
+  return state.players[state.playerSecrets.index].role;
+}
 
 export default defineComponent({
   name: 'Game',
@@ -56,6 +67,18 @@ export default defineComponent({
         send({ type: ConnectionEvents.Restart });
       }
     };
+
+    watch(connected, (newVal, oldVal) => {
+      if (newVal && !oldVal && state.value) {
+        const role = roleFromState(state.value);
+        if (role) {
+          send({
+            type: ConnectionEvents.SetRole,
+            data: role,
+          });
+        }
+      }
+    });
 
     return {
       GameStatus,
