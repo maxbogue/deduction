@@ -55,7 +55,7 @@ export interface Player {
 export enum Mark {
   Q = '?',
   D = '•',
-  X = '&#x2716;',
+  X = '&#x2715;',
   E = '!',
   N1 = '1',
   N2 = '2',

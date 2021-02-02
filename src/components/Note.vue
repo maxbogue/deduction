@@ -119,6 +119,7 @@ export default defineComponent({
   }
 
   &__mark {
+    color: #000;
     font-size: 2.4rem;
     list-style: none;
     cursor: pointer;

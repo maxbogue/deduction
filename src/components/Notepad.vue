@@ -15,7 +15,7 @@
       <tr>
         <th :colspan="players.length + 1">Roles</th>
       </tr>
-      <tr v-for="card in skin.roles" :key="card.name">
+      <tr v-for="card in skin.roles" :key="card.name" :class="rowClasses(card)">
         <th>{{ card.name }}</th>
         <td v-for="player in players" :key="player.role.name">
           <Note
@@ -29,7 +29,11 @@
       <tr>
         <th :colspan="players.length + 1">Places</th>
       </tr>
-      <tr v-for="card in skin.places" :key="card.name">
+      <tr
+        v-for="card in skin.places"
+        :key="card.name"
+        :class="rowClasses(card)"
+      >
         <th>{{ card.name }}</th>
         <td v-for="player in players" :key="player.role.name">
           <Note
@@ -43,7 +47,7 @@
       <tr>
         <th :colspan="players.length + 1">Tools</th>
       </tr>
-      <tr v-for="card in skin.tools" :key="card.name">
+      <tr v-for="card in skin.tools" :key="card.name" :class="rowClasses(card)">
         <th>{{ card.name }}</th>
         <td v-for="player in players" :key="player.role.name">
           <Note
@@ -59,12 +63,13 @@
 </template>
 
 <script lang="ts">
+import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
 import Note from '@/components/Note.vue';
 import RoleColor from '@/components/RoleColor.vue';
 import { useEventListener } from '@/composables';
-import { Card, Mark, Player, Skin } from '@/state';
+import { Card, Crime, Mark, Player, Skin } from '@/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -83,6 +88,11 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
+function hexToRgba(hex: string, a: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 export default defineComponent({
   name: 'Notepad',
   components: {
@@ -97,6 +107,14 @@ export default defineComponent({
     players: {
       type: Array as PropType<Player[]>,
       required: true,
+    },
+    suggestion: {
+      type: Object as PropType<Maybe<Crime>>,
+      default: null,
+    },
+    sharePlayer: {
+      type: Object as PropType<Maybe<Player>>,
+      default: null,
     },
     notes: {
       type: Object as PropType<Dict<Dict<Mark[]>>>,
@@ -143,8 +161,10 @@ export default defineComponent({
   computed: {
     colorVars(): Dict<string> {
       return dictFromList(this.players, (acc, player, i) => {
-        const { r, g, b } = hexToRgb(player.role.color);
-        acc[`--color-${i + 1}`] = `rgba(${r}, ${g}, ${b}, 0.1)`;
+        acc[`--color-${i + 1}`] = hexToRgba(
+          player.role.color,
+          player === this.sharePlayer ? 0.5 : 0.2
+        );
       });
     },
     tableStyle(): Dict<string> {
@@ -158,6 +178,9 @@ export default defineComponent({
         maxHeight: `${this.tableHeight}px`,
       };
     },
+    highlightCards(): Card[] {
+      return this.suggestion ? Object.values(this.suggestion) : [];
+    },
   },
   methods: {
     getMarks(player: Player, card: Card): Mark[] {
@@ -170,6 +193,11 @@ export default defineComponent({
     },
     isShownDropdown(player: Player, card: Card) {
       return this.shownNoteDropdown === makeNoteKey(player, card);
+    },
+    rowClasses(card: Card): Dict<boolean> {
+      return {
+        notepad__highlight: Boolean(this.highlightCards.find(isEqual(card))),
+      };
     },
   },
 });
@@ -197,7 +225,7 @@ export default defineComponent({
 
   td,
   th {
-    border: 1px solid black;
+    border: 1px solid #000;
 
     @for $i from 1 through 10 {
       &:nth-child(#{$i + 1}) {
@@ -223,6 +251,11 @@ export default defineComponent({
 
   &__player-color {
     margin-bottom: 1.2rem;
+  }
+
+  &__highlight {
+    background-color: #666;
+    color: #fff;
   }
 }
 </style>

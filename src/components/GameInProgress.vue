@@ -36,6 +36,8 @@
       <Notepad
         :skin="state.skin"
         :players="state.players"
+        :suggestion="suggestion"
+        :sharePlayer="sharePlayer"
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
@@ -134,6 +136,11 @@ export default defineComponent({
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
+    },
+    suggestion(): Maybe<Crime> {
+      return this.turn.status === TurnStatus.Suggest
+        ? null
+        : this.turn.suggestion;
     },
   },
   methods: {
