@@ -25,8 +25,21 @@ import { defineComponent, PropType } from 'vue';
 import { Mark as M } from '@/state';
 import { Maybe } from '@/types';
 
-const ALL_MARKS = [M.Q, M.D, M.X, M.E, M.N1, M.N2, M.N3, M.N4, M.N5];
-const MUTEX_MARKS = [M.Q, M.D, M.X, M.E];
+const ALL_MARKS = [
+  M.Q,
+  M.D,
+  M.X,
+  M.E,
+  M.W,
+  M.N1,
+  M.N2,
+  M.N3,
+  M.N4,
+  M.N5,
+  M.N6,
+  M.N7,
+];
+const MUTEX_MARKS = [M.Q, M.D, M.X, M.E, M.W];
 
 export default defineComponent({
   name: 'Note',
@@ -108,7 +121,7 @@ export default defineComponent({
     right: 0;
     top: 0;
     width: 150px;
-    height: 150px;
+    height: 200px;
     z-index: 1;
     padding: 0;
     overflow: hidden;
