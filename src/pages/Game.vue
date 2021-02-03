@@ -99,6 +99,7 @@ export default defineComponent({
   font-size: 2.4rem;
   text-align: center;
   margin: $pad-lg auto $pad-lg;
+  padding: $pad-lg $pad-md;
   background-color: #eee;
 
   @media (min-width: $screen-sm-min) {
@@ -111,6 +112,10 @@ export default defineComponent({
 
   @media (min-width: $screen-lg-min) {
     width: $container-lg;
+  }
+
+  > :not(:first-child) {
+    margin-top: $pad-lg;
   }
 
   &__state {

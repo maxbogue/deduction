@@ -3,13 +3,15 @@
     <div
       v-for="player in players"
       :key="player.role.name"
-      class="players__player"
       :class="classesForPlayer(player)"
       @click="onReconnect(player)"
     >
       <RoleColor class="players__player-color" :role="player.role" />
-      <div class="players__player-name">{{ playerToString(player) }}</div>
-      <span v-if="player.failedAccusation">&#x1F47B;</span>
+      <div v-if="player.failedAccusation">&#x1F47B;&nbsp;</div>
+      <div v-else-if="player === turnPlayer">&#x1F50D;&nbsp;</div>
+      <div :class="classesForPlayerName(player)">
+        {{ playerToString(player) }}
+      </div>
     </div>
   </div>
 </template>
@@ -35,6 +37,10 @@ export default defineComponent({
       type: Object as PropType<Maybe<Player>>,
       default: null,
     },
+    turnPlayer: {
+      type: Object as PropType<Maybe<Player>>,
+      default: null,
+    },
     onReconnect: {
       type: Function as PropType<(player: Player) => void>,
       required: true,
@@ -43,9 +49,16 @@ export default defineComponent({
   methods: {
     classesForPlayer(player: Player) {
       return {
+        players__player: true,
         'players__player--you': player === this.yourPlayer,
         'players__player--disconnected': !player.isConnected,
         'players__player--reconnectable': this.canReconnectAsPlayer(player),
+      };
+    },
+    classesForPlayerName(player: Player) {
+      return {
+        'players__player-name': true,
+        'players__player-name--you': player === this.yourPlayer,
       };
     },
     canReconnectAsPlayer(player: Player): boolean {
@@ -64,15 +77,12 @@ export default defineComponent({
 
 .players {
   @include flex-column;
+  align-items: flex-start;
 
   &__player {
     display: flex;
     align-items: center;
     cursor: default;
-
-    &--you {
-      text-decoration: underline;
-    }
 
     &--disconnected {
       color: red;
@@ -85,7 +95,13 @@ export default defineComponent({
   }
 
   &__player-color {
-    margin: 0.8rem;
+    margin: 0.6rem;
+  }
+
+  &__player-name {
+    &--you {
+      text-decoration: underline;
+    }
   }
 }
 </style>

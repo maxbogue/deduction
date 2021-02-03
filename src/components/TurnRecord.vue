@@ -176,7 +176,19 @@ export default defineComponent({
     cursor: pointer;
 
     @media (min-width: $screen-sm-min) {
+      width: $container-sm;
+      left: calc(50% - #{$container-sm / 2});
       bottom: $pad-sm;
+    }
+
+    @media (min-width: $screen-md-min) {
+      width: $container-md;
+      left: calc(50% - #{$container-md / 2});
+    }
+
+    @media (min-width: $screen-lg-min) {
+      width: $container-lg;
+      left: calc(50% - #{$container-lg / 2});
     }
   }
 }

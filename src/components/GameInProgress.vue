@@ -3,9 +3,9 @@
     <Players
       :players="state.players"
       :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
       :onReconnect="reconnectAsPlayer"
     />
-    <h2>Turn: {{ playerToString(turnPlayer) }}</h2>
     <TurnSuggest
       v-if="turn.status === TurnStatus.Suggest"
       :yourPlayer="yourPlayer"
@@ -32,7 +32,6 @@
       :onAccuse="accuse"
     />
     <template v-if="state.playerSecrets">
-      <h2>Notepad</h2>
       <Notepad
         :skin="state.skin"
         :players="state.players"
@@ -203,34 +202,16 @@ export default defineComponent({
 
 .game-in-progress {
   @include flex-column;
-  padding: $pad-md $pad-lg;
+
+  > :not(:first-child) {
+    margin-top: $pad-lg;
+  }
 
   &__hand {
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
-  }
-
-  &__unready-players {
-    display: flex;
-    align-items: center;
-
-    > :not(:first-child) {
-      margin-left: $pad-xs;
-    }
-  }
-
-  &__turn-buttons {
-    margin-top: $pad-sm;
-  }
-
-  &__accuse :deep(.select-crime__button) {
-    background-color: rgba(255, 24, 12, 0.5);
-
-    &[disabled] {
-      background-color: transparent;
-    }
   }
 }
 </style>

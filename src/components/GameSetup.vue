@@ -1,28 +1,32 @@
 <template>
   <div class="game-setup">
-    <h2>Role</h2>
-    <div class="game-setup__roles">
-      <div
-        v-for="role in state.skin.roles"
-        :key="role.name"
-        class="game-setup__role"
-        :class="classesForRole(role)"
-        @click="selectRole(role)"
-      >
-        <RoleColor :role="role" />
-        <div>
-          <span>{{ role.name }}</span>
-          <span v-if="!isRoleAvailable(role)">
-            [{{ roleToConnection[role.name].name }}]</span
-          >
+    <div>
+      <h2>Role</h2>
+      <div class="game-setup__roles">
+        <div
+          v-for="role in state.skin.roles"
+          :key="role.name"
+          class="game-setup__role"
+          :class="classesForRole(role)"
+          @click="selectRole(role)"
+        >
+          <RoleColor :role="role" />
+          <div>
+            <span>{{ role.name }}</span>
+            <span v-if="!isRoleAvailable(role)">
+              [{{ roleToConnection[role.name].name }}]</span
+            >
+          </div>
         </div>
       </div>
     </div>
-    <h2>Name</h2>
-    <form @submit.prevent="saveName">
-      <input v-model="name" type="text" :disabled="!connection.role" />
-      <button type="submit" class="game-setup__save-name">Save</button>
-    </form>
+    <div>
+      <h2>Name</h2>
+      <form @submit.prevent="saveName">
+        <input v-model="name" type="text" :disabled="!connection.role" />
+        <button type="submit" class="game-setup__save-name">Save</button>
+      </form>
+    </div>
     <div class="game-setup__buttons">
       <button :disabled="!canReady" @click="toggleReady">
         {{ connection.isReady ? 'Unready' : 'Ready' }}
@@ -129,7 +133,10 @@ export default defineComponent({
 
 .game-setup {
   @include flex-column;
-  padding: $pad-md $pad-lg;
+
+  > :not(:first-child) {
+    margin-top: $pad-lg;
+  }
 
   &__save-name {
     margin-left: $pad-xs;
