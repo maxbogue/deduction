@@ -1,5 +1,6 @@
-import { Ref, ref } from 'vue';
+import { onUnmounted, Ref, ref, watch } from 'vue';
 
+import { useEventListener } from '@/composables';
 import { Maybe } from '@/types';
 
 const RECONNECT_DELAY_MS = 64;
@@ -15,9 +16,11 @@ export function useWebSocket<S, E>(url: Ref<string>): UseWebSocket<S, E> {
   const connected = ref(false);
 
   let delayMs = RECONNECT_DELAY_MS;
+  let timeoutId = 0;
   let ws: WebSocket;
 
-  function init() {
+  function connect() {
+    clearTimeout(timeoutId);
     ws = new WebSocket(url.value);
 
     ws.addEventListener('open', () => {
@@ -31,12 +34,18 @@ export function useWebSocket<S, E>(url: Ref<string>): UseWebSocket<S, E> {
 
     ws.addEventListener('close', () => {
       connected.value = false;
-      setTimeout(init, delayMs);
+      timeoutId = window.setTimeout(connect, delayMs);
       delayMs *= 2;
     });
   }
 
-  init();
+  watch(url, connect, { immediate: true });
+  useEventListener(window, 'online', connect);
+
+  onUnmounted(() => {
+    ws.close();
+    clearTimeout(timeoutId);
+  });
 
   const send = (event: E) => {
     ws.send(JSON.stringify(event));
