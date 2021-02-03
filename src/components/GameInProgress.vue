@@ -36,6 +36,7 @@
       <Notepad
         :skin="state.skin"
         :players="state.players"
+        :turnPlayer="turnPlayer"
         :suggestion="suggestion"
         :sharePlayer="sharePlayer"
         :notes="state.playerSecrets.notes"

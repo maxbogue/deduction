@@ -3,7 +3,11 @@
     <table ref="table" :style="tableStyle">
       <tr>
         <th />
-        <th v-for="player in players" :key="player.role.name">
+        <th
+          v-for="player in players"
+          :key="player.role.name"
+          :class="colClasses(player)"
+        >
           <div class="notepad__player-header">
             <RoleColor class="notepad__player-color" :role="player.role">
               {{ player.handSize }}
@@ -17,7 +21,11 @@
       </tr>
       <tr v-for="card in skin.roles" :key="card.name" :class="rowClasses(card)">
         <th>{{ card.name }}</th>
-        <td v-for="player in players" :key="player.role.name">
+        <td
+          v-for="player in players"
+          :key="player.role.name"
+          :class="colClasses(player)"
+        >
           <Note
             :marks="getMarks(player, card)"
             :showDropdown="isShownDropdown(player, card)"
@@ -35,7 +43,11 @@
         :class="rowClasses(card)"
       >
         <th>{{ card.name }}</th>
-        <td v-for="player in players" :key="player.role.name">
+        <td
+          v-for="player in players"
+          :key="player.role.name"
+          :class="colClasses(player)"
+        >
           <Note
             :marks="getMarks(player, card)"
             :showDropdown="isShownDropdown(player, card)"
@@ -49,7 +61,11 @@
       </tr>
       <tr v-for="card in skin.tools" :key="card.name" :class="rowClasses(card)">
         <th>{{ card.name }}</th>
-        <td v-for="player in players" :key="player.role.name">
+        <td
+          v-for="player in players"
+          :key="player.role.name"
+          :class="colClasses(player)"
+        >
           <Note
             :marks="getMarks(player, card)"
             :showDropdown="isShownDropdown(player, card)"
@@ -108,6 +124,10 @@ export default defineComponent({
       type: Array as PropType<Player[]>,
       required: true,
     },
+    turnPlayer: {
+      type: Object as PropType<Maybe<Player>>,
+      default: null,
+    },
     suggestion: {
       type: Object as PropType<Maybe<Crime>>,
       default: null,
@@ -163,7 +183,7 @@ export default defineComponent({
       return dictFromList(this.players, (acc, player, i) => {
         acc[`--color-${i + 1}`] = hexToRgba(
           player.role.color,
-          player === this.sharePlayer ? 0.5 : 0.2
+          player === this.turnPlayer ? 0.5 : 0.2
         );
       });
     },
@@ -199,6 +219,11 @@ export default defineComponent({
         notepad__highlight: Boolean(this.highlightCards.find(isEqual(card))),
       };
     },
+    colClasses(player: Player): Dict<boolean> {
+      return {
+        notepad__highlight: player === this.sharePlayer,
+      };
+    },
   },
 });
 </script>
@@ -231,6 +256,10 @@ export default defineComponent({
       &:nth-child(#{$i + 1}) {
         background-color: #{var(--color- + $i)};
       }
+    }
+
+    &.notepad__highlight {
+      @extend .notepad__highlight;
     }
   }
 

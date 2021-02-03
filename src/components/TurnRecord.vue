@@ -166,14 +166,18 @@ export default defineComponent({
 
   &__toast {
     position: fixed;
-    bottom: $pad-sm;
+    bottom: calc(1em + #{$pad-sm});
     z-index: 10;
     opacity: 90%;
-    padding: 12px;
+    padding: $pad-sm;
     left: 0;
     width: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
     cursor: pointer;
+
+    @media (min-width: $screen-sm-min) {
+      bottom: $pad-sm;
+    }
   }
 }
 </style>
