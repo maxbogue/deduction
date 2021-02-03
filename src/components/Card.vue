@@ -1,5 +1,8 @@
 <template>
-  <div class="card" :class="classes" @click="handleClick">
+  <div v-if="onClick" class="card" :class="classes" @click="onClick">
+    {{ card.name }}
+  </div>
+  <div v-else class="card" :class="classes">
     {{ card.name }}
   </div>
 </template>
@@ -32,11 +35,6 @@ export default defineComponent({
         'card--selectable': Boolean(this.onClick),
         'card--selected': this.selected,
       };
-    },
-  },
-  methods: {
-    handleClick() {
-      this.onClick?.();
     },
   },
 });
