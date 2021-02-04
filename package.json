@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "node bin/dev-server.js",
-    "build": "NODE_ENV=production webpack -p --progress --hide-modules",
+    "build": "NODE_ENV=production webpack --mode production --progress",
     "prod": "NODE_ENV=production node build/main.js",
     "lint": "eslint --ext .ts,.vue --fix src",
     "typecheck": "vuedx-typecheck"
@@ -63,6 +63,7 @@
     "url-loader": "^4.1.1",
     "vue-loader": "^16.1.2",
     "webpack": "^5.11.1",
+    "webpack-cli": "^4.5.0",
     "webpack-merge": "^5.7.3",
     "webpack-node-externals": "^2.5.2"
   }

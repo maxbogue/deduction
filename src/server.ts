@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import expressWs from 'express-ws';
 import path from 'path';
+import process from 'process';
 import WebSocket from 'ws';
 
 import { Room } from './game';
@@ -33,5 +34,6 @@ app.get('*', (_, res) => {
   res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
-console.log('Starting server...');
-app.listen(3000);
+const port = parseInt(process.argv[2]) || 3000;
+console.log(`Starting server on ${port}...`);
+app.listen(port);

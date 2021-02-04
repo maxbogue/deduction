@@ -56,7 +56,10 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const id = computed(() => route.params.id);
-    const url = computed(() => `ws://${window.location.host}/api/${id.value}/`);
+    const protocol = document.location.protocol === 'https:' ? 'wss' : 'ws';
+    const url = computed(
+      () => `${protocol}://${window.location.host}/api/${id.value}/`
+    );
 
     const { connected, state, send } = useWebSocket<GameState, ConnectionEvent>(
       url
