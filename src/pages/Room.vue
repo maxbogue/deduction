@@ -99,7 +99,7 @@ export default defineComponent({
 @import '@/style/constants';
 
 .room {
-  margin: $pad-lg auto $pad-lg;
+  margin: 0 auto;
   padding: $pad-lg $pad-md;
   background-color: #eee;
 

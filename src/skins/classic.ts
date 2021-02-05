@@ -74,7 +74,7 @@ export const classic: Skin = {
   places: [
     {
       type: CardType.Place,
-      name: 'Breakfast Nook',
+      name: 'Nook',
     },
     {
       type: CardType.Place,
@@ -90,19 +90,11 @@ export const classic: Skin = {
     },
     {
       type: CardType.Place,
-      name: 'Rec Room',
-    },
-    {
-      type: CardType.Place,
       name: 'Den',
     },
     {
       type: CardType.Place,
       name: 'Entryway',
-    },
-    {
-      type: CardType.Place,
-      name: 'Laundry Room',
     },
     {
       type: CardType.Place,

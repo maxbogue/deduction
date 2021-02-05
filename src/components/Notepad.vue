@@ -234,8 +234,8 @@ export default defineComponent({
 .notepad {
   text-align: center;
   cursor: default;
-  margin: 0 (-$pad-lg);
-  max-width: calc(100% + #{$pad-lg * 2});
+  margin: 0 (-$pad-md);
+  max-width: calc(100% + #{$pad-md * 2});
 
   table {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
