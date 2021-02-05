@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import Game from '@/pages/Game.vue';
 import Home from '@/pages/Home.vue';
+import Room from '@/pages/Room.vue';
 
 export default createRouter({
   history: createWebHistory(),
   routes: [
     { name: 'home', path: '/', component: Home },
-    { name: 'game', path: '/game/:id', component: Game },
+    { name: 'room', path: '/:id', component: Room },
   ],
 });

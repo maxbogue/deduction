@@ -1,7 +1,7 @@
 <template>
   <form class="home" @submit="onSubmit">
     <h1>Room Name</h1>
-    <input v-model="gameId" class="home__room-input" type="text" />
+    <input v-model="roomId" class="home__room-input" type="text" />
     <button type="submit">Submit</button>
   </form>
 </template>
@@ -13,13 +13,13 @@ import { defineComponent } from 'vue';
 export default defineComponent({
   name: 'Home',
   data: () => ({
-    gameId: randomWords(2).join('-'),
+    roomId: randomWords({ exactly: 2, join: '-' }),
   }),
   methods: {
     onSubmit() {
       this.$router.push({
-        name: 'game',
-        params: { id: this.gameId },
+        name: 'room',
+        params: { id: this.roomId },
       });
     },
   },

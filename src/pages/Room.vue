@@ -1,5 +1,5 @@
 <template>
-  <div class="game">
+  <div class="room">
     <div v-if="!state">Loading...</div>
     <div v-else-if="!connected">Reconnecting...</div>
     <GameSetup
@@ -14,11 +14,11 @@
     />
     <GameOver v-else :state="state" :send="send" />
     <hr />
-    <div class="game__buttons">
+    <div class="room__buttons">
       <button @click="restart">Restart</button>
       <button @click="showStateJson = !showStateJson">Debug</button>
     </div>
-    <div v-if="showStateJson" class="game__state">
+    <div v-if="showStateJson" class="room__state">
       {{ JSON.stringify(state, null, 2) }}
     </div>
   </div>
@@ -47,7 +47,7 @@ function roleFromState(state: GameState): Maybe<RoleCard> {
 }
 
 export default defineComponent({
-  name: 'Game',
+  name: 'Room',
   components: {
     GameInProgress,
     GameOver,
@@ -98,7 +98,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '@/style/constants';
 
-.game {
+.room {
   margin: $pad-lg auto $pad-lg;
   padding: $pad-lg $pad-md;
   background-color: #eee;
