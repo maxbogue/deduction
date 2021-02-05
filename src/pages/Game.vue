@@ -99,8 +99,6 @@ export default defineComponent({
 @import '@/style/constants';
 
 .game {
-  font-size: 2.4rem;
-  text-align: center;
   margin: $pad-lg auto $pad-lg;
   padding: $pad-lg $pad-md;
   background-color: #eee;
