@@ -120,19 +120,11 @@ export default defineComponent({
     turnPlayer(): Player {
       return this.state.players[this.state.turnIndex];
     },
-    isYourTurn(): boolean {
-      return this.yourPlayer === this.turnPlayer;
-    },
     sharePlayer(): Maybe<Player> {
       if (this.turn.status === TurnStatus.Suggest) {
         return null;
       }
       return this.state.players[this.turn.sharePlayerIndex];
-    },
-    connectionPlayer(): string {
-      return this.yourPlayer
-        ? this.playerToString(this.yourPlayer)
-        : 'observing';
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
@@ -181,17 +173,6 @@ export default defineComponent({
         card,
         marks,
       });
-    },
-    getPlayerName(player: Player): string {
-      return player === this.yourPlayer ? 'You' : player.name;
-    },
-    playerToString(player: Player): string {
-      const { role, name } = player;
-      return `${role.name} [${name}]`;
-    },
-    crimeToString(crime: Crime): string {
-      const { role, tool, place } = crime;
-      return `${role.name} in the ${place.name} with the ${tool.name}`;
     },
   },
 });
