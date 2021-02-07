@@ -132,12 +132,19 @@ export default defineComponent({
     const placeholderHeight = ref(0);
 
     const getPlaceholderTop = () => placeholderRef.value?.offsetTop ?? 0;
-    const getPlaceholderWidth = () => placeholderRef.value?.offsetWidth ?? 0;
+    const getParentWidth = () => {
+      if (!placeholderRef.value) {
+        return 0;
+      }
+      // Parent of parent is .room, whose width we want to match.
+      const parent = placeholderRef.value.parentNode?.parentNode as HTMLElement;
+      return parent.offsetWidth;
+    };
     const getTurnHeight = () => turnRef.value?.$el?.offsetHeight ?? 0;
 
     const syncPlaceholder = () => {
       turnTop.value = getPlaceholderTop();
-      turnWidth.value = getPlaceholderWidth();
+      turnWidth.value = getParentWidth();
       placeholderHeight.value = getTurnHeight();
     };
 
@@ -254,10 +261,6 @@ export default defineComponent({
 .game-in-progress {
   @include flex-column;
 
-  > :not(:first-child) {
-    margin-top: $pad-lg;
-  }
-
   &__placeholder {
     width: 100%;
     height: var(--placeholder-height);
@@ -272,12 +275,14 @@ export default defineComponent({
     position: absolute;
     top: var(--turn-top);
     width: var(--turn-width);
-    background-color: #fff;
-    z-index: 5;
+    background-color: #eee;
+    padding: $pad-lg $pad-md;
 
     &--sticky {
       position: fixed;
       top: 0;
+      box-shadow: $box-shadow;
+      z-index: 5;
     }
   }
 

@@ -27,7 +27,7 @@ export default defineComponent({
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  box-shadow: $box-shadow;
   width: 2.4rem;
   height: 2.4rem;
   color: white;

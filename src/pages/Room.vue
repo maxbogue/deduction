@@ -102,6 +102,7 @@ export default defineComponent({
   margin: 0 auto;
   padding: $pad-lg $pad-md;
   background-color: #eee;
+  box-shadow: $box-shadow;
 
   @media (min-width: $screen-sm-min) {
     width: $container-sm;

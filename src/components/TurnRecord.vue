@@ -172,7 +172,7 @@ export default defineComponent({
     padding: $pad-sm;
     left: 0;
     width: 100%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    box-shadow: $box-shadow;
     cursor: pointer;
 
     @media (min-width: $screen-sm-min) {

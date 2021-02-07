@@ -238,7 +238,7 @@ export default defineComponent({
   max-width: calc(100% + #{$pad-md * 2});
 
   table {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    box-shadow: $box-shadow;
     border-collapse: collapse;
     background-color: #fff;
     transform-origin: 0% 0% 0px;
