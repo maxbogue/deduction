@@ -1,19 +1,24 @@
 <template>
-  <div class="game-in-progress">
+  <div class="game-in-progress" :style="turnCssProps">
     <Players
       :players="state.players"
       :yourPlayer="yourPlayer"
       :turnPlayer="turnPlayer"
       :onReconnect="reconnectAsPlayer"
     />
+    <div ref="placeholderRef" class="game-in-progress__placeholder" />
     <TurnSuggest
       v-if="turn.status === TurnStatus.Suggest"
+      ref="turnRef"
+      :class="turnClass"
       :yourPlayer="yourPlayer"
       :turnPlayer="turnPlayer"
       :onSuggest="suggest"
     />
     <TurnShare
       v-else-if="turn.status === TurnStatus.Share"
+      ref="turnRef"
+      :class="turnClass"
       :turn="turn"
       :players="state.players"
       :hand="hand"
@@ -23,6 +28,8 @@
     />
     <TurnRecord
       v-else-if="turn.status === TurnStatus.Record"
+      ref="turnRef"
+      :class="turnClass"
       :turn="turn"
       :players="state.players"
       :hand="hand"
@@ -54,7 +61,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, provide } from 'vue';
+import {
+  ComponentPublicInstance,
+  computed,
+  ComputedRef,
+  defineComponent,
+  nextTick,
+  PropType,
+  provide,
+  Ref,
+  ref,
+  toRefs,
+  watch,
+} from 'vue';
 
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
@@ -62,7 +81,7 @@ import Players from '@/components/Players.vue';
 import TurnRecord from '@/components/TurnRecord.vue';
 import TurnShare from '@/components/TurnShare.vue';
 import TurnSuggest from '@/components/TurnSuggest.vue';
-import { SkinKey } from '@/composables';
+import { SkinKey, useEventListener } from '@/composables';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import {
   Card,
@@ -101,7 +120,52 @@ export default defineComponent({
     },
   },
   setup(props) {
-    provide(SkinKey, props.state.skin);
+    const { state } = toRefs(props);
+    provide(SkinKey, state.value.skin);
+
+    const turnRef: Ref<Maybe<ComponentPublicInstance>> = ref(null);
+    const placeholderRef: Ref<Maybe<HTMLElement>> = ref(null);
+
+    const isTurnSticky = ref(false);
+    const turnTop = ref(0);
+    const turnWidth = ref(0);
+    const placeholderHeight = ref(0);
+
+    const getPlaceholderTop = () => placeholderRef.value?.offsetTop ?? 0;
+    const getPlaceholderWidth = () => placeholderRef.value?.offsetWidth ?? 0;
+    const getTurnHeight = () => turnRef.value?.$el?.offsetHeight ?? 0;
+
+    const syncPlaceholder = () => {
+      turnTop.value = getPlaceholderTop();
+      turnWidth.value = getPlaceholderWidth();
+      placeholderHeight.value = getTurnHeight();
+    };
+
+    useEventListener(window, 'scroll', () => {
+      isTurnSticky.value = window.scrollY > getPlaceholderTop();
+    });
+
+    watch(
+      state,
+      () => {
+        nextTick(syncPlaceholder);
+      },
+      { immediate: true }
+    );
+    setInterval(syncPlaceholder, 100);
+
+    const turnCssProps: ComputedRef<Dict<string>> = computed(() => ({
+      '--turn-top': `${turnTop.value}px`,
+      '--turn-width': `${turnWidth.value}px`,
+      '--placeholder-height': `${placeholderHeight.value}px`,
+    }));
+
+    return {
+      placeholderRef,
+      turnRef,
+      isTurnSticky,
+      turnCssProps,
+    };
   },
   data: (): InProgressData => ({
     TurnStatus,
@@ -133,6 +197,12 @@ export default defineComponent({
       return this.turn.status === TurnStatus.Suggest
         ? null
         : this.turn.suggestion;
+    },
+    turnClass(): Dict<boolean> {
+      return {
+        'game-in-progress__turn': true,
+        'game-in-progress__turn--sticky': this.isTurnSticky,
+      };
     },
   },
   methods: {
@@ -186,6 +256,29 @@ export default defineComponent({
 
   > :not(:first-child) {
     margin-top: $pad-lg;
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: var(--placeholder-height);
+
+    &::before {
+      content: ' ';
+    }
+  }
+
+  &__turn {
+    margin-top: 0 !important;
+    position: absolute;
+    top: var(--turn-top);
+    width: var(--turn-width);
+    background-color: #fff;
+    z-index: 5;
+
+    &--sticky {
+      position: fixed;
+      top: 0;
+    }
   }
 
   &__hand {
