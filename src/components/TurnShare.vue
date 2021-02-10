@@ -1,5 +1,5 @@
 <template>
-  <div class="turn-share">
+  <Sticky class="turn-share">
     <div>
       {{ getPlayerName(turnPlayer) }} suggested
       {{ crimeToString(turn.suggestion) }}.
@@ -16,13 +16,14 @@
       </div>
     </template>
     <div v-else>{{ sharePlayer.name }} is choosing a card.</div>
-  </div>
+  </Sticky>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
+import Sticky from '@/components/Sticky.vue';
 import { Card, Crime, Player, TurnShareState } from '@/state';
 import { Maybe } from '@/types';
 
@@ -30,6 +31,7 @@ export default defineComponent({
   name: 'TurnShare',
   components: {
     Card: CardComponent,
+    Sticky,
   },
   props: {
     turn: {

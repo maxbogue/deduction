@@ -1,38 +1,37 @@
 <template>
   <div class="game-in-progress">
     <Players
+      class="game-in-progress__players"
       :players="state.players"
       :yourPlayer="yourPlayer"
       :turnPlayer="turnPlayer"
       :onReconnect="reconnectAsPlayer"
     />
-    <Sticky>
-      <TurnSuggest
-        v-if="turn.status === TurnStatus.Suggest"
-        :yourPlayer="yourPlayer"
-        :turnPlayer="turnPlayer"
-        :onSuggest="suggest"
-      />
-      <TurnShare
-        v-else-if="turn.status === TurnStatus.Share"
-        :turn="turn"
-        :players="state.players"
-        :hand="hand"
-        :yourPlayer="yourPlayer"
-        :turnPlayer="turnPlayer"
-        :onShareCard="shareCard"
-      />
-      <TurnRecord
-        v-else-if="turn.status === TurnStatus.Record"
-        :turn="turn"
-        :players="state.players"
-        :hand="hand"
-        :yourPlayer="yourPlayer"
-        :turnPlayer="turnPlayer"
-        :setIsReady="setIsReady"
-        :onAccuse="accuse"
-      />
-    </Sticky>
+    <TurnSuggest
+      v-if="turn.status === TurnStatus.Suggest"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :onSuggest="suggest"
+    />
+    <TurnShare
+      v-else-if="turn.status === TurnStatus.Share"
+      :turn="turn"
+      :players="state.players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :onShareCard="shareCard"
+    />
+    <TurnRecord
+      v-else-if="turn.status === TurnStatus.Record"
+      :turn="turn"
+      :players="state.players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :setIsReady="setIsReady"
+      :onAccuse="accuse"
+    />
     <template v-if="state.playerSecrets">
       <Notepad
         :skin="state.skin"
@@ -61,7 +60,6 @@ import { defineComponent, PropType, provide, toRefs } from 'vue';
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
-import Sticky from '@/components/Sticky.vue';
 import TurnRecord from '@/components/TurnRecord.vue';
 import TurnShare from '@/components/TurnShare.vue';
 import TurnSuggest from '@/components/TurnSuggest.vue';
@@ -89,7 +87,6 @@ export default defineComponent({
     Card: CardComponent,
     Notepad,
     Players,
-    Sticky,
     TurnRecord,
     TurnShare,
     TurnSuggest,
@@ -188,6 +185,10 @@ export default defineComponent({
 
 .game-in-progress {
   @include flex-column;
+
+  &__players {
+    margin-bottom: $pad-sm;
+  }
 
   &__hand {
     display: flex;

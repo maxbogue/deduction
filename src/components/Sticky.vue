@@ -8,7 +8,14 @@
 </template>
 
 <script lang="ts">
-import { computed, ComputedRef, defineComponent, Ref, ref } from 'vue';
+import {
+  computed,
+  ComputedRef,
+  defineComponent,
+  Ref,
+  ref,
+  watchEffect,
+} from 'vue';
 
 import { useEventListener } from '@/composables';
 import { Dict, Maybe } from '@/types';
@@ -41,7 +48,8 @@ export default defineComponent({
       isSticky.value = window.scrollY > getPlaceholderTop();
     });
 
-    setInterval(syncPlaceholder, 100);
+    watchEffect(syncPlaceholder);
+    //setInterval(syncPlaceholder, 100);
 
     const cssProps: ComputedRef<Dict<string>> = computed(() => ({
       '--content-top': `${turnTop.value}px`,
@@ -84,7 +92,7 @@ export default defineComponent({
     left: calc(50% - var(--content-width) / 2);
     width: var(--content-width);
     background-color: #eee;
-    padding: $pad-lg $pad-md;
+    padding: $pad-sm;
 
     &--sticky {
       position: fixed;
