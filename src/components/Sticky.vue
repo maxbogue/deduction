@@ -1,26 +1,27 @@
+<template>
+  <div class="sticky" :style="cssProps">
+    <div ref="placeholderRef" class="sticky__placeholder" />
+    <div ref="contentRef" :class="contentClass">
+      <slot />
+    </div>
+  </div>
+</template>
+
 <script lang="ts">
-import {
-  ComponentPublicInstance,
-  defineComponent,
-  h,
-  nextTick,
-  onMounted,
-  Ref,
-  ref,
-} from 'vue';
+import { computed, ComputedRef, defineComponent, Ref, ref } from 'vue';
 
 import { useEventListener } from '@/composables';
-import { Maybe } from '@/types';
+import { Dict, Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Sticky',
-  setup(_, { slots }) {
+  setup() {
+    const contentRef: Ref<Maybe<HTMLElement>> = ref(null);
     const placeholderRef: Ref<Maybe<HTMLElement>> = ref(null);
-    let slotEls: HTMLElement[] = [];
 
-    const isSlotSticky = ref(false);
-    const slotTop = ref(0);
-    const slotWidth = ref(0);
+    const isSticky = ref(false);
+    const turnTop = ref(0);
+    const turnWidth = ref(0);
     const placeholderHeight = ref(0);
 
     const getPlaceholderTop = () => placeholderRef.value?.offsetTop ?? 0;
@@ -28,62 +29,37 @@ export default defineComponent({
       const room = document.querySelector('.room');
       return room instanceof HTMLElement ? room.offsetWidth : 0;
     };
-    const getSlotHeight = () => slots.default.value?.$el?.offsetHeight ?? 0;
+    const getTurnHeight = () => contentRef.value?.offsetHeight ?? 0;
 
     const syncPlaceholder = () => {
-      slotTop.value = getPlaceholderTop();
-      slotWidth.value = getRoomWidth();
-      placeholderHeight.value = getSlotHeight();
+      turnTop.value = getPlaceholderTop();
+      turnWidth.value = getRoomWidth();
+      placeholderHeight.value = getTurnHeight();
     };
 
     useEventListener(window, 'scroll', () => {
-      isSlotSticky.value = window.scrollY > getPlaceholderTop();
-    });
-
-    //watch(state, () => {
-    //  console.log('state watcher');
-    //  nextTick(syncPlaceholder);
-    //});
-
-    onMounted(() => {
-      console.log('mounted');
-      nextTick(syncPlaceholder);
+      isSticky.value = window.scrollY > getPlaceholderTop();
     });
 
     setInterval(syncPlaceholder, 100);
 
-    const renderPlaceholder = () =>
-      h('div', {
-        ref: placeholderRef,
-        placeholderRef,
-        class: 'sticky__placeholder',
-        style: {
-          '--placeholder-height': `${placeholderHeight.value}px`,
-        },
-      });
+    const cssProps: ComputedRef<Dict<string>> = computed(() => ({
+      '--content-top': `${turnTop.value}px`,
+      '--content-width': `${turnWidth.value}px`,
+      '--placeholder-height': `${placeholderHeight.value}px`,
+    }));
 
-    const addSlotStyles = node => ({
-      ...node,
-      class: {
-        ...node.class,
-        sticky__slot: true,
-        'sticky__slot--sticky': isSlotSticky.value,
-      },
-      style: {
-        ...node.style,
-        '--slot-top': `${slotTop.value}px`,
-        '--slot-width': `${slotWidth.value}px`,
-      },
-    });
-    console.log(slots);
+    const contentClass: ComputedRef<Dict<boolean>> = computed(() => ({
+      sticky__content: true,
+      'sticky__content--sticky': isSticky.value,
+    }));
 
-    const renderSlots = () => {
-      const slotNodes = slots.default();
-      slotEls = slotNodes.map(slot => slot.$el);
-      return slotNodes;
+    return {
+      contentRef,
+      placeholderRef,
+      cssProps,
+      contentClass,
     };
-
-    return () => [renderPlaceholder(), ...slotEls.map(addSlotStyles)];
   },
 });
 </script>
@@ -104,8 +80,9 @@ export default defineComponent({
   &__content {
     margin-top: 0 !important;
     position: absolute;
-    top: var(--slot-top);
-    width: var(--slot-width);
+    top: var(--content-top);
+    left: calc(50% - var(--content-width) / 2);
+    width: var(--content-width);
     background-color: #eee;
     padding: $pad-lg $pad-md;
 
