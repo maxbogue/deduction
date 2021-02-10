@@ -12,9 +12,13 @@ import {
   computed,
   ComputedRef,
   defineComponent,
+  nextTick,
+  onMounted,
+  PropType,
   Ref,
   ref,
-  watchEffect,
+  toRefs,
+  watch,
 } from 'vue';
 
 import { useEventListener } from '@/composables';
@@ -22,13 +26,20 @@ import { Dict, Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Sticky',
-  setup() {
+  props: {
+    sentinel: {
+      type: Object as PropType<unknown>,
+      default: null as unknown,
+    },
+  },
+  setup(props) {
+    const { sentinel } = toRefs(props);
     const contentRef: Ref<Maybe<HTMLElement>> = ref(null);
     const placeholderRef: Ref<Maybe<HTMLElement>> = ref(null);
 
     const isSticky = ref(false);
-    const turnTop = ref(0);
-    const turnWidth = ref(0);
+    const contentTop = ref(0);
+    const contentWidth = ref(0);
     const placeholderHeight = ref(0);
 
     const getPlaceholderTop = () => placeholderRef.value?.offsetTop ?? 0;
@@ -36,24 +47,31 @@ export default defineComponent({
       const room = document.querySelector('.room');
       return room instanceof HTMLElement ? room.offsetWidth : 0;
     };
-    const getTurnHeight = () => contentRef.value?.offsetHeight ?? 0;
+    const getContentHeight = () => contentRef.value?.offsetHeight ?? 0;
 
     const syncPlaceholder = () => {
-      turnTop.value = getPlaceholderTop();
-      turnWidth.value = getRoomWidth();
-      placeholderHeight.value = getTurnHeight();
+      console.log('SYNC');
+      contentTop.value = getPlaceholderTop();
+      contentWidth.value = getRoomWidth();
+      placeholderHeight.value = getContentHeight();
     };
+
+    const doubleSync = () => {
+      syncPlaceholder();
+      nextTick(syncPlaceholder);
+    };
+
+    watch(sentinel, doubleSync);
+    onMounted(doubleSync);
+    useEventListener(window, 'resize', doubleSync);
 
     useEventListener(window, 'scroll', () => {
       isSticky.value = window.scrollY > getPlaceholderTop();
     });
 
-    watchEffect(syncPlaceholder);
-    //setInterval(syncPlaceholder, 100);
-
     const cssProps: ComputedRef<Dict<string>> = computed(() => ({
-      '--content-top': `${turnTop.value}px`,
-      '--content-width': `${turnWidth.value}px`,
+      '--content-top': `${contentTop.value}px`,
+      '--content-width': `${contentWidth.value}px`,
       '--placeholder-height': `${placeholderHeight.value}px`,
     }));
 

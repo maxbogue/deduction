@@ -47,8 +47,12 @@ export default defineComponent({
 .turn-suggest {
   @include flex-column;
 
+  h2 {
+    margin-top: 0;
+  }
+
   &__your-turn {
-    padding: $pad-lg $pad-md;
+    padding: $pad-sm;
   }
 }
 </style>

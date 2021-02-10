@@ -1,5 +1,5 @@
 <template>
-  <Sticky class="turn-share">
+  <Sticky class="turn-share" :sentinel="turn">
     <div>
       {{ getPlayerName(turnPlayer) }} suggested
       {{ crimeToString(turn.suggestion) }}.

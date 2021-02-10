@@ -34,6 +34,7 @@
     />
     <template v-if="state.playerSecrets">
       <Notepad
+        class="game-in-progress__notepad"
         :skin="state.skin"
         :players="state.players"
         :turnPlayer="turnPlayer"
@@ -42,7 +43,7 @@
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
-      <h2>Hand</h2>
+      <h2 class="game-in-progress__hand-title">Hand</h2>
       <div class="game-in-progress__hand">
         <Card
           v-for="card in state.playerSecrets.hand"
@@ -188,6 +189,14 @@ export default defineComponent({
 
   &__players {
     margin-bottom: $pad-sm;
+  }
+
+  &__notepad {
+    margin-top: $pad-sm;
+  }
+
+  &__hand-title {
+    margin-top: $pad-lg;
   }
 
   &__hand {

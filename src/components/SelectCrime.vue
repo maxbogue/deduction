@@ -172,7 +172,6 @@ export default defineComponent({
   &__select {
     display: flex;
     justify-content: center;
-    margin-top: $pad-md;
   }
 }
 </style>

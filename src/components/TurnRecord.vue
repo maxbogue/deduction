@@ -1,6 +1,6 @@
 <template>
   <div class="turn-record">
-    <Sticky>
+    <Sticky :sentinel="turn">
       <div>
         {{ getPlayerName(turnPlayer) }} suggested
         {{ crimeToString(turn.suggestion) }}.
@@ -146,12 +146,12 @@ export default defineComponent({
 
 .turn-record {
   @include flex-column;
+  margin-bottom: $pad-lg;
 
   &__unready-players {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: $pad-lg;
 
     > :not(:first-child) {
       margin-left: $pad-xs;
