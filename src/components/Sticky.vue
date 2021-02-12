@@ -115,7 +115,7 @@ export default defineComponent({
 
     &--sticky {
       position: fixed;
-      top: 0;
+      top: $pad-xs;
       box-shadow: $box-shadow;
       z-index: 5;
       opacity: 95%;
