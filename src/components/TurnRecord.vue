@@ -170,7 +170,7 @@ export default defineComponent({
     position: fixed;
     bottom: calc(1em + #{$pad-sm});
     z-index: 10;
-    opacity: 90%;
+    opacity: 95%;
     padding: $pad-sm;
     left: 0;
     width: 100%;

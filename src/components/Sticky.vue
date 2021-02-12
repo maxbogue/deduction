@@ -116,6 +116,7 @@ export default defineComponent({
       top: 0;
       box-shadow: $box-shadow;
       z-index: 5;
+      opacity: 95%;
     }
   }
 }
