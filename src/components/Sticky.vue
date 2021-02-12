@@ -49,10 +49,15 @@ export default defineComponent({
     };
     const getContentHeight = () => contentRef.value?.offsetHeight ?? 0;
 
+    const updateIsSticky = () => {
+      isSticky.value = window.scrollY > getPlaceholderTop();
+    };
+
     const syncPlaceholder = () => {
       contentTop.value = getPlaceholderTop();
       contentWidth.value = getRoomWidth();
       placeholderHeight.value = getContentHeight();
+      updateIsSticky();
     };
 
     const doubleSync = () => {
@@ -63,10 +68,7 @@ export default defineComponent({
     watch(sentinel, doubleSync);
     onMounted(doubleSync);
     useEventListener(window, 'resize', doubleSync);
-
-    useEventListener(window, 'scroll', () => {
-      isSticky.value = window.scrollY > getPlaceholderTop();
-    });
+    useEventListener(window, 'scroll', updateIsSticky);
 
     const cssProps: ComputedRef<Dict<string>> = computed(() => ({
       '--content-top': `${contentTop.value}px`,
