@@ -43,14 +43,14 @@ export default defineComponent({
     const placeholderHeight = ref(0);
 
     const getPlaceholderTop = () => placeholderRef.value?.offsetTop ?? 0;
+    const getContentHeight = () => contentRef.value?.offsetHeight ?? 0;
     const getRoomWidth = () => {
       const room = document.querySelector('.room');
       return room instanceof HTMLElement ? room.offsetWidth : 0;
     };
-    const getContentHeight = () => contentRef.value?.offsetHeight ?? 0;
 
     const updateIsSticky = () => {
-      isSticky.value = window.scrollY > getPlaceholderTop();
+      isSticky.value = window.scrollY > contentTop.value - 6;
     };
 
     const syncPlaceholder = () => {

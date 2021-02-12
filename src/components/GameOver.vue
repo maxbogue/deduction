@@ -5,17 +5,15 @@
       :yourPlayer="yourPlayer"
       :onReconnect="reconnectAsPlayer"
     />
-    <div>
-      <h2>Game Over!</h2>
-      <Sticky>
-        <div>Winner is {{ playerToString(winner) }}!</div>
-        <div class="game-in-progress__cards">
-          <div class="game-in-progress__hand">
-            <Card v-for="card in solution" :key="card.name" :card="card" />
-          </div>
+    <h2>Game Over!</h2>
+    <Sticky>
+      <div>Winner is {{ playerToString(winner) }}!</div>
+      <div class="game-in-progress__cards">
+        <div class="game-in-progress__hand">
+          <Card v-for="card in solution" :key="card.name" :card="card" />
         </div>
-      </Sticky>
-    </div>
+      </div>
+    </Sticky>
     <template v-if="state.playerSecrets">
       <Notepad
         :skin="state.skin"
@@ -113,9 +111,5 @@ export default defineComponent({
 
 .game-over {
   @include flex-column;
-
-  > :not(:first-child) {
-    margin-top: $pad-lg;
-  }
 }
 </style>
