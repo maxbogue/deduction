@@ -50,7 +50,6 @@ export default defineComponent({
     const getContentHeight = () => contentRef.value?.offsetHeight ?? 0;
 
     const syncPlaceholder = () => {
-      console.log('SYNC');
       contentTop.value = getPlaceholderTop();
       contentWidth.value = getRoomWidth();
       placeholderHeight.value = getContentHeight();
