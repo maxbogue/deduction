@@ -1,6 +1,7 @@
 <template>
   <div class="game-in-progress">
     <Players
+      class="game-in-progress__players"
       :players="state.players"
       :yourPlayer="yourPlayer"
       :turnPlayer="turnPlayer"
@@ -33,6 +34,7 @@
     />
     <template v-if="state.playerSecrets">
       <Notepad
+        class="game-in-progress__notepad"
         :skin="state.skin"
         :players="state.players"
         :turnPlayer="turnPlayer"
@@ -41,7 +43,7 @@
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
-      <h2>Hand</h2>
+      <h2 class="game-in-progress__hand-title">Hand</h2>
       <div class="game-in-progress__hand">
         <Card
           v-for="card in state.playerSecrets.hand"
@@ -54,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, provide } from 'vue';
+import { defineComponent, PropType, provide, toRefs } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
@@ -101,7 +103,8 @@ export default defineComponent({
     },
   },
   setup(props) {
-    provide(SkinKey, props.state.skin);
+    const { state } = toRefs(props);
+    provide(SkinKey, state.value.skin);
   },
   data: (): InProgressData => ({
     TurnStatus,
@@ -120,19 +123,11 @@ export default defineComponent({
     turnPlayer(): Player {
       return this.state.players[this.state.turnIndex];
     },
-    isYourTurn(): boolean {
-      return this.yourPlayer === this.turnPlayer;
-    },
     sharePlayer(): Maybe<Player> {
       if (this.turn.status === TurnStatus.Suggest) {
         return null;
       }
       return this.state.players[this.turn.sharePlayerIndex];
-    },
-    connectionPlayer(): string {
-      return this.yourPlayer
-        ? this.playerToString(this.yourPlayer)
-        : 'observing';
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
@@ -182,17 +177,6 @@ export default defineComponent({
         marks,
       });
     },
-    getPlayerName(player: Player): string {
-      return player === this.yourPlayer ? 'You' : player.name;
-    },
-    playerToString(player: Player): string {
-      const { role, name } = player;
-      return `${role.name} [${name}]`;
-    },
-    crimeToString(crime: Crime): string {
-      const { role, tool, place } = crime;
-      return `${role.name} in the ${place.name} with the ${tool.name}`;
-    },
   },
 });
 </script>
@@ -203,7 +187,15 @@ export default defineComponent({
 .game-in-progress {
   @include flex-column;
 
-  > :not(:first-child) {
+  &__players {
+    margin-bottom: $pad-sm;
+  }
+
+  &__notepad {
+    margin-top: $pad-sm;
+  }
+
+  &__hand-title {
     margin-top: $pad-lg;
   }
 

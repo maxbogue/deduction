@@ -5,15 +5,15 @@
       :yourPlayer="yourPlayer"
       :onReconnect="reconnectAsPlayer"
     />
-    <div>
-      <h2>Game Over!</h2>
+    <h2>Game Over!</h2>
+    <Sticky>
       <div>Winner is {{ playerToString(winner) }}!</div>
       <div class="game-in-progress__cards">
         <div class="game-in-progress__hand">
           <Card v-for="card in solution" :key="card.name" :card="card" />
         </div>
       </div>
-    </div>
+    </Sticky>
     <template v-if="state.playerSecrets">
       <Notepad
         :skin="state.skin"
@@ -41,6 +41,7 @@ import { defineComponent, PropType } from 'vue';
 import CardComponent from '@/components/Card.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
+import Sticky from '@/components/Sticky.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { Card, Crime, GameOverState, Mark, Player } from '@/state';
 import { Maybe } from '@/types';
@@ -51,6 +52,7 @@ export default defineComponent({
     Card: CardComponent,
     Notepad,
     Players,
+    Sticky,
   },
   props: {
     state: {
@@ -109,9 +111,5 @@ export default defineComponent({
 
 .game-over {
   @include flex-column;
-
-  > :not(:first-child) {
-    margin-top: $pad-lg;
-  }
 }
 </style>

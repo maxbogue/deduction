@@ -10,6 +10,7 @@
           :onClick="() => selectRole(role)"
         />
       </div>
+      <div class="select-crime__text">in the</div>
       <div class="select-crime__column">
         <Card
           v-for="place in places"
@@ -19,6 +20,7 @@
           :onClick="() => selectPlace(place)"
         />
       </div>
+      <div class="select-crime__text">with the</div>
       <div class="select-crime__column">
         <Card
           v-for="tool in tools"
@@ -140,6 +142,12 @@ export default defineComponent({
     }
   }
 
+  &__text {
+    @media (min-width: $screen-sm-min) {
+      display: none;
+    }
+  }
+
   &__column {
     display: flex;
     flex-direction: row;
@@ -164,7 +172,6 @@ export default defineComponent({
   &__select {
     display: flex;
     justify-content: center;
-    margin-top: $pad-md;
   }
 }
 </style>

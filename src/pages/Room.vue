@@ -100,8 +100,9 @@ export default defineComponent({
 
 .room {
   margin: 0 auto;
-  padding: $pad-lg $pad-md;
+  padding: $pad-lg $pad-sm;
   background-color: #eee;
+  box-shadow: $box-shadow;
 
   @media (min-width: $screen-sm-min) {
     width: $container-sm;

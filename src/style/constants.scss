@@ -20,6 +20,7 @@ $font-weight-normal: 300;
 $font-weight-bold: 500;
 
 $line-height: 1.5;
+$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
 
 @mixin flex-column {
   display: flex;

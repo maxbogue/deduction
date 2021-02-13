@@ -1,17 +1,19 @@
 <template>
   <div class="turn-record">
-    <div>
-      {{ getPlayerName(turnPlayer) }} suggested
-      {{ crimeToString(turn.suggestion) }}.
-    </div>
-    <div v-if="sharedCard">
-      <span>{{ getPlayerName(sharePlayer) }} shared</span>
-      <Card :card="sharedCard" />
-    </div>
-    <div v-else-if="sharePlayer !== turnPlayer">
-      {{ getPlayerName(sharePlayer) }} has shared a card.
-    </div>
-    <div v-else>No player had a matching card to share.</div>
+    <Sticky :sentinel="turn">
+      <div>
+        {{ getPlayerName(turnPlayer) }} suggested
+        {{ crimeToString(turn.suggestion) }}.
+      </div>
+      <div v-if="sharedCard">
+        <span>{{ getPlayerName(sharePlayer) }} shared</span>
+        <Card :card="sharedCard" />
+      </div>
+      <div v-else-if="sharePlayer !== turnPlayer">
+        {{ getPlayerName(sharePlayer) }} has shared a card.
+      </div>
+      <div v-else>No player had a matching card to share.</div>
+    </Sticky>
     <div v-if="yourPlayer" class="turn-record__buttons">
       <button @click="setIsReady(!isReady)">
         {{ isReady ? 'Unready' : 'Ready' }}
@@ -54,6 +56,7 @@ import { defineComponent, PropType } from 'vue';
 import CardComponent from '@/components/Card.vue';
 import RoleColor from '@/components/RoleColor.vue';
 import SelectCrime from '@/components/SelectCrime.vue';
+import Sticky from '@/components/Sticky.vue';
 import { Card, Crime, Player, TurnRecordState } from '@/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -68,6 +71,7 @@ export default defineComponent({
     Card: CardComponent,
     RoleColor,
     SelectCrime,
+    Sticky,
   },
   props: {
     turn: {
@@ -142,18 +146,16 @@ export default defineComponent({
 
 .turn-record {
   @include flex-column;
+  margin-bottom: $pad-lg;
 
   &__unready-players {
     display: flex;
     align-items: center;
+    justify-content: center;
 
     > :not(:first-child) {
       margin-left: $pad-xs;
     }
-  }
-
-  &__buttons {
-    margin-top: $pad-sm;
   }
 
   &__accuse :deep(.select-crime__button) {
@@ -168,11 +170,11 @@ export default defineComponent({
     position: fixed;
     bottom: calc(1em + #{$pad-sm});
     z-index: 10;
-    opacity: 90%;
+    opacity: 95%;
     padding: $pad-sm;
     left: 0;
     width: 100%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+    box-shadow: $box-shadow;
     cursor: pointer;
 
     @media (min-width: $screen-sm-min) {
