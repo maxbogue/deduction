@@ -60,7 +60,6 @@ export class Room implements ConnectionObserver, GameObserver {
   }
 
   processEvent(conn: Connection, event: ConnectionEvent): void {
-    console.log(event);
     let updateAll = true;
     switch (event.type) {
       case ConnectionEvents.Restart:
@@ -129,7 +128,7 @@ class GameSetup extends Game {
 
   private setConnectionRole(conn: Connection, role: RoleCard): void {
     if (!this.skin.roles.find(isEqual(role))) {
-      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
+      console.error(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
       return;
     }
 
@@ -147,14 +146,14 @@ class GameSetup extends Game {
 
   private setSkin(skinName: string): void {
     if (!SKINS[skinName]) {
-      console.log(`Invalid skin ${skinName} for game.`);
+      console.error(`Invalid skin ${skinName} for game.`);
       return;
     }
 
     const skin = SKINS[skinName];
 
     if (this.skin === skin) {
-      console.log('Skin already set.');
+      console.error('Skin already set.');
     } else {
       this.resetRoles();
       this.skin = skin;
@@ -220,7 +219,7 @@ class GameSetup extends Game {
           role,
           name,
           isConnected: true,
-          failedAccusation: null,
+          isDed: false,
           handSize: hands[i].length,
         };
       }
@@ -323,7 +322,7 @@ abstract class GamePostSetup extends Game {
 
   protected setConnectionRole(conn: Connection, role: RoleCard): void {
     if (!this.skin.roles.find(isEqual(role))) {
-      console.log(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
+      console.error(`Invalid role ${role.name} for skin ${this.skin.skinName}`);
       return;
     }
 
@@ -409,7 +408,7 @@ class GameInProgress extends GamePostSetup {
     }
   }
 
-  private isTurnPlayer(role: Maybe<RoleCard>): boolean {
+  private isTurnPlayer(role: Maybe<RoleCard>): role is RoleCard {
     const turnPlayer = this.players[this.turnIndex];
     return Boolean(role && role.name === turnPlayer.role.name);
   }
@@ -445,10 +444,11 @@ class GameInProgress extends GamePostSetup {
     this.turnState = {
       status: TurnStatus.Record,
       suggestion,
+      failedAccusation: null,
       sharePlayerIndex: this.turnIndex,
       sharedCard: null,
       playerIsReady: dictFromList(this.players, (dict, p) => {
-        if (!p.failedAccusation) {
+        if (!p.isDed) {
           dict[p.role.name] = false;
         }
       }),
@@ -465,10 +465,11 @@ class GameInProgress extends GamePostSetup {
     this.turnState = {
       status: TurnStatus.Record,
       suggestion: this.turnState.suggestion,
+      failedAccusation: null,
       sharePlayerIndex: this.turnState.sharePlayerIndex,
       sharedCard: card,
       playerIsReady: dictFromList(this.players, (dict, p) => {
-        if (!p.failedAccusation) {
+        if (!p.isDed) {
           dict[p.role.name] = false;
         }
       }),
@@ -491,7 +492,7 @@ class GameInProgress extends GamePostSetup {
     }
 
     const player = this.roleToPlayer[role.name];
-    if (!player.failedAccusation) {
+    if (!player.isDed) {
       this.turnState.playerIsReady[role.name] = isReady;
       this.checkIfReady();
     }
@@ -500,7 +501,7 @@ class GameInProgress extends GamePostSetup {
   private endTurn() {
     do {
       this.turnIndex = (this.turnIndex + 1) % this.players.length;
-    } while (this.players[this.turnIndex].failedAccusation);
+    } while (this.players[this.turnIndex].isDed);
 
     this.turnState = { status: TurnStatus.Suggest };
   }
@@ -514,7 +515,7 @@ class GameInProgress extends GamePostSetup {
     this.validateCrimeForCurrentSkin(accusation);
 
     const player = this.roleToPlayer[role.name];
-    if (player.failedAccusation) {
+    if (player.isDed) {
       return;
     }
 
@@ -523,11 +524,16 @@ class GameInProgress extends GamePostSetup {
       return;
     }
 
-    player.failedAccusation = accusation;
-    const playersLeft = this.players.filter(p => !p.failedAccusation);
+    player.isDed = true;
+    this.turnState.failedAccusation = accusation;
+    const playersLeft = this.players.filter(p => !p.isDed);
     if (playersLeft.length > 1) {
-      delete this.turnState.playerIsReady[player.role.name];
-      this.checkIfReady();
+      const { playerIsReady } = this.turnState;
+      delete playerIsReady[player.role.name];
+      // Unready everybody.
+      Object.keys(playerIsReady).forEach(name => {
+        playerIsReady[name] = false;
+      });
     } else {
       this.gameOver(playersLeft[0]);
     }
@@ -579,38 +585,14 @@ class GameInProgress extends GamePostSetup {
         }
         break;
       case ConnectionEvents.Accuse:
-        if (!conn.role) {
-          break;
+        if (this.isTurnPlayer(conn.role)) {
+          this.accuse(conn.role, event.data);
         }
-        this.validateCrime(event.data);
-        this.accuse(conn.role, event.data);
         break;
       default:
         console.error(`Invalid event for ${GameStatus.InProgress}: ${event}`);
     }
     return true;
-  }
-
-  private validateCrime(crime: Crime) {
-    let errors = '';
-    if (!crime.role) {
-      errors += 'Missing suspect. ';
-    }
-    if (!crime.tool) {
-      errors += 'Missing tool. ';
-    }
-    if (!crime.place) {
-      errors += 'Missing place. ';
-    }
-
-    const foundKeys = Object.keys(crime).length;
-    if (foundKeys !== 3) {
-      errors += `Found ${foundKeys}. Expected 3.`;
-    }
-
-    if (errors) {
-      throw new Error(errors);
-    }
   }
 
   private getTurnStateForRole(role: Maybe<RoleCard>): TurnState {
@@ -668,7 +650,7 @@ class GameOver extends GamePostSetup {
         }
         return false;
       default:
-        console.log('Event not found in processEvent', event);
+        console.error('Event not found in processEvent', event);
     }
     return true;
   }

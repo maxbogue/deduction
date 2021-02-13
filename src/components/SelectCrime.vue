@@ -33,7 +33,7 @@
     </div>
     <div class="select-crime__select">
       <button
-        v-if="crime"
+        v-if="crime && !buttonDisabled"
         class="select-crime__button"
         @click="onSelect(crime)"
       >
@@ -70,6 +70,10 @@ export default defineComponent({
     excludeCards: {
       type: Array as PropType<Card[]>,
       default: () => [],
+    },
+    buttonDisabled: {
+      type: Boolean as PropType<boolean>,
+      default: false,
     },
     buttonText: {
       type: String as PropType<string>,

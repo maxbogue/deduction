@@ -44,13 +44,7 @@
         :setNote="setNote"
       />
       <h2 class="game-in-progress__hand-title">Hand</h2>
-      <div class="game-in-progress__hand">
-        <Card
-          v-for="card in state.playerSecrets.hand"
-          :key="card.name"
-          :card="card"
-        />
-      </div>
+      <Cards :cards="state.playerSecrets.hand" />
     </template>
   </div>
 </template>
@@ -58,7 +52,7 @@
 <script lang="ts">
 import { defineComponent, PropType, provide, toRefs } from 'vue';
 
-import CardComponent from '@/components/Card.vue';
+import Cards from '@/components/Cards.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
 import TurnRecord from '@/components/TurnRecord.vue';
@@ -85,7 +79,7 @@ interface InProgressData {
 export default defineComponent({
   name: 'GameInProgress',
   components: {
-    Card: CardComponent,
+    Cards,
     Notepad,
     Players,
     TurnRecord,
@@ -197,13 +191,6 @@ export default defineComponent({
 
   &__hand-title {
     margin-top: $pad-lg;
-  }
-
-  &__hand {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
   }
 }
 </style>

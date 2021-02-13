@@ -48,7 +48,7 @@ export interface Player {
   role: RoleCard;
   name: string;
   isConnected: boolean;
-  failedAccusation: Maybe<Crime>;
+  isDed: boolean;
   handSize: number;
 }
 
@@ -95,6 +95,7 @@ export interface TurnRecordState {
   sharePlayerIndex: number;
   sharedCard: Maybe<Card>;
   playerIsReady: Dict<boolean>;
+  failedAccusation: Maybe<Crime>;
 }
 
 export type TurnState = TurnSuggestState | TurnShareState | TurnRecordState;

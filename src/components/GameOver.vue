@@ -9,9 +9,7 @@
     <Sticky>
       <div>Winner is {{ playerToString(winner) }}!</div>
       <div class="game-in-progress__cards">
-        <div class="game-in-progress__hand">
-          <Card v-for="card in solution" :key="card.name" :card="card" />
-        </div>
+        <Cards :cards="Object.values(state.solution)" />
       </div>
     </Sticky>
     <template v-if="state.playerSecrets">
@@ -23,13 +21,7 @@
       />
       <div>
         <h2>Hand</h2>
-        <div class="game-in-progress__hand">
-          <Card
-            v-for="card in state.playerSecrets.hand"
-            :key="card.name"
-            :card="card"
-          />
-        </div>
+        <Cards :cards="state.playerSecrets.hand" />
       </div>
     </template>
   </div>
@@ -38,18 +30,18 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import CardComponent from '@/components/Card.vue';
+import Cards from '@/components/Cards.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
 import Sticky from '@/components/Sticky.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { Card, Crime, GameOverState, Mark, Player } from '@/state';
+import { Card, GameOverState, Mark, Player } from '@/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'GameOver',
   components: {
-    Card: CardComponent,
+    Cards,
     Notepad,
     Players,
     Sticky,
@@ -78,9 +70,6 @@ export default defineComponent({
     },
     winner(): Player {
       return this.state.players[this.state.winner];
-    },
-    solution(): Crime {
-      return this.state.solution;
     },
   },
   methods: {

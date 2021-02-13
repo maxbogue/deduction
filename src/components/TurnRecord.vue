@@ -13,8 +13,13 @@
         {{ getPlayerName(sharePlayer) }} has shared a card.
       </div>
       <div v-else>No player had a matching card to share.</div>
+      <div v-if="turn.failedAccusation">
+        <div>{{ getPlayerName(turnPlayer) }} is ded! &#x1F47B;</div>
+        <div>Failed accusation:</div>
+        <Cards :cards="Object.values(turn.failedAccusation)" />
+      </div>
     </Sticky>
-    <div v-if="yourPlayer" class="turn-record__buttons">
+    <div v-if="yourPlayer && !yourPlayer.isDed" class="turn-record__buttons">
       <button @click="setIsReady(!isReady)">
         {{ isReady ? 'Unready' : 'Ready' }}
       </button>
@@ -35,7 +40,8 @@
       <SelectCrime
         class="turn-record__accuse"
         :excludeCards="hand"
-        buttonText="Final Accusation"
+        :buttonDisabled="!canAccuse"
+        :buttonText="canAccuse ? 'Final Accusation' : 'Waiting...'"
         :onSelect="onAccuse"
       />
     </template>
@@ -51,9 +57,11 @@
 </template>
 
 <script lang="ts">
+import isEqual from 'lodash/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import CardComponent from '@/components/Card.vue';
+import Cards from '@/components/Cards.vue';
 import RoleColor from '@/components/RoleColor.vue';
 import SelectCrime from '@/components/SelectCrime.vue';
 import Sticky from '@/components/Sticky.vue';
@@ -69,6 +77,7 @@ export default defineComponent({
   name: 'TurnRecord',
   components: {
     Card: CardComponent,
+    Cards,
     RoleColor,
     SelectCrime,
     Sticky,
@@ -127,6 +136,9 @@ export default defineComponent({
       return Object.entries(this.turn.playerIsReady)
         .filter(e => !e[1])
         .map(e => this.roleToPlayer[e[0]]);
+    },
+    canAccuse(): boolean {
+      return isEqual(this.unreadyPlayers, [this.turnPlayer]);
     },
   },
   methods: {

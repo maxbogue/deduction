@@ -7,7 +7,7 @@
       @click="onReconnect(player)"
     >
       <RoleColor class="players__player-color" :role="player.role" />
-      <div v-if="player.failedAccusation">&#x1F47B;&nbsp;</div>
+      <div v-if="player.isDed">&#x1F47B;&nbsp;</div>
       <div v-else-if="player === turnPlayer">&#x1F50D;&nbsp;</div>
       <div :class="classesForPlayerName(player)">
         {{ playerToString(player) }}
