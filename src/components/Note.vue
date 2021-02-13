@@ -9,11 +9,12 @@
         class="note__mark"
         :class="{ 'note__mark--selected': marks.includes(mark) }"
         @click.stop="toggleMark(mark)"
-        v-html="mark"
-      />
+      >
+        {{ mark }}
+      </div>
     </div>
     <div class="note__content" @click.stop="toggleDropdown">
-      <div class="note__mutex" v-html="mutexMark" />
+      <div class="note__mutex">{{ bigMarks.join('') }}</div>
       <div class="note__numbers">{{ numberMarks.join('') }}</div>
     </div>
   </div>
@@ -23,14 +24,13 @@
 import { defineComponent, PropType } from 'vue';
 
 import { Mark as M } from '@/state';
-import { Maybe } from '@/types';
 
 const ALL_MARKS = [
-  M.Q,
   M.D,
+  M.W,
   M.X,
   M.E,
-  M.W,
+  M.Q,
   M.N1,
   M.N2,
   M.N3,
@@ -39,7 +39,8 @@ const ALL_MARKS = [
   M.N6,
   M.N7,
 ];
-const MUTEX_MARKS = [M.Q, M.D, M.X, M.E, M.W];
+const MUTEX_MARKS = [M.D, M.W, M.X];
+const BIG_MARKS = [...MUTEX_MARKS, M.E, M.Q];
 
 export default defineComponent({
   name: 'Note',
@@ -65,11 +66,14 @@ export default defineComponent({
     ALL_MARKS,
   }),
   computed: {
-    mutexMark(): Maybe<M> {
-      return this.marks.filter(m => MUTEX_MARKS.includes(m))[0] || null;
+    bigMarks(): M[] {
+      return this.marks
+        .filter(m => BIG_MARKS.includes(m))
+        .sort()
+        .reverse();
     },
     numberMarks(): M[] {
-      return this.marks.filter(m => !MUTEX_MARKS.includes(m)).sort();
+      return this.marks.filter(m => !BIG_MARKS.includes(m)).sort();
     },
   },
   methods: {
