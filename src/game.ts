@@ -414,11 +414,22 @@ class GameInProgress extends GamePostSetup {
   }
 
   private isSharePlayer(role: Maybe<RoleCard>): boolean {
-    if (this.turnState.status === TurnStatus.Suggest) {
+    if (
+      this.turnState.status !== TurnStatus.Share &&
+      this.turnState.status !== TurnStatus.Record
+    ) {
       return false;
     }
     const sharePlayer = this.players[this.turnState.sharePlayerIndex];
     return Boolean(role && role.name === sharePlayer.role.name);
+  }
+
+  private initPlayerIsReady(): Dict<boolean> {
+    return dictFromList(this.players, (dict, p) => {
+      if (!p.isDed) {
+        dict[p.role.name] = false;
+      }
+    });
   }
 
   private suggest(suggestion: Crime) {
@@ -444,14 +455,9 @@ class GameInProgress extends GamePostSetup {
     this.turnState = {
       status: TurnStatus.Record,
       suggestion,
-      failedAccusation: null,
       sharePlayerIndex: this.turnIndex,
       sharedCard: null,
-      playerIsReady: dictFromList(this.players, (dict, p) => {
-        if (!p.isDed) {
-          dict[p.role.name] = false;
-        }
-      }),
+      playerIsReady: this.initPlayerIsReady(),
     };
   }
 
@@ -465,7 +471,6 @@ class GameInProgress extends GamePostSetup {
     this.turnState = {
       status: TurnStatus.Record,
       suggestion: this.turnState.suggestion,
-      failedAccusation: null,
       sharePlayerIndex: this.turnState.sharePlayerIndex,
       sharedCard: card,
       playerIsReady: dictFromList(this.players, (dict, p) => {
@@ -477,17 +482,30 @@ class GameInProgress extends GamePostSetup {
   }
 
   private checkIfReady() {
-    if (this.turnState.status !== TurnStatus.Record) {
+    if (
+      this.turnState.status !== TurnStatus.Record &&
+      this.turnState.status !== TurnStatus.Accused
+    ) {
       return;
     }
 
-    if (Object.values(this.turnState.playerIsReady).every(x => x)) {
+    if (!Object.values(this.turnState.playerIsReady).every(x => x)) {
+      return;
+    }
+
+    const playersLeft = this.players.filter(p => !p.isDed);
+    if (playersLeft.length > 1) {
       this.endTurn();
+    } else {
+      this.gameOver(playersLeft[0]);
     }
   }
 
   private setIsReady(role: RoleCard, isReady: boolean) {
-    if (this.turnState.status !== TurnStatus.Record) {
+    if (
+      this.turnState.status !== TurnStatus.Record &&
+      this.turnState.status !== TurnStatus.Accused
+    ) {
       return;
     }
 
@@ -525,18 +543,12 @@ class GameInProgress extends GamePostSetup {
     }
 
     player.isDed = true;
-    this.turnState.failedAccusation = accusation;
-    const playersLeft = this.players.filter(p => !p.isDed);
-    if (playersLeft.length > 1) {
-      const { playerIsReady } = this.turnState;
-      delete playerIsReady[player.role.name];
-      // Unready everybody.
-      Object.keys(playerIsReady).forEach(name => {
-        playerIsReady[name] = false;
-      });
-    } else {
-      this.gameOver(playersLeft[0]);
-    }
+
+    this.turnState = {
+      status: TurnStatus.Accused,
+      failedAccusation: accusation,
+      playerIsReady: this.initPlayerIsReady(),
+    };
   }
 
   private gameOver(winner: Player) {

@@ -32,6 +32,15 @@
       :setIsReady="setIsReady"
       :onAccuse="accuse"
     />
+    <TurnAccused
+      v-else-if="turn.status === TurnStatus.Accused"
+      :turn="turn"
+      :players="state.players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :turnPlayer="turnPlayer"
+      :setIsReady="setIsReady"
+    />
     <template v-if="state.playerSecrets">
       <Notepad
         class="game-in-progress__notepad"
@@ -55,6 +64,7 @@ import { defineComponent, PropType, provide, toRefs } from 'vue';
 import Cards from '@/components/Cards.vue';
 import Notepad from '@/components/Notepad.vue';
 import Players from '@/components/Players.vue';
+import TurnAccused from '@/components/TurnAccused.vue';
 import TurnRecord from '@/components/TurnRecord.vue';
 import TurnShare from '@/components/TurnShare.vue';
 import TurnSuggest from '@/components/TurnSuggest.vue';
@@ -82,6 +92,7 @@ export default defineComponent({
     Cards,
     Notepad,
     Players,
+    TurnAccused,
     TurnRecord,
     TurnShare,
     TurnSuggest,
@@ -118,7 +129,10 @@ export default defineComponent({
       return this.state.players[this.state.turnIndex];
     },
     sharePlayer(): Maybe<Player> {
-      if (this.turn.status === TurnStatus.Suggest) {
+      if (
+        this.turn.status !== TurnStatus.Share &&
+        this.turn.status !== TurnStatus.Record
+      ) {
         return null;
       }
       return this.state.players[this.turn.sharePlayerIndex];
@@ -127,9 +141,13 @@ export default defineComponent({
       return this.state.playerSecrets?.hand ?? [];
     },
     suggestion(): Maybe<Crime> {
-      return this.turn.status === TurnStatus.Suggest
-        ? null
-        : this.turn.suggestion;
+      if (
+        this.turn.status !== TurnStatus.Share &&
+        this.turn.status !== TurnStatus.Record
+      ) {
+        return null;
+      }
+      return this.turn.suggestion;
     },
   },
   methods: {

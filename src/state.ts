@@ -77,6 +77,7 @@ export enum TurnStatus {
   Suggest = 'Suggest',
   Share = 'Share',
   Record = 'Record',
+  Accused = 'Accused',
 }
 
 export interface TurnSuggestState {
@@ -95,10 +96,19 @@ export interface TurnRecordState {
   sharePlayerIndex: number;
   sharedCard: Maybe<Card>;
   playerIsReady: Dict<boolean>;
-  failedAccusation: Maybe<Crime>;
 }
 
-export type TurnState = TurnSuggestState | TurnShareState | TurnRecordState;
+export interface TurnAccusedState {
+  status: TurnStatus.Accused;
+  failedAccusation: Crime;
+  playerIsReady: Dict<boolean>;
+}
+
+export type TurnState =
+  | TurnSuggestState
+  | TurnShareState
+  | TurnRecordState
+  | TurnAccusedState;
 
 export enum GameStatus {
   Setup = 'Setup',
