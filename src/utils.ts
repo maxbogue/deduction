@@ -20,6 +20,10 @@ export const dictFromList = <T, U>(
   return dict;
 };
 
+// Returns one random item from the list.
+export const chooseOne = <T>(ls: T[]): T =>
+  ls[Math.floor(Math.random() * ls.length)];
+
 // Removes one random item from the list and returns it.
 export const pickOne = <T>(ls: T[]): T => {
   const i = Math.floor(Math.random() * ls.length);

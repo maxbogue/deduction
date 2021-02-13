@@ -4,7 +4,7 @@
     :style="{ backgroundColor: yourPlayer.role.color }"
     @click="setIsReady(!isReady)"
   >
-    {{ isReady ? 'no wait' : 'im ready bro' }}
+    {{ isReady ? unreadyPhrase : readyPhrase }}
   </div>
 </template>
 
@@ -13,6 +13,25 @@ import { defineComponent, PropType } from 'vue';
 
 import { Player } from '@/state';
 import { Dict } from '@/types';
+import { chooseOne } from '@/utils';
+
+const READY_PHRASES = [
+  //'im ready bro',
+  //'lets gooooo',
+  //'we did it',
+  //'done and done',
+  //'thank u next',
+  '✅', // checkmark emoji
+];
+
+const UNREADY_PHRASES = [
+  'no wait',
+  'oops hang on',
+  'gotta check something',
+  'hmmm one sec',
+  'jk',
+  '⏪', // rewind emoji
+];
 
 export default defineComponent({
   name: 'ReadyToast',
@@ -30,6 +49,10 @@ export default defineComponent({
       required: true,
     },
   },
+  data: () => ({
+    readyPhrase: chooseOne(READY_PHRASES),
+    unreadyPhrase: chooseOne(UNREADY_PHRASES),
+  }),
   computed: {
     isReady(): boolean {
       return this.playerIsReady[this.yourPlayer.role.name];
@@ -51,6 +74,7 @@ export default defineComponent({
   width: 100%;
   box-shadow: $box-shadow;
   cursor: pointer;
+  user-select: none;
 
   @media (min-width: $screen-sm-min) {
     width: $container-sm;
