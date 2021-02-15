@@ -17,19 +17,16 @@ export class WebSocketConnection implements Connection {
     this.observer = observer;
     this.ws = ws;
 
-    console.log('websocket connected');
-
     ws.on('message', (message: string) => {
       try {
         const event = JSON.parse(message);
         this.observer.processEvent(this, event);
       } catch (e: unknown) {
-        console.log(e instanceof Error ? e.message : e);
+        console.error(e instanceof Error ? e.message : e);
       }
     });
 
     ws.on('close', () => {
-      console.log('closing websocket');
       this.observer.removeConnection(this);
     });
   }
@@ -45,8 +42,8 @@ export class WebSocketConnection implements Connection {
   sendState(state: GameState): void {
     try {
       this.ws.send(JSON.stringify(state));
-    } catch (err: unknown) {
-      console.error(err);
+    } catch (e: unknown) {
+      console.error(e instanceof Error ? e.message : e);
     }
   }
 }

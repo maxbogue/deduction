@@ -48,7 +48,7 @@ module.exports = {
     // Disallow some deprecated function properties.
     'no-caller': 'error',
     // Disallow console.log and debug to prevent debug statements from being merged.
-    //'no-console': ['error', { allow: ['warn', 'error'] }],
+    'no-console': ['error', { allow: ['warn', 'error'] }],
     // Constructors shouldn't return things.
     'no-constructor-return': 'error',
     // Don't use eval!

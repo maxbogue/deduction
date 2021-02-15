@@ -35,5 +35,6 @@ app.get('*', (_, res) => {
 });
 
 const port = parseInt(process.argv[2]) || 3000;
+// eslint-disable-next-line no-console
 console.log(`Starting server on ${port}...`);
 app.listen(port);
