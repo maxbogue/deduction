@@ -35,7 +35,7 @@ import Sticky from '@/components/Sticky.vue';
 import Cards from '@/deduction/components/Cards.vue';
 import Notepad from '@/deduction/components/Notepad.vue';
 import Players from '@/deduction/components/Players.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { DeductionEvent, DeductionEvents } from '@/deduction/events';
 import { Card, GameOverState, Mark, Player } from '@/deduction/state';
 import { Maybe } from '@/types';
 
@@ -53,7 +53,7 @@ export default defineComponent({
       required: true,
     },
     send: {
-      type: Function as PropType<(event: ConnectionEvent) => void>,
+      type: Function as PropType<(event: DeductionEvent) => void>,
       required: true,
     },
   },
@@ -76,7 +76,7 @@ export default defineComponent({
   methods: {
     reconnectAsPlayer(player: Player) {
       this.send({
-        type: ConnectionEvents.SetRole,
+        kind: DeductionEvents.SetRole,
         data: player.role,
       });
     },
@@ -86,7 +86,7 @@ export default defineComponent({
     },
     setNote(player: Player, card: Card, marks: Mark[]) {
       this.send({
-        type: ConnectionEvents.SetNote,
+        kind: DeductionEvents.SetNote,
         player,
         card,
         marks,

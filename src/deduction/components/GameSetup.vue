@@ -40,7 +40,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import RoleColor from '@/deduction/components/RoleColor.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { DeductionEvent, DeductionEvents } from '@/deduction/events';
 import { ProtoPlayer, RoleCard, SetupState } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -56,7 +56,7 @@ export default defineComponent({
       required: true,
     },
     send: {
-      type: Function as PropType<(event: ConnectionEvent) => void>,
+      type: Function as PropType<(event: DeductionEvent) => void>,
       required: true,
     },
   },
@@ -100,7 +100,7 @@ export default defineComponent({
         return;
       }
       this.send({
-        type: ConnectionEvents.SetRole,
+        kind: DeductionEvents.SetRole,
         data: role,
       });
     },
@@ -109,7 +109,7 @@ export default defineComponent({
         return;
       }
       this.send({
-        type: ConnectionEvents.SetName,
+        kind: DeductionEvents.SetName,
         data: this.name,
       });
     },
@@ -118,13 +118,13 @@ export default defineComponent({
         return;
       }
       this.send({
-        type: ConnectionEvents.SetReady,
+        kind: DeductionEvents.SetReady,
         data: !this.player.isReady,
       });
     },
     startGame() {
       this.send({
-        type: ConnectionEvents.Start,
+        kind: DeductionEvents.Start,
       });
     },
   },

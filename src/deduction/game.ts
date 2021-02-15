@@ -8,7 +8,7 @@ import { Connection, Game, GameConfig, GameObserver } from '@/server/game';
 import { ById, Dict, Maybe } from '@/types';
 import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
 
-import { ConnectionEvent, ConnectionEvents } from './events';
+import { DeductionEvent, DeductionEvents } from './events';
 import { SKINS } from './skins';
 import {
   Card,
@@ -155,21 +155,21 @@ class GameSetup extends Game {
     this.observer.setGame(game);
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): boolean {
-    switch (event.type) {
-      case ConnectionEvents.SetRole:
+  processEvent(conn: Connection, event: DeductionEvent): boolean {
+    switch (event.kind) {
+      case DeductionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
         break;
-      case ConnectionEvents.SetName:
+      case DeductionEvents.SetName:
         this.setName(conn, event.data);
         break;
-      case ConnectionEvents.SetReady:
+      case DeductionEvents.SetReady:
         this.setIsReady(conn, event.data);
         break;
-      case ConnectionEvents.SetSkin:
+      case DeductionEvents.SetSkin:
         this.setSkin(event.data);
         break;
-      case ConnectionEvents.Start:
+      case DeductionEvents.Start:
         this.start();
         break;
       default:
@@ -499,33 +499,33 @@ class GameInProgress extends GamePostSetup {
     );
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): boolean {
+  processEvent(conn: Connection, event: DeductionEvent): boolean {
     const role = this.getRole(conn);
-    switch (event.type) {
-      case ConnectionEvents.SetRole:
+    switch (event.kind) {
+      case DeductionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
         break;
-      case ConnectionEvents.SetNote:
+      case DeductionEvents.SetNote:
         if (role) {
           this.setNote(role, event.player, event.card, event.marks);
         }
         return false;
-      case ConnectionEvents.Suggest:
+      case DeductionEvents.Suggest:
         if (this.isTurnPlayer(role)) {
           this.suggest(event.suggestion);
         }
         break;
-      case ConnectionEvents.ShareCard:
+      case DeductionEvents.ShareCard:
         if (this.isSharePlayer(role)) {
           this.shareCard(event.sharedCard);
         }
         break;
-      case ConnectionEvents.SetReady:
+      case DeductionEvents.SetReady:
         if (role) {
           this.setIsReady(role, event.data);
         }
         break;
-      case ConnectionEvents.Accuse:
+      case DeductionEvents.Accuse:
         if (this.isTurnPlayer(role)) {
           this.accuse(role, event.data);
         }
@@ -577,13 +577,13 @@ class GameOver extends GamePostSetup {
     this.winner = winner;
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): boolean {
+  processEvent(conn: Connection, event: DeductionEvent): boolean {
     const role = this.getRole(conn);
-    switch (event.type) {
-      case ConnectionEvents.SetRole:
+    switch (event.kind) {
+      case DeductionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
         break;
-      case ConnectionEvents.SetNote:
+      case DeductionEvents.SetNote:
         if (role) {
           this.setNote(role, event.player, event.card, event.marks);
         }

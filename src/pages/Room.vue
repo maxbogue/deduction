@@ -5,14 +5,14 @@
     <GameSetup
       v-else-if="state.status === GameStatus.Setup"
       :state="state"
-      :send="send"
+      :send="sendGameEvent"
     />
     <GameInProgress
       v-else-if="state.status === GameStatus.InProgress"
       :state="state"
-      :send="send"
+      :send="sendGameEvent"
     />
-    <GameOver v-else :state="state" :send="send" />
+    <GameOver v-else :state="state" :send="sendGameEvent" />
     <hr />
     <div class="room__buttons">
       <button @click="restart">Restart</button>
@@ -32,8 +32,9 @@ import { useWebSocket } from '@/composables/websocket';
 import GameInProgress from '@/deduction/components/GameInProgress.vue';
 import GameOver from '@/deduction/components/GameOver.vue';
 import GameSetup from '@/deduction/components/GameSetup.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { DeductionEvents } from '@/deduction/events';
 import { GameState, GameStatus, RoleCard } from '@/deduction/state';
+import { RoomEvent, RoomEvents } from '@/events';
 import { Maybe } from '@/types';
 
 function roleFromState(state: GameState): Maybe<RoleCard> {
@@ -61,22 +62,26 @@ export default defineComponent({
       () => `${protocol}://${window.location.host}/api/${id.value}/`
     );
 
-    const { connected, state, send } = useWebSocket<GameState, ConnectionEvent>(
-      url
-    );
+    const { connected, state, send } = useWebSocket<GameState, RoomEvent>(url);
 
     const restart = () => {
       if (confirm('Are you sure you want to restart the game?')) {
-        send({ type: ConnectionEvents.Restart });
+        send({ kind: RoomEvents.Restart });
       }
     };
+
+    const sendGameEvent = (event: any) =>
+      send({
+        kind: RoomEvents.GameEvent,
+        event,
+      });
 
     watch(connected, (newVal, oldVal) => {
       if (newVal && !oldVal && state.value) {
         const role = roleFromState(state.value);
         if (role) {
-          send({
-            type: ConnectionEvents.SetRole,
+          sendGameEvent({
+            kind: DeductionEvents.SetRole,
             data: role,
           });
         }
@@ -87,7 +92,7 @@ export default defineComponent({
       GameStatus,
       connected,
       state,
-      send,
+      sendGameEvent,
       restart,
       showStateJson: ref(false),
     };

@@ -69,7 +69,7 @@ import TurnAccused from '@/deduction/components/TurnAccused.vue';
 import TurnRecord from '@/deduction/components/TurnRecord.vue';
 import TurnShare from '@/deduction/components/TurnShare.vue';
 import TurnSuggest from '@/deduction/components/TurnSuggest.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { DeductionEvent, DeductionEvents } from '@/deduction/events';
 import {
   Card,
   Crime,
@@ -103,7 +103,7 @@ export default defineComponent({
       required: true,
     },
     send: {
-      type: Function as PropType<(event: ConnectionEvent) => void>,
+      type: Function as PropType<(event: DeductionEvent) => void>,
       required: true,
     },
   },
@@ -153,37 +153,37 @@ export default defineComponent({
   methods: {
     suggest(suggestion: Crime) {
       this.send({
-        type: ConnectionEvents.Suggest,
+        kind: DeductionEvents.Suggest,
         suggestion,
       });
     },
     shareCard(card: Card) {
       this.send({
-        type: ConnectionEvents.ShareCard,
+        kind: DeductionEvents.ShareCard,
         sharedCard: card,
       });
     },
     setIsReady(isReady: boolean) {
       this.send({
-        type: ConnectionEvents.SetReady,
+        kind: DeductionEvents.SetReady,
         data: isReady,
       });
     },
     accuse(crime: Crime) {
       this.send({
-        type: ConnectionEvents.Accuse,
+        kind: DeductionEvents.Accuse,
         data: crime,
       });
     },
     reconnectAsPlayer(player: Player) {
       this.send({
-        type: ConnectionEvents.SetRole,
+        kind: DeductionEvents.SetRole,
         data: player.role,
       });
     },
     setNote(player: Player, card: Card, marks: Mark[]) {
       this.send({
-        type: ConnectionEvents.SetNote,
+        kind: DeductionEvents.SetNote,
         player,
         card,
         marks,

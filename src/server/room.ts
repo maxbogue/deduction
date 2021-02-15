@@ -1,5 +1,5 @@
-import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
 import deduction from '@/deduction/game';
+import { RoomEvent, RoomEvents } from '@/events';
 import {
   Connection,
   ConnectionObserver,
@@ -38,14 +38,16 @@ export class Room implements ConnectionObserver, GameObserver {
     this.updateState();
   }
 
-  processEvent(conn: Connection, event: ConnectionEvent): void {
+  processEvent(conn: Connection, event: RoomEvent): void {
     let updateAll = true;
-    switch (event.type) {
-      case ConnectionEvents.Restart:
+    switch (event.kind) {
+      case RoomEvents.SetGame:
+        break;
+      case RoomEvents.Restart:
         this.game = this.initGame();
         break;
       default:
-        updateAll = this.game.processEvent(conn, event);
+        updateAll = this.game.processEvent(conn, event.event);
     }
     if (updateAll) {
       this.updateState();

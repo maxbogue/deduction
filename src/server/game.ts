@@ -1,9 +1,9 @@
-import { ConnectionEvent } from '@/deduction/events';
 import { GameState } from '@/deduction/state';
+import { RoomEvent } from '@/events';
 
 export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
-  processEvent: (conn: Connection, event: ConnectionEvent) => void;
+  processEvent: (conn: Connection, event: RoomEvent) => void;
 }
 
 export interface Connection {
@@ -25,7 +25,7 @@ export abstract class Game {
   abstract removeConnection(conn: Connection): void;
   abstract getStateForConnection(conn: Connection): GameState;
   // Returns whether to update state for all connections or just `conn`.
-  abstract processEvent(conn: Connection, event: ConnectionEvent): boolean;
+  abstract processEvent(conn: Connection, event: unknown): boolean;
 }
 
 export interface GameConfig {

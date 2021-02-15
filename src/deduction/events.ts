@@ -1,8 +1,7 @@
 import { Card, Crime, Mark, Player, RoleCard } from '@/deduction/state';
 
-export enum ConnectionEvents {
+export enum DeductionEvents {
   Accuse = 'Accuse',
-  Restart = 'Restart',
   SetName = 'SetName',
   SetNote = 'SetNote',
   SetReady = 'SetReady',
@@ -14,58 +13,53 @@ export enum ConnectionEvents {
 }
 
 export interface AccuseEvent {
-  type: ConnectionEvents.Accuse;
+  kind: DeductionEvents.Accuse;
   data: Crime;
 }
 
-export interface RestartEvent {
-  type: ConnectionEvents.Restart;
-}
-
 export interface SetNameEvent {
-  type: ConnectionEvents.SetName;
+  kind: DeductionEvents.SetName;
   data: string;
 }
 
 export interface SetNoteEvent {
-  type: ConnectionEvents.SetNote;
+  kind: DeductionEvents.SetNote;
   player: Player;
   card: Card;
   marks: Mark[];
 }
 
 export interface SetReadyEvent {
-  type: ConnectionEvents.SetReady;
+  kind: DeductionEvents.SetReady;
   data: boolean;
 }
 
 export interface SetRoleEvent {
-  type: ConnectionEvents.SetRole;
+  kind: DeductionEvents.SetRole;
   data: RoleCard;
 }
 
 export interface SetSkinEvent {
-  type: ConnectionEvents.SetSkin;
+  kind: DeductionEvents.SetSkin;
   data: string;
 }
 
 export interface ShareCardEvent {
-  type: ConnectionEvents.ShareCard;
+  kind: DeductionEvents.ShareCard;
   sharedCard: Card;
 }
 
 export interface StartEvent {
-  type: ConnectionEvents.Start;
+  kind: DeductionEvents.Start;
 }
 
 export interface SuggestEvent {
-  type: ConnectionEvents.Suggest;
+  kind: DeductionEvents.Suggest;
   suggestion: Crime;
 }
 
-export type ConnectionEvent =
+export type DeductionEvent =
   | AccuseEvent
-  | RestartEvent
   | SetNameEvent
   | SetNoteEvent
   | SetReadyEvent
