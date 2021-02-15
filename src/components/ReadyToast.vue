@@ -16,11 +16,11 @@ import { Dict } from '@/types';
 import { chooseOne } from '@/utils';
 
 const READY_PHRASES = [
-  //'im ready bro',
-  //'lets gooooo',
-  //'we did it',
-  //'done and done',
-  //'thank u next',
+  'im ready bro',
+  'lets gooooo',
+  'we did it',
+  'done and done',
+  'thank u next',
   '✅', // checkmark emoji
 ];
 

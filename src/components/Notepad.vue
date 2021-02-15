@@ -92,7 +92,13 @@ import { dictFromList } from '@/utils';
 const makeNoteKey = (player: Player, card: Card) =>
   `${player.role.name}---${card.name}`;
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
+interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
+
+function parseHex(hex: string): Rgb {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
     throw new Error(`bad player color: ${hex}`);
@@ -104,10 +110,13 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   };
 }
 
-function hexToRgba(hex: string, a: number): string {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
+const toRgba = ({ r, g, b }: Rgb, a: number) => `rgba(${r}, ${g}, ${b}, ${a})`;
+
+const darken = ({ r, g, b }: Rgb, x = 0.75) => ({
+  r: Math.floor(r * x),
+  g: Math.floor(g * x),
+  b: Math.floor(b * x),
+});
 
 export default defineComponent({
   name: 'Notepad',
@@ -181,10 +190,12 @@ export default defineComponent({
   computed: {
     colorVars(): Dict<string> {
       return dictFromList(this.players, (acc, player, i) => {
-        acc[`--color-${i + 1}`] = hexToRgba(
-          player.role.color,
+        const rgb = parseHex(player.role.color);
+        acc[`--color-${i + 1}`] = toRgba(
+          rgb,
           player === this.turnPlayer ? 0.5 : 0.2
         );
+        acc[`--color-dark-${i + 1}`] = toRgba(darken(rgb), 0.75);
       });
     },
     tableStyle(): Dict<string> {
@@ -221,6 +232,7 @@ export default defineComponent({
     },
     colClasses(player: Player): Dict<boolean> {
       return {
+        'notepad__turn-player': player === this.turnPlayer,
         notepad__highlight: player === this.sharePlayer,
       };
     },
@@ -260,6 +272,16 @@ export default defineComponent({
 
     &.notepad__highlight {
       @extend .notepad__highlight;
+    }
+
+    &.notepad__turn-player:not(.notepad__highlight) {
+      color: #fff;
+
+      @for $i from 1 through 10 {
+        &:nth-child(#{$i + 1}) {
+          background-color: #{var(--color-dark- + $i)};
+        }
+      }
     }
   }
 
