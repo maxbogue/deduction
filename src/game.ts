@@ -1,5 +1,6 @@
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
+import mapValues from 'lodash/fp/mapValues';
 import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
@@ -7,19 +8,19 @@ import { ConnectionEvent, ConnectionEvents } from '@/events';
 import { SKINS } from '@/skins';
 import {
   Card,
-  ConnectionDescription,
   Crime,
   GameState,
   GameStatus,
   Mark,
   Player,
   PlayerSecrets,
+  ProtoPlayer,
   RoleCard,
   Skin,
   TurnState,
   TurnStatus,
 } from '@/state';
-import { Dict, Maybe } from '@/types';
+import { ById, Dict, Maybe } from '@/types';
 import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
 
 export interface ConnectionObserver {
@@ -28,10 +29,7 @@ export interface ConnectionObserver {
 }
 
 export interface Connection {
-  name: string;
-  role: Maybe<RoleCard>;
-  isReady: boolean;
-  getDescription: () => ConnectionDescription;
+  readonly id: number;
   sendState: (gameState: GameState) => void;
 }
 
@@ -44,12 +42,12 @@ export class Room implements ConnectionObserver, GameObserver {
   private game: Game;
 
   constructor() {
-    this.game = new GameSetup(this, this.connections);
+    this.game = new GameSetup(this);
   }
 
   addConnection(conn: Connection): void {
     this.connections.push(conn);
-    this.updateState();
+    this.updateStateForConnection(conn);
   }
 
   removeConnection(conn: Connection): void {
@@ -63,7 +61,7 @@ export class Room implements ConnectionObserver, GameObserver {
     let updateAll = true;
     switch (event.type) {
       case ConnectionEvents.Restart:
-        this.game = new GameSetup(this, this.connections);
+        this.game = new GameSetup(this);
         break;
       default:
         updateAll = this.game.processEvent(conn, event);
@@ -80,14 +78,12 @@ export class Room implements ConnectionObserver, GameObserver {
   }
 
   updateStateForConnection(conn: Connection): void {
-    conn.sendState(
-      this.game.getStateForConnection(conn, this.connections.indexOf(conn))
-    );
+    conn.sendState(this.game.getStateForConnection(conn));
   }
 
   updateState(): void {
-    this.connections.forEach((c, i) => {
-      c.sendState(this.game.getStateForConnection(c, i));
+    this.connections.forEach(conn => {
+      conn.sendState(this.game.getStateForConnection(conn));
     });
   }
 }
@@ -100,30 +96,17 @@ abstract class Game {
   }
 
   abstract removeConnection(conn: Connection): void;
-  abstract getStateForConnection(conn: Connection, i: number): GameState;
+  abstract getStateForConnection(conn: Connection): GameState;
   // Returns whether to update state for all connections or just `conn`.
   abstract processEvent(conn: Connection, event: ConnectionEvent): boolean;
 }
 
 class GameSetup extends Game {
-  private readonly connections: Connection[];
-  private roleToConnection: Dict<Connection> = {};
+  private playersByConnection: ById<ProtoPlayer> = {};
   private skin: Skin = SKINS.classic;
 
-  constructor(observer: GameObserver, connections: Connection[]) {
-    super(observer);
-    this.connections = connections;
-    this.connections.forEach(conn => {
-      if (conn.role) {
-        this.setConnectionRole(conn, conn.role);
-      }
-    });
-  }
-
   removeConnection(conn: Connection): void {
-    if (conn.role) {
-      delete this.roleToConnection[conn.role.name];
-    }
+    delete this.playersByConnection[conn.id];
   }
 
   private setConnectionRole(conn: Connection, role: RoleCard): void {
@@ -132,16 +115,36 @@ class GameSetup extends Game {
       return;
     }
 
-    if (this.roleToConnection[role.name]) {
+    if (
+      Object.values(this.playersByConnection).some(
+        p => p.role.name === role.name
+      )
+    ) {
       return;
     }
 
-    if (conn.role) {
-      delete this.roleToConnection[conn.role.name];
+    const player = this.playersByConnection[conn.id];
+    if (player) {
+      player.role = role;
+    } else {
+      this.playersByConnection[conn.id] = {
+        role,
+        name: '',
+        isReady: false,
+      };
     }
+  }
 
-    this.roleToConnection[role.name] = conn;
-    conn.role = role;
+  private setName(conn: Connection, name: string) {
+    if (this.playersByConnection[conn.id]) {
+      this.playersByConnection[conn.id].name = name;
+    }
+  }
+
+  private setIsReady(conn: Connection, isReady: boolean) {
+    if (this.playersByConnection[conn.id]) {
+      this.playersByConnection[conn.id].isReady = isReady;
+    }
   }
 
   private setSkin(skinName: string): void {
@@ -161,11 +164,7 @@ class GameSetup extends Game {
   }
 
   private resetRoles(): void {
-    Object.values(this.roleToConnection).forEach(conn => {
-      conn.role = null;
-      conn.isReady = false;
-    });
-    this.roleToConnection = {};
+    this.playersByConnection = {};
   }
 
   private dealCards(numHands: number) {
@@ -199,19 +198,15 @@ class GameSetup extends Game {
   }
 
   private start(): void {
-    const playerConnections = Object.values(this.roleToConnection);
-    if (
-      playerConnections.length < 2 ||
-      !playerConnections.every(c => c.isReady)
-    ) {
+    const protoPlayers = Object.values(this.playersByConnection);
+    if (protoPlayers.length < 2 || !protoPlayers.every(p => p.isReady)) {
       return;
     }
 
-    const { solution, hands } = this.dealCards(playerConnections.length);
+    const { solution, hands } = this.dealCards(protoPlayers.length);
 
-    const players = shuffle(playerConnections).map(
-      (conn: Connection, i: number): Player => {
-        const { role, name } = conn.getDescription();
+    const players = shuffle(protoPlayers).map(
+      ({ role, name }: ProtoPlayer, i: number): Player => {
         if (!role) {
           throw new TypeError('Role must be set.');
         }
@@ -228,6 +223,7 @@ class GameSetup extends Game {
     const game = new GameInProgress(
       this.observer,
       this.skin,
+      mapValues(p => p.role, this.playersByConnection),
       players,
       hands,
       solution
@@ -241,10 +237,10 @@ class GameSetup extends Game {
         this.setConnectionRole(conn, event.data);
         break;
       case ConnectionEvents.SetName:
-        conn.name = event.data;
+        this.setName(conn, event.data);
         break;
       case ConnectionEvents.SetReady:
-        conn.isReady = event.data;
+        this.setIsReady(conn, event.data);
         break;
       case ConnectionEvents.SetSkin:
         this.setSkin(event.data);
@@ -258,12 +254,12 @@ class GameSetup extends Game {
     return true;
   }
 
-  getStateForConnection(_: Connection, i: number): GameState {
+  getStateForConnection(conn: Connection): GameState {
     return {
       status: GameStatus.Setup,
       skin: this.skin,
-      connections: this.connections.map(c => c.getDescription()),
-      connectionIndex: i,
+      playersByConnection: this.playersByConnection,
+      connectionId: conn.id,
     };
   }
 }
@@ -273,12 +269,14 @@ abstract class GamePostSetup extends Game {
   protected readonly solution: Crime;
   protected readonly players: Player[];
   protected readonly playerSecrets: PlayerSecrets[];
+  protected readonly rolesByConnection: ById<RoleCard> = {};
   protected readonly roleToPlayer: Dict<Player> = {};
   protected readonly roleToPlayerSecrets: Dict<PlayerSecrets> = {};
 
   constructor(
     observer: GameObserver,
     skin: Skin,
+    rolesByConnection: ById<RoleCard>,
     players: Player[],
     playerSecrets: PlayerSecrets[],
     solution: Crime
@@ -286,9 +284,10 @@ abstract class GamePostSetup extends Game {
     super(observer);
 
     this.skin = skin;
-    this.solution = solution;
+    this.rolesByConnection = rolesByConnection;
     this.players = players;
     this.playerSecrets = playerSecrets;
+    this.solution = solution;
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
@@ -298,12 +297,17 @@ abstract class GamePostSetup extends Game {
   }
 
   removeConnection(conn: Connection): void {
-    if (conn.role) {
-      const player = this.roleToPlayer[conn.role.name];
+    const role = this.getRole(conn);
+    if (role) {
+      const player = this.roleToPlayer[role.name];
       if (player) {
         player.isConnected = false;
       }
     }
+  }
+
+  protected getRole(conn: Connection): Maybe<RoleCard> {
+    return this.rolesByConnection[conn.id] ?? null;
   }
 
   protected setNote(
@@ -326,7 +330,7 @@ abstract class GamePostSetup extends Game {
       return;
     }
 
-    if (conn.role) {
+    if (this.getRole(conn)) {
       // Can't switch roles mid-game.
       return;
     }
@@ -336,7 +340,7 @@ abstract class GamePostSetup extends Game {
       return;
     }
 
-    conn.role = role;
+    this.rolesByConnection[conn.id] = role;
     player.isConnected = true;
   }
 }
@@ -373,6 +377,7 @@ class GameInProgress extends GamePostSetup {
   constructor(
     observer: GameObserver,
     skin: Skin,
+    rolesByConnection: ById<RoleCard>,
     players: Player[],
     hands: Card[][],
     solution: Crime
@@ -380,6 +385,7 @@ class GameInProgress extends GamePostSetup {
     super(
       observer,
       skin,
+      rolesByConnection,
       players,
       hands.map((hand, i) => ({
         index: i,
@@ -560,6 +566,7 @@ class GameInProgress extends GamePostSetup {
       new GameOver(
         this.observer,
         this.skin,
+        this.rolesByConnection,
         this.players,
         playerSecrets,
         this.solution,
@@ -569,36 +576,34 @@ class GameInProgress extends GamePostSetup {
   }
 
   processEvent(conn: Connection, event: ConnectionEvent): boolean {
+    const role = this.getRole(conn);
     switch (event.type) {
       case ConnectionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
         break;
-      case ConnectionEvents.SetName:
-        conn.name = event.data;
-        break;
       case ConnectionEvents.SetNote:
-        if (conn.role) {
-          this.setNote(conn.role, event.player, event.card, event.marks);
+        if (role) {
+          this.setNote(role, event.player, event.card, event.marks);
         }
         return false;
       case ConnectionEvents.Suggest:
-        if (this.isTurnPlayer(conn.role)) {
+        if (this.isTurnPlayer(role)) {
           this.suggest(event.suggestion);
         }
         break;
       case ConnectionEvents.ShareCard:
-        if (this.isSharePlayer(conn.role)) {
+        if (this.isSharePlayer(role)) {
           this.shareCard(event.sharedCard);
         }
         break;
       case ConnectionEvents.SetReady:
-        if (conn.role) {
-          this.setIsReady(conn.role, event.data);
+        if (role) {
+          this.setIsReady(role, event.data);
         }
         break;
       case ConnectionEvents.Accuse:
-        if (this.isTurnPlayer(conn.role)) {
-          this.accuse(conn.role, event.data);
+        if (this.isTurnPlayer(role)) {
+          this.accuse(role, event.data);
         }
         break;
       default:
@@ -620,15 +625,14 @@ class GameInProgress extends GamePostSetup {
   }
 
   getStateForConnection(conn: Connection): GameState {
+    const role = this.getRole(conn);
     return {
       status: GameStatus.InProgress,
       skin: this.skin,
       players: this.players,
       turnIndex: this.turnIndex,
-      turnState: this.getTurnStateForRole(conn.role),
-      playerSecrets: conn.role
-        ? this.roleToPlayerSecrets[conn.role.name]
-        : null,
+      turnState: this.getTurnStateForRole(role),
+      playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
     };
   }
 }
@@ -639,26 +643,25 @@ class GameOver extends GamePostSetup {
   constructor(
     observer: GameObserver,
     skin: Skin,
+    rolesByConnection: ById<RoleCard>,
     players: Player[],
     playerSecrets: PlayerSecrets[],
     solution: Crime,
     winner: number
   ) {
-    super(observer, skin, players, playerSecrets, solution);
+    super(observer, skin, rolesByConnection, players, playerSecrets, solution);
     this.winner = winner;
   }
 
   processEvent(conn: Connection, event: ConnectionEvent): boolean {
+    const role = this.getRole(conn);
     switch (event.type) {
       case ConnectionEvents.SetRole:
         this.setConnectionRole(conn, event.data);
         break;
-      case ConnectionEvents.SetName:
-        conn.name = event.data;
-        break;
       case ConnectionEvents.SetNote:
-        if (conn.role) {
-          this.setNote(conn.role, event.player, event.card, event.marks);
+        if (role) {
+          this.setNote(role, event.player, event.card, event.marks);
         }
         return false;
       default:
@@ -668,15 +671,14 @@ class GameOver extends GamePostSetup {
   }
 
   getStateForConnection(conn: Connection): GameState {
+    const role = this.getRole(conn);
     return {
       status: GameStatus.GameOver,
       skin: this.skin,
       players: this.players,
       winner: this.winner,
       solution: this.solution,
-      playerSecrets: conn.role
-        ? this.roleToPlayerSecrets[conn.role.name]
-        : null,
+      playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
     };
   }
 }

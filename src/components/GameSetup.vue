@@ -14,7 +14,7 @@
           <div>
             <span>{{ role.name }}</span>
             <span v-if="!isRoleAvailable(role)">
-              [{{ roleToConnection[role.name].name }}]</span
+              [{{ playersByRole[role.name].name }}]</span
             >
           </div>
         </div>
@@ -23,13 +23,13 @@
     <div>
       <h2>Name</h2>
       <form @submit.prevent="saveName">
-        <input v-model="name" type="text" :disabled="!connection.role" />
+        <input v-model="name" type="text" :disabled="!player" />
         <button type="submit" class="game-setup__save-name">Save</button>
       </form>
     </div>
     <div class="game-setup__buttons">
       <button :disabled="!canReady" @click="toggleReady">
-        {{ connection.isReady ? 'Unready' : 'Ready' }}
+        {{ player && player.isReady ? 'Unready' : 'Ready' }}
       </button>
       <button :disabled="!canStart" @click="startGame">Start</button>
     </div>
@@ -41,8 +41,8 @@ import { defineComponent, PropType } from 'vue';
 
 import RoleColor from '@/components/RoleColor.vue';
 import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { ConnectionDescription, RoleCard, SetupState } from '@/state';
-import { Dict } from '@/types';
+import { ProtoPlayer, RoleCard, SetupState } from '@/state';
+import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
 export default defineComponent({
@@ -64,38 +64,35 @@ export default defineComponent({
     name: '',
   }),
   computed: {
-    connection(): ConnectionDescription {
-      return this.state.connections[this.state.connectionIndex];
+    player(): Maybe<ProtoPlayer> {
+      return this.state.playersByConnection[this.state.connectionId];
     },
-    roleToConnection(): Dict<ConnectionDescription> {
-      return dictFromList(this.state.connections, (acc, connection) => {
-        if (connection.role) {
-          acc[connection.role.name] = connection;
-        }
+    protoPlayers(): ProtoPlayer[] {
+      return Object.values(this.state.playersByConnection);
+    },
+    playersByRole(): Dict<ProtoPlayer> {
+      return dictFromList(this.protoPlayers, (acc, player) => {
+        acc[player.role.name] = player;
       });
     },
-    playerConnections(): ConnectionDescription[] {
-      return this.state.connections.filter(c => c.role);
-    },
     canReady(): boolean {
-      return Boolean(this.connection.role && this.connection.name);
+      return Boolean(this.player?.name);
     },
     canStart(): boolean {
       return (
-        this.playerConnections.length > 1 &&
-        this.playerConnections.every(c => c.isReady)
+        this.protoPlayers.length > 1 && this.protoPlayers.every(c => c.isReady)
       );
     },
   },
   methods: {
     isRoleAvailable(role: RoleCard): boolean {
-      return !this.roleToConnection[role.name];
+      return !this.playersByRole[role.name];
     },
     classesForRole(role: RoleCard) {
-      const connection = this.roleToConnection[role.name];
+      const player = this.playersByRole[role.name];
       return {
-        'game-setup__role--available': !connection,
-        'game-setup__role--ready': connection?.isReady,
+        'game-setup__role--available': !player,
+        'game-setup__role--ready': player?.isReady,
       };
     },
     selectRole(role: RoleCard) {
@@ -108,15 +105,21 @@ export default defineComponent({
       });
     },
     saveName() {
+      if (!this.player) {
+        return;
+      }
       this.send({
         type: ConnectionEvents.SetName,
         data: this.name,
       });
     },
     toggleReady() {
+      if (!this.player) {
+        return;
+      }
       this.send({
         type: ConnectionEvents.SetReady,
-        data: !this.connection.isReady,
+        data: !this.player.isReady,
       });
     },
     startGame() {

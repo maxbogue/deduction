@@ -1,17 +1,14 @@
 import WebSocket from 'ws';
 
 import { Connection, ConnectionObserver } from '@/game';
-import { ConnectionDescription, GameState, RoleCard } from '@/state';
-import { Maybe } from '@/types';
+import { GameState } from '@/state';
+
+let nextId = 1;
 
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
   private ws: WebSocket;
-
-  // mutable, only used during setup
-  name = '';
-  role: Maybe<RoleCard> = null;
-  isReady = false;
+  readonly id = nextId++;
 
   constructor(observer: ConnectionObserver, ws: WebSocket) {
     this.observer = observer;
@@ -29,14 +26,6 @@ export class WebSocketConnection implements Connection {
     ws.on('close', () => {
       this.observer.removeConnection(this);
     });
-  }
-
-  getDescription(): ConnectionDescription {
-    return {
-      role: this.role,
-      name: this.name,
-      isReady: this.isReady,
-    };
   }
 
   sendState(state: GameState): void {

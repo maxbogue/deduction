@@ -1,4 +1,4 @@
-import { Dict, Maybe } from '@/types';
+import { ById, Dict, Maybe } from '@/types';
 
 export enum CardType {
   Role = 'Role',
@@ -38,8 +38,8 @@ export interface Crime {
   place: PlaceCard;
 }
 
-export interface ConnectionDescription {
-  role: Maybe<RoleCard>;
+export interface ProtoPlayer {
+  role: RoleCard;
   name: string;
   isReady: boolean;
 }
@@ -119,8 +119,8 @@ export enum GameStatus {
 export interface SetupState {
   status: GameStatus.Setup;
   skin: Skin;
-  connections: ConnectionDescription[];
-  connectionIndex: number;
+  playersByConnection: ById<ProtoPlayer>;
+  connectionId: number;
 }
 
 interface PostSetupState {

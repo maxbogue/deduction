@@ -38,7 +38,7 @@ import { Maybe } from '@/types';
 
 function roleFromState(state: GameState): Maybe<RoleCard> {
   if (state.status === GameStatus.Setup) {
-    return state.connections[state.connectionIndex].role;
+    return state.playersByConnection[state.connectionId].role;
   }
   if (!state.playerSecrets) {
     return null;

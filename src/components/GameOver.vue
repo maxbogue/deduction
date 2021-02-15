@@ -14,6 +14,7 @@
     </Sticky>
     <template v-if="state.playerSecrets">
       <Notepad
+        class="game-over__notepad"
         :skin="state.skin"
         :players="state.players"
         :notes="state.playerSecrets.notes"
@@ -100,5 +101,9 @@ export default defineComponent({
 
 .game-over {
   @include flex-column;
+
+  &__notepad {
+    margin-top: $pad-sm;
+  }
 }
 </style>
