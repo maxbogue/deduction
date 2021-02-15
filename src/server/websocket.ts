@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
+import { GameState } from '@/deduction/state';
 import { Connection, ConnectionObserver } from '@/server/game';
-import { GameState } from '@/state';
 
 let nextId = 1;
 

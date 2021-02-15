@@ -1,4 +1,4 @@
-import { Skin } from '@/state';
+import { Skin } from '@/deduction/state';
 import { Dict } from '@/types';
 
 import { classic } from './classic';

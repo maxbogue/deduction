@@ -1,6 +1,6 @@
 import { inject, InjectionKey, onMounted, onUnmounted } from 'vue';
 
-import { Skin } from '@/state';
+import { Skin } from '@/deduction/state';
 
 export const SkinKey: InjectionKey<Skin> = Symbol('Skin');
 

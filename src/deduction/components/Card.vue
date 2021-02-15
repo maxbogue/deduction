@@ -10,7 +10,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { Card } from '@/state';
+import { Card } from '@/deduction/state';
 import { Dict } from '@/types';
 
 export default defineComponent({

@@ -23,7 +23,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { Mark as M } from '@/state';
+import { Mark as M } from '@/deduction/state';
 
 const ALL_MARKS = [
   M.D,

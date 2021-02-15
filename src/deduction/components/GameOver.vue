@@ -31,12 +31,12 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import Cards from '@/components/Cards.vue';
-import Notepad from '@/components/Notepad.vue';
-import Players from '@/components/Players.vue';
 import Sticky from '@/components/Sticky.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { Card, GameOverState, Mark, Player } from '@/state';
+import Cards from '@/deduction/components/Cards.vue';
+import Notepad from '@/deduction/components/Notepad.vue';
+import Players from '@/deduction/components/Players.vue';
+import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { Card, GameOverState, Mark, Player } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({

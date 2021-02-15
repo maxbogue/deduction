@@ -28,12 +28,12 @@
 import { computed, defineComponent, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
-import GameInProgress from '@/components/GameInProgress.vue';
-import GameOver from '@/components/GameOver.vue';
-import GameSetup from '@/components/GameSetup.vue';
 import { useWebSocket } from '@/composables/websocket';
-import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { GameState, GameStatus, RoleCard } from '@/state';
+import GameInProgress from '@/deduction/components/GameInProgress.vue';
+import GameOver from '@/deduction/components/GameOver.vue';
+import GameSetup from '@/deduction/components/GameSetup.vue';
+import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { GameState, GameStatus, RoleCard } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 function roleFromState(state: GameState): Maybe<RoleCard> {

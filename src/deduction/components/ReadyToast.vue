@@ -11,7 +11,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { Player } from '@/state';
+import { Player } from '@/deduction/state';
 import { Dict } from '@/types';
 import { chooseOne } from '@/utils';
 

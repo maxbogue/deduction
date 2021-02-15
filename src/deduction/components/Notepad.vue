@@ -82,10 +82,10 @@
 import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
-import Note from '@/components/Note.vue';
-import RoleColor from '@/components/RoleColor.vue';
 import { useEventListener } from '@/composables';
-import { Card, Crime, Mark, Player, Skin } from '@/state';
+import Note from '@/deduction/components/Note.vue';
+import RoleColor from '@/deduction/components/RoleColor.vue';
+import { Card, Crime, Mark, Player, Skin } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 

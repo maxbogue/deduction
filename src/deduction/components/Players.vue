@@ -19,8 +19,8 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import RoleColor from '@/components/RoleColor.vue';
-import { Player } from '@/state';
+import RoleColor from '@/deduction/components/RoleColor.vue';
+import { Player } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({

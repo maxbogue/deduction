@@ -39,9 +39,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import RoleColor from '@/components/RoleColor.vue';
-import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { ProtoPlayer, RoleCard, SetupState } from '@/state';
+import RoleColor from '@/deduction/components/RoleColor.vue';
+import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import { ProtoPlayer, RoleCard, SetupState } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 

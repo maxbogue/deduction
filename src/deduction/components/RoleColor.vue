@@ -7,7 +7,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import { RoleCard } from '@/state';
+import { RoleCard } from '@/deduction/state';
 
 export default defineComponent({
   name: 'RoleColor',

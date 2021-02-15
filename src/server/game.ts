@@ -1,5 +1,5 @@
-import { ConnectionEvent } from '@/events';
-import { GameState } from '@/state';
+import { ConnectionEvent } from '@/deduction/events';
+import { GameState } from '@/deduction/state';
 
 export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;

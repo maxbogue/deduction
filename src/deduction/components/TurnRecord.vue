@@ -1,11 +1,23 @@
 <template>
-  <div class="turn-accused">
+  <div class="turn-record">
     <Sticky :sentinel="turn">
-      <div>{{ getPlayerName(turnPlayer) }} is ded! &#x1F47B;</div>
-      <div>Failed accusation:</div>
-      <Cards :cards="Object.values(turn.failedAccusation)" />
+      <div>
+        {{ getPlayerName(turnPlayer) }} suggested
+        {{ crimeToString(turn.suggestion) }}.
+      </div>
+      <div v-if="sharedCard">
+        <span>{{ getPlayerName(sharePlayer) }} shared</span>
+        <Card :card="sharedCard" />
+      </div>
+      <div v-else-if="sharePlayer !== turnPlayer">
+        {{ getPlayerName(sharePlayer) }} has shared a card.
+      </div>
+      <div v-else>No player had a matching card to share.</div>
     </Sticky>
-    <div class="turn-accused__unready-players">
+    <div v-if="yourPlayer === turnPlayer" class="turn-record__buttons">
+      <button @click="showAccuse = true">Accuse</button>
+    </div>
+    <div class="turn-record__unready-players">
       <span>Waiting for: </span>
       <RoleColor
         v-for="player in unreadyPlayers"
@@ -13,6 +25,16 @@
         :role="player.role"
       />
     </div>
+    <template v-if="showAccuse">
+      <h2>Accusation</h2>
+      <SelectCrime
+        class="turn-record__accuse"
+        :excludeCards="hand"
+        :buttonDisabled="!canAccuse"
+        :buttonText="canAccuse ? 'Final Accusation' : 'Waiting...'"
+        :onSelect="onAccuse"
+      />
+    </template>
     <ReadyToast
       v-if="yourPlayer && !yourPlayer.isDed"
       :playerIsReady="turn.playerIsReady"
@@ -23,27 +45,34 @@
 </template>
 
 <script lang="ts">
+import isEqual from 'lodash/isEqual';
 import { defineComponent, PropType } from 'vue';
 
-import Cards from '@/components/Cards.vue';
-import ReadyToast from '@/components/ReadyToast.vue';
-import RoleColor from '@/components/RoleColor.vue';
 import Sticky from '@/components/Sticky.vue';
-import { Card, Player, TurnAccusedState } from '@/state';
+import CardComponent from '@/deduction/components/Card.vue';
+import ReadyToast from '@/deduction/components/ReadyToast.vue';
+import RoleColor from '@/deduction/components/RoleColor.vue';
+import SelectCrime from '@/deduction/components/SelectCrime.vue';
+import { Card, Crime, Player, TurnRecordState } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
+interface TurnRecordData {
+  showAccuse: boolean;
+}
+
 export default defineComponent({
-  name: 'TurnAccused',
+  name: 'TurnRecord',
   components: {
-    Cards,
+    Card: CardComponent,
     ReadyToast,
     RoleColor,
+    SelectCrime,
     Sticky,
   },
   props: {
     turn: {
-      type: Object as PropType<TurnAccusedState>,
+      type: Object as PropType<TurnRecordState>,
       required: true,
     },
     players: {
@@ -66,8 +95,21 @@ export default defineComponent({
       type: Function as PropType<(isReady: boolean) => void>,
       required: true,
     },
+    onAccuse: {
+      type: Function as PropType<(accusation: Crime) => void>,
+      required: true,
+    },
   },
+  data: (): TurnRecordData => ({
+    showAccuse: false,
+  }),
   computed: {
+    sharePlayer(): Player {
+      return this.players[this.turn.sharePlayerIndex];
+    },
+    sharedCard(): Maybe<Card> {
+      return this.turn.sharedCard;
+    },
     roleToPlayer(): Dict<Player> {
       return dictFromList(this.players, (acc, p) => {
         acc[p.role.name] = p;
@@ -78,10 +120,17 @@ export default defineComponent({
         .filter(e => !e[1])
         .map(e => this.roleToPlayer[e[0]]);
     },
+    canAccuse(): boolean {
+      return isEqual(this.unreadyPlayers, [this.turnPlayer]);
+    },
   },
   methods: {
     getPlayerName(player: Player): string {
       return player === this.yourPlayer ? 'You' : player.name;
+    },
+    crimeToString(crime: Crime): string {
+      const { role, tool, place } = crime;
+      return `${role.name} in the ${place.name} with the ${tool.name}`;
     },
   },
 });
@@ -90,7 +139,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '@/style/constants';
 
-.turn-accused {
+.turn-record {
   @include flex-column;
   margin-bottom: $pad-lg;
 

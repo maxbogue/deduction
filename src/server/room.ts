@@ -1,5 +1,5 @@
-import { ConnectionEvent, ConnectionEvents } from '@/events';
-import deduction from '@/server/deduction';
+import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
+import deduction from '@/deduction/game';
 import {
   Connection,
   ConnectionObserver,

@@ -22,9 +22,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import CardComponent from '@/components/Card.vue';
 import Sticky from '@/components/Sticky.vue';
-import { Card, Crime, Player, TurnShareState } from '@/state';
+import CardComponent from '@/deduction/components/Card.vue';
+import { Card, Crime, Player, TurnShareState } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({

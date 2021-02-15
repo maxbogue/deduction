@@ -1,4 +1,4 @@
-import { Card, Crime, Mark, Player, RoleCard } from '@/state';
+import { Card, Crime, Mark, Player, RoleCard } from '@/deduction/state';
 
 export enum ConnectionEvents {
   Accuse = 'Accuse',

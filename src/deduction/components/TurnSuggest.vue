@@ -13,9 +13,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import SelectCrime from '@/components/SelectCrime.vue';
 import Sticky from '@/components/Sticky.vue';
-import { Crime, Player } from '@/state';
+import SelectCrime from '@/deduction/components/SelectCrime.vue';
+import { Crime, Player } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({

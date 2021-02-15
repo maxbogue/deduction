@@ -1,4 +1,4 @@
-import { CardType, Skin } from '@/state';
+import { CardType, Skin } from '@/deduction/state';
 
 export const familyCookies: Skin = {
   skinName: 'familyCookies',

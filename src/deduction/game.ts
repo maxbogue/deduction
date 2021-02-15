@@ -4,8 +4,12 @@ import mapValues from 'lodash/fp/mapValues';
 import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
-import { ConnectionEvent, ConnectionEvents } from '@/events';
-import { SKINS } from '@/skins';
+import { Connection, Game, GameConfig, GameObserver } from '@/server/game';
+import { ById, Dict, Maybe } from '@/types';
+import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
+
+import { ConnectionEvent, ConnectionEvents } from './events';
+import { SKINS } from './skins';
 import {
   Card,
   Crime,
@@ -19,11 +23,7 @@ import {
   Skin,
   TurnState,
   TurnStatus,
-} from '@/state';
-import { ById, Dict, Maybe } from '@/types';
-import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
-
-import { Connection, Game, GameConfig, GameObserver } from './game';
+} from './state';
 
 class GameSetup extends Game {
   private playersByConnection: ById<ProtoPlayer> = {};

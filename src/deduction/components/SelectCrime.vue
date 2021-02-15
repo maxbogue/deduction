@@ -50,9 +50,9 @@
 import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, PropType } from 'vue';
 
-import CardComponent from '@/components/Card.vue';
 import { safeInject, SkinKey } from '@/composables';
-import { Card, Crime, PlaceCard, RoleCard, ToolCard } from '@/state';
+import CardComponent from '@/deduction/components/Card.vue';
+import { Card, Crime, PlaceCard, RoleCard, ToolCard } from '@/deduction/state';
 import { Maybe } from '@/types';
 
 interface InProgressData {

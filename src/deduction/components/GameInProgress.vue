@@ -61,15 +61,15 @@
 <script lang="ts">
 import { defineComponent, PropType, provide, toRefs } from 'vue';
 
-import Cards from '@/components/Cards.vue';
-import Notepad from '@/components/Notepad.vue';
-import Players from '@/components/Players.vue';
-import TurnAccused from '@/components/TurnAccused.vue';
-import TurnRecord from '@/components/TurnRecord.vue';
-import TurnShare from '@/components/TurnShare.vue';
-import TurnSuggest from '@/components/TurnSuggest.vue';
 import { SkinKey } from '@/composables';
-import { ConnectionEvent, ConnectionEvents } from '@/events';
+import Cards from '@/deduction/components/Cards.vue';
+import Notepad from '@/deduction/components/Notepad.vue';
+import Players from '@/deduction/components/Players.vue';
+import TurnAccused from '@/deduction/components/TurnAccused.vue';
+import TurnRecord from '@/deduction/components/TurnRecord.vue';
+import TurnShare from '@/deduction/components/TurnShare.vue';
+import TurnSuggest from '@/deduction/components/TurnSuggest.vue';
+import { ConnectionEvent, ConnectionEvents } from '@/deduction/events';
 import {
   Card,
   Crime,
@@ -78,7 +78,7 @@ import {
   Player,
   TurnState,
   TurnStatus,
-} from '@/state';
+} from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 
 interface InProgressData {
