@@ -4,11 +4,12 @@ import path from 'path';
 import process from 'process';
 import WebSocket from 'ws';
 
-import { Room } from './game';
-import { Dict } from './types';
+import { Dict } from '@/types';
+
+import { Room } from './room';
 import { WebSocketConnection } from './websocket';
 
-const JS_PATH = path.resolve(__dirname, '..', 'build', 'js');
+const JS_PATH = path.resolve(__dirname, '../../build/js');
 
 const { app } = expressWs(express());
 
@@ -17,7 +18,7 @@ app.get('/js/:filename', (req: Request, res: Response) => {
 });
 
 //app.use('/robots.txt', express.static('static/robots.txt'));
-app.use('/static', express.static('static'));
+//app.use('/static', express.static('../../static'));
 
 const roomsById: Dict<Room> = {};
 
@@ -31,7 +32,7 @@ app.ws('/api/:roomId/', (ws: WebSocket, req: Request) => {
 });
 
 app.get('*', (_, res) => {
-  res.sendFile(path.resolve(__dirname, 'index.html'));
+  res.sendFile(path.resolve(__dirname, '../index.html'));
 });
 
 const port = parseInt(process.argv[2]) || 3000;

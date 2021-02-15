@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 
-import { Connection, ConnectionObserver } from '@/game';
+import { Connection, ConnectionObserver } from '@/server/game';
 import { GameState } from '@/state';
 
 let nextId = 1;

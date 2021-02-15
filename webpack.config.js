@@ -8,7 +8,7 @@ module.exports = [
   merge(baseConfig, {
     name: 'server',
     target: 'node',
-    entry: './src/server.ts',
+    entry: './src/server/index.ts',
     output: {
       path: path.resolve(__dirname, 'build'),
       filename: 'main.js',

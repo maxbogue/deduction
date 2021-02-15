@@ -23,83 +23,7 @@ import {
 import { ById, Dict, Maybe } from '@/types';
 import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
 
-export interface ConnectionObserver {
-  removeConnection: (conn: Connection) => void;
-  processEvent: (conn: Connection, event: ConnectionEvent) => void;
-}
-
-export interface Connection {
-  readonly id: number;
-  sendState: (gameState: GameState) => void;
-}
-
-interface GameObserver {
-  setGame: (game: Game) => void;
-}
-
-export class Room implements ConnectionObserver, GameObserver {
-  private readonly connections: Connection[] = [];
-  private game: Game;
-
-  constructor() {
-    this.game = new GameSetup(this);
-  }
-
-  addConnection(conn: Connection): void {
-    this.connections.push(conn);
-    this.updateStateForConnection(conn);
-  }
-
-  removeConnection(conn: Connection): void {
-    const i = this.connections.indexOf(conn);
-    this.connections.splice(i, 1);
-    this.game.removeConnection(conn);
-    this.updateState();
-  }
-
-  processEvent(conn: Connection, event: ConnectionEvent): void {
-    let updateAll = true;
-    switch (event.type) {
-      case ConnectionEvents.Restart:
-        this.game = new GameSetup(this);
-        break;
-      default:
-        updateAll = this.game.processEvent(conn, event);
-    }
-    if (updateAll) {
-      this.updateState();
-    } else {
-      this.updateStateForConnection(conn);
-    }
-  }
-
-  setGame(game: Game): void {
-    this.game = game;
-  }
-
-  updateStateForConnection(conn: Connection): void {
-    conn.sendState(this.game.getStateForConnection(conn));
-  }
-
-  updateState(): void {
-    this.connections.forEach(conn => {
-      conn.sendState(this.game.getStateForConnection(conn));
-    });
-  }
-}
-
-abstract class Game {
-  protected readonly observer: GameObserver;
-
-  constructor(observer: GameObserver) {
-    this.observer = observer;
-  }
-
-  abstract removeConnection(conn: Connection): void;
-  abstract getStateForConnection(conn: Connection): GameState;
-  // Returns whether to update state for all connections or just `conn`.
-  abstract processEvent(conn: Connection, event: ConnectionEvent): boolean;
-}
+import { Connection, Game, GameConfig, GameObserver } from './game';
 
 class GameSetup extends Game {
   private playersByConnection: ById<ProtoPlayer> = {};
@@ -682,3 +606,9 @@ class GameOver extends GamePostSetup {
     };
   }
 }
+
+const config: GameConfig = {
+  init: (observer: GameObserver) => new GameSetup(observer),
+};
+
+export default config;
