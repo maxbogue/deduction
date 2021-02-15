@@ -116,7 +116,7 @@ class GameSetup extends Game {
           pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand)
         ),
       numHands
-    );
+    ).reverse();
 
     return { solution, hands };
   }
