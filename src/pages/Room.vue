@@ -2,17 +2,11 @@
   <div class="room">
     <div v-if="!state">Loading...</div>
     <div v-else-if="!connected">Reconnecting...</div>
-    <GameSetup
-      v-else-if="state.status === GameStatus.Setup"
-      :state="state"
+    <Deduction
+      v-else-if="state.game.kind === Games.Deduction"
+      :state="state.game.state"
       :send="sendGameEvent"
     />
-    <GameInProgress
-      v-else-if="state.status === GameStatus.InProgress"
-      :state="state"
-      :send="sendGameEvent"
-    />
-    <GameOver v-else :state="state" :send="sendGameEvent" />
     <hr />
     <div class="room__buttons">
       <button @click="restart">Restart</button>
@@ -29,16 +23,15 @@ import { computed, defineComponent, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useWebSocket } from '@/composables/websocket';
-import GameInProgress from '@/deduction/components/GameInProgress.vue';
-import GameOver from '@/deduction/components/GameOver.vue';
-import GameSetup from '@/deduction/components/GameSetup.vue';
+import Deduction from '@/deduction/components/Deduction.vue';
 import { DeductionEvents } from '@/deduction/events';
-import { GameState, GameStatus, RoleCard } from '@/deduction/state';
+import { DeductionState, DeductionStatus, RoleCard } from '@/deduction/state';
 import { RoomEvent, RoomEvents } from '@/events';
+import { Games, RoomState } from '@/state';
 import { Maybe } from '@/types';
 
-function roleFromState(state: GameState): Maybe<RoleCard> {
-  if (state.status === GameStatus.Setup) {
+function roleFromState(state: DeductionState): Maybe<RoleCard> {
+  if (state.status === DeductionStatus.Setup) {
     return state.playersByConnection[state.connectionId].role;
   }
   if (!state.playerSecrets) {
@@ -50,9 +43,7 @@ function roleFromState(state: GameState): Maybe<RoleCard> {
 export default defineComponent({
   name: 'Room',
   components: {
-    GameInProgress,
-    GameOver,
-    GameSetup,
+    Deduction,
   },
   setup() {
     const route = useRoute();
@@ -62,7 +53,7 @@ export default defineComponent({
       () => `${protocol}://${window.location.host}/api/${id.value}/`
     );
 
-    const { connected, state, send } = useWebSocket<GameState, RoomEvent>(url);
+    const { connected, state, send } = useWebSocket<RoomState, RoomEvent>(url);
 
     const restart = () => {
       if (confirm('Are you sure you want to restart the game?')) {
@@ -78,7 +69,7 @@ export default defineComponent({
 
     watch(connected, (newVal, oldVal) => {
       if (newVal && !oldVal && state.value) {
-        const role = roleFromState(state.value);
+        const role = roleFromState(state.value.game.state);
         if (role) {
           sendGameEvent({
             kind: DeductionEvents.SetRole,
@@ -89,7 +80,7 @@ export default defineComponent({
     });
 
     return {
-      GameStatus,
+      Games,
       connected,
       state,
       sendGameEvent,

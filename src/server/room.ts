@@ -1,4 +1,4 @@
-import deduction from '@/deduction/game';
+import deductionConfig from '@/deduction/game';
 import { RoomEvent, RoomEvents } from '@/events';
 import {
   Connection,
@@ -7,23 +7,23 @@ import {
   GameConfig,
   GameObserver,
 } from '@/server/game';
+import { Games } from '@/state';
 import { Dict } from '@/types';
 
 const GAMES: Dict<GameConfig> = {
-  deduction,
+  [Games.Deduction]: deductionConfig,
 };
 
 export class Room implements ConnectionObserver, GameObserver {
   private readonly connections: Connection[] = [];
   private game: Game;
-  private gameName = 'deduction';
 
   constructor() {
-    this.game = this.initGame();
+    this.game = deductionConfig.init(this);
   }
 
   private initGame(): Game {
-    return GAMES[this.gameName].init(this);
+    return GAMES[this.game.getKind()].init(this);
   }
 
   addConnection(conn: Connection): void {
@@ -60,13 +60,16 @@ export class Room implements ConnectionObserver, GameObserver {
     this.game = game;
   }
 
-  updateStateForConnection(conn: Connection): void {
-    conn.sendState(this.game.getStateForConnection(conn));
+  private updateStateForConnection(conn: Connection): void {
+    conn.sendState({
+      numConnections: this.connections.length,
+      game: this.game.getStateForConnection(conn),
+    });
   }
 
-  updateState(): void {
+  private updateState(): void {
     this.connections.forEach(conn => {
-      conn.sendState(this.game.getStateForConnection(conn));
+      this.updateStateForConnection(conn);
     });
   }
 }

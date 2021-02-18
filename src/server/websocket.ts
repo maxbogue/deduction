@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
-import { GameState } from '@/deduction/state';
 import { Connection, ConnectionObserver } from '@/server/game';
+import { RoomState } from '@/state';
 
 let nextId = 1;
 
@@ -28,7 +28,7 @@ export class WebSocketConnection implements Connection {
     });
   }
 
-  sendState(state: GameState): void {
+  sendState(state: RoomState): void {
     try {
       this.ws.send(JSON.stringify(state));
     } catch (e: unknown) {

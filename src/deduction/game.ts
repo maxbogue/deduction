@@ -5,6 +5,7 @@ import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
 import { Connection, Game, GameConfig, GameObserver } from '@/server/game';
+import { Games, GameState } from '@/state';
 import { ById, Dict, Maybe } from '@/types';
 import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
 
@@ -13,8 +14,7 @@ import { SKINS } from './skins';
 import {
   Card,
   Crime,
-  GameState,
-  GameStatus,
+  DeductionStatus,
   Mark,
   Player,
   PlayerSecrets,
@@ -25,7 +25,13 @@ import {
   TurnStatus,
 } from './state';
 
-class GameSetup extends Game {
+abstract class DeductionGame extends Game {
+  getKind(): Games {
+    return Games.Deduction;
+  }
+}
+
+class GameSetup extends DeductionGame {
   private playersByConnection: ById<ProtoPlayer> = {};
   private skin: Skin = SKINS.classic;
 
@@ -173,22 +179,25 @@ class GameSetup extends Game {
         this.start();
         break;
       default:
-        console.error(`Invalid event for ${GameStatus.Setup}: ${event}`);
+        console.error(`Invalid event for ${DeductionStatus.Setup}: ${event}`);
     }
     return true;
   }
 
   getStateForConnection(conn: Connection): GameState {
     return {
-      status: GameStatus.Setup,
-      skin: this.skin,
-      playersByConnection: this.playersByConnection,
-      connectionId: conn.id,
+      kind: Games.Deduction,
+      state: {
+        status: DeductionStatus.Setup,
+        skin: this.skin,
+        playersByConnection: this.playersByConnection,
+        connectionId: conn.id,
+      },
     };
   }
 }
 
-abstract class GamePostSetup extends Game {
+abstract class GamePostSetup extends DeductionGame {
   protected readonly skin: Skin;
   protected readonly solution: Crime;
   protected readonly players: Player[];
@@ -531,7 +540,9 @@ class GameInProgress extends GamePostSetup {
         }
         break;
       default:
-        console.error(`Invalid event for ${GameStatus.InProgress}: ${event}`);
+        console.error(
+          `Invalid event for ${DeductionStatus.InProgress}: ${event}`
+        );
     }
     return true;
   }
@@ -551,12 +562,15 @@ class GameInProgress extends GamePostSetup {
   getStateForConnection(conn: Connection): GameState {
     const role = this.getRole(conn);
     return {
-      status: GameStatus.InProgress,
-      skin: this.skin,
-      players: this.players,
-      turnIndex: this.turnIndex,
-      turnState: this.getTurnStateForRole(role),
-      playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
+      kind: Games.Deduction,
+      state: {
+        status: DeductionStatus.InProgress,
+        skin: this.skin,
+        players: this.players,
+        turnIndex: this.turnIndex,
+        turnState: this.getTurnStateForRole(role),
+        playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
+      },
     };
   }
 }
@@ -597,12 +611,15 @@ class GameOver extends GamePostSetup {
   getStateForConnection(conn: Connection): GameState {
     const role = this.getRole(conn);
     return {
-      status: GameStatus.GameOver,
-      skin: this.skin,
-      players: this.players,
-      winner: this.winner,
-      solution: this.solution,
-      playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
+      kind: Games.Deduction,
+      state: {
+        status: DeductionStatus.GameOver,
+        skin: this.skin,
+        players: this.players,
+        winner: this.winner,
+        solution: this.solution,
+        playerSecrets: role ? this.roleToPlayerSecrets[role.name] : null,
+      },
     };
   }
 }

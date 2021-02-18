@@ -110,14 +110,14 @@ export type TurnState =
   | TurnRecordState
   | TurnAccusedState;
 
-export enum GameStatus {
+export enum DeductionStatus {
   Setup = 'Setup',
   InProgress = 'InProgress',
   GameOver = 'GameOver',
 }
 
 export interface SetupState {
-  status: GameStatus.Setup;
+  status: DeductionStatus.Setup;
   skin: Skin;
   playersByConnection: ById<ProtoPlayer>;
   connectionId: number;
@@ -130,15 +130,15 @@ interface PostSetupState {
 }
 
 export interface InProgressState extends PostSetupState {
-  status: GameStatus.InProgress;
+  status: DeductionStatus.InProgress;
   turnIndex: number;
   turnState: TurnState;
 }
 
 export interface GameOverState extends PostSetupState {
-  status: GameStatus.GameOver;
+  status: DeductionStatus.GameOver;
   winner: number;
   solution: Crime;
 }
 
-export type GameState = SetupState | InProgressState | GameOverState;
+export type DeductionState = SetupState | InProgressState | GameOverState;

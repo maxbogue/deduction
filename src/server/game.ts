@@ -1,5 +1,5 @@
-import { GameState } from '@/deduction/state';
 import { RoomEvent } from '@/events';
+import { Games, GameState, RoomState } from '@/state';
 
 export interface ConnectionObserver {
   removeConnection: (conn: Connection) => void;
@@ -8,7 +8,7 @@ export interface ConnectionObserver {
 
 export interface Connection {
   readonly id: number;
-  sendState: (gameState: GameState) => void;
+  sendState: (state: RoomState) => void;
 }
 
 export interface GameObserver {
@@ -22,6 +22,7 @@ export abstract class Game {
     this.observer = observer;
   }
 
+  abstract getKind(): Games;
   abstract removeConnection(conn: Connection): void;
   abstract getStateForConnection(conn: Connection): GameState;
   // Returns whether to update state for all connections or just `conn`.
