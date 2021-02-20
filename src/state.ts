@@ -1,7 +1,9 @@
 import { DeductionState } from '@/deduction/state';
+import { DeductionSyncState } from '@/deductionSync/state';
 
 export enum Games {
   Deduction = 'Deduction',
+  DeductionSync = 'DeductionSync',
 }
 
 interface DeductionGameState {
@@ -9,7 +11,12 @@ interface DeductionGameState {
   state: DeductionState;
 }
 
-export type GameState = DeductionGameState;
+interface DeductionSyncGameState {
+  kind: Games.DeductionSync;
+  state: DeductionSyncState;
+}
+
+export type GameState = DeductionGameState | DeductionSyncGameState;
 
 export interface RoomState {
   numConnections: number;

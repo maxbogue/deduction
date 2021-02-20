@@ -6,6 +6,11 @@
       :state="state.game.state"
       :send="sendGameEvent"
     />
+    <DeductionSync
+      v-else-if="state.game.kind === Games.DeductionSync"
+      :state="state.game.state"
+      :send="sendGameEvent"
+    />
     <Modal v-if="state && !connected">Reconnecting...</Modal>
     <hr />
     <div class="room__buttons">
@@ -25,6 +30,7 @@ import { useRoute } from 'vue-router';
 import Modal from '@/components/Modal.vue';
 import { useWebSocket } from '@/composables/websocket';
 import Deduction from '@/deduction/components/Deduction.vue';
+import DeductionSync from '@/deduction/components/DeductionSync.vue';
 import { DeductionEvents } from '@/deduction/events';
 import { DeductionState, DeductionStatus, RoleCard } from '@/deduction/state';
 import { RoomEvent, RoomEvents } from '@/events';
@@ -45,6 +51,7 @@ export default defineComponent({
   name: 'Room',
   components: {
     Deduction,
+    DeductionSync,
     Modal,
   },
   setup() {
