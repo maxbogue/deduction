@@ -1,12 +1,12 @@
 <template>
   <div class="room">
     <div v-if="!state">Loading...</div>
-    <div v-else-if="!connected">Reconnecting...</div>
     <Deduction
       v-else-if="state.game.kind === Games.Deduction"
       :state="state.game.state"
       :send="sendGameEvent"
     />
+    <Modal v-if="state && !connected">Reconnecting...</Modal>
     <hr />
     <div class="room__buttons">
       <button @click="restart">Restart</button>
@@ -22,6 +22,7 @@
 import { computed, defineComponent, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
+import Modal from '@/components/Modal.vue';
 import { useWebSocket } from '@/composables/websocket';
 import Deduction from '@/deduction/components/Deduction.vue';
 import { DeductionEvents } from '@/deduction/events';
@@ -44,6 +45,7 @@ export default defineComponent({
   name: 'Room',
   components: {
     Deduction,
+    Modal,
   },
   setup() {
     const route = useRoute();
