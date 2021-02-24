@@ -1,4 +1,5 @@
 import deductionConfig from '@/deduction/game';
+import deductionSyncConfig from '@/deductionSync/game';
 import { RoomEvent, RoomEvents } from '@/events';
 import {
   Connection,
@@ -12,6 +13,7 @@ import { Dict } from '@/types';
 
 const GAMES: Dict<GameConfig> = {
   [Games.Deduction]: deductionConfig,
+  [Games.DeductionSync]: deductionSyncConfig,
 };
 
 export class Room implements ConnectionObserver, GameObserver {
@@ -19,7 +21,7 @@ export class Room implements ConnectionObserver, GameObserver {
   private game: Game;
 
   constructor() {
-    this.game = deductionConfig.init(this);
+    this.game = deductionSyncConfig.init(this);
   }
 
   private initGame(): Game {

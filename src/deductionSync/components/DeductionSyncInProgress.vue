@@ -4,22 +4,24 @@
       class="game-in-progress__players"
       :players="state.players"
       :yourPlayer="yourPlayer"
-      :turnPlayer="turnPlayer"
+      :turnPlayer="selectedPlayer"
       :onReconnect="reconnectAsPlayer"
     />
     <TurnSuggest
       v-if="turn.status === TurnStatus.Suggest"
+      :turn="turn"
+      :players="state.players"
       :yourPlayer="yourPlayer"
-      :turnPlayer="turnPlayer"
       :onSuggest="suggest"
     />
+    <!--
     <TurnShare
       v-else-if="turn.status === TurnStatus.Share"
       :turn="turn"
       :players="state.players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="turnPlayer"
+      :turnPlayer="selectedPlayer"
       :onShareCard="shareCard"
     />
     <TurnRecord
@@ -28,7 +30,7 @@
       :players="state.players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="turnPlayer"
+      :turnPlayer="selectedPlayer"
       :setIsReady="setIsReady"
       :onAccuse="accuse"
     />
@@ -38,15 +40,16 @@
       :players="state.players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="turnPlayer"
+      :turnPlayer="selectedPlayer"
       :setIsReady="setIsReady"
     />
+    -->
     <template v-if="state.playerSecrets">
       <Notepad
         class="game-in-progress__notepad"
         :skin="state.skin"
         :players="state.players"
-        :turnPlayer="turnPlayer"
+        :turnPlayer="selectedPlayer"
         :suggestion="suggestion"
         :sharePlayer="sharePlayer"
         :notes="state.playerSecrets.notes"
@@ -87,6 +90,7 @@ import { Dict, Maybe } from '@/types';
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
   notes: Dict<Dict<string>>;
+  selectedPlayer: Maybe<Player>;
 }
 
 export default defineComponent({
@@ -117,6 +121,7 @@ export default defineComponent({
   data: (): InProgressData => ({
     TurnStatus,
     notes: {},
+    selectedPlayer: null,
   }),
   computed: {
     turn(): TurnState {
@@ -128,9 +133,6 @@ export default defineComponent({
       }
       return this.state.players[this.state.playerSecrets.index];
     },
-    turnPlayer(): Player {
-      return this.state.players[this.state.turnIndex];
-    },
     sharePlayer(): Maybe<Player> {
       if (
         this.turn.status !== TurnStatus.Share &&
@@ -138,7 +140,8 @@ export default defineComponent({
       ) {
         return null;
       }
-      return this.state.players[this.turn.sharePlayerIndex];
+      // TODO real thing
+      return this.state.players[0];
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
@@ -150,7 +153,8 @@ export default defineComponent({
       ) {
         return null;
       }
-      return this.turn.suggestion;
+      //TODO fix
+      return null;
     },
   },
   methods: {
@@ -163,7 +167,9 @@ export default defineComponent({
     shareCard(card: Card) {
       this.send({
         kind: DeductionSyncEvents.ShareCard,
-        sharedCard: card,
+        shareCard: card,
+        //TODO fix
+        shareWith: 0,
       });
     },
     setIsReady(isReady: boolean) {

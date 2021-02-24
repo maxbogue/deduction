@@ -30,25 +30,28 @@ export interface PlayerCrime extends Crime {
 
 export interface TurnSuggestState {
   status: TurnStatus.Suggest;
+  yourSuggestion: Maybe<Crime>;
   playerIsReady: Dict<boolean>;
 }
 
 export interface TurnShareState {
   status: TurnStatus.Share;
-  suggestions: Crime[];
+  suggestions: Dict<Crime>;
+  sharePlayers: Dict<number>;
   playerIsReady: Dict<boolean>;
 }
 
 export interface TurnRecordState {
   status: TurnStatus.Record;
-  suggestions: PlayerCrime[];
-  sharedCard: Maybe<Card>;
+  suggestions: Dict<Crime>;
+  sharePlayers: Dict<number>;
+  yourSharedCard: Maybe<Card>;
   playerIsReady: Dict<boolean>;
 }
 
 export interface TurnAccusedState {
   status: TurnStatus.Accused;
-  failedAccusations: PlayerCrime[];
+  failedAccusations: Dict<Crime>;
   playerIsReady: Dict<boolean>;
 }
 

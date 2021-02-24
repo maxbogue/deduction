@@ -1,11 +1,11 @@
 <template>
   <DeductionSetup
-    v-if="state.status === DeductionSyncStatus.Setup"
+    v-if="state.status === DeductionStatus.Setup"
     :state="state"
     :send="send"
   />
   <DeductionSyncInProgress
-    v-else-if="state.status === DeductionSyncStatus.InProgress"
+    v-else-if="state.status === DeductionStatus.InProgress"
     :state="state"
     :send="send"
   />
@@ -19,7 +19,7 @@ import DeductionSetup from '@/deduction/components/GameSetup.vue';
 import DeductionSyncInProgress from '@/deductionSync/components/DeductionSyncInProgress.vue';
 import DeductionSyncOver from '@/deductionSync/components/DeductionSyncOver.vue';
 import { DeductionSyncEvent } from '@/deductionSync/events';
-import { DeductionSyncState, DeductionSyncStatus } from '@/deductionSync/state';
+import { DeductionStatus, DeductionSyncState } from '@/deductionSync/state';
 
 export default defineComponent({
   name: 'DeductionSync',
@@ -39,7 +39,7 @@ export default defineComponent({
     },
   },
   data: () => ({
-    DeductionSyncStatus,
+    DeductionStatus,
   }),
 });
 </script>

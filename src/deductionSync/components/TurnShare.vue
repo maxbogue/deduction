@@ -2,7 +2,7 @@
   <Sticky class="turn-share" :sentinel="turn">
     <div>
       {{ getPlayerName(turnPlayer) }} suggested
-      {{ crimeToString(turn.suggestion) }}.
+      {{ crimeToString(turn.yourSuggestion) }}.
     </div>
     <template v-if="yourPlayer === sharePlayer">
       <div>Choose a card to share:</div>

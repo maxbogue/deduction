@@ -18,8 +18,19 @@ import { defineComponent, PropType } from 'vue';
 import GameInProgress from '@/deduction/components/GameInProgress.vue';
 import GameOver from '@/deduction/components/GameOver.vue';
 import GameSetup from '@/deduction/components/GameSetup.vue';
-import { DeductionEvent } from '@/deduction/events';
-import { DeductionState, DeductionStatus } from '@/deduction/state';
+import { DeductionEvent, DeductionEvents } from '@/deduction/events';
+import { DeductionState, DeductionStatus, RoleCard } from '@/deduction/state';
+import { Maybe } from '@/types';
+
+function roleFromState(state: DeductionState): Maybe<RoleCard> {
+  if (state.status === DeductionStatus.Setup) {
+    return state.playersByConnection[state.connectionId].role;
+  }
+  if (!state.playerSecrets) {
+    return null;
+  }
+  return state.players[state.playerSecrets.index].role;
+}
 
 export default defineComponent({
   name: 'Deduction',
@@ -41,5 +52,18 @@ export default defineComponent({
   data: () => ({
     DeductionStatus,
   }),
+  watch: {
+    connected(newVal, oldVal) {
+      if (newVal && !oldVal) {
+        const role = roleFromState(this.state);
+        if (role) {
+          this.send({
+            kind: DeductionEvents.SetRole,
+            data: role,
+          });
+        }
+      }
+    },
+  },
 });
 </script>

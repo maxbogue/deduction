@@ -1,12 +1,14 @@
 <template>
   <div class="turn-suggest">
-    <div v-if="yourPlayer === turnPlayer" class="turn-suggest__your-turn">
-      <h2>Suggest</h2>
+    <h2>Suggest</h2>
+    <template v-if="turn.yourSuggestion">
+      <Sticky>You suggested {{ crimeToString(turn.yourSuggestion) }}.</Sticky>
+      <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
+    </template>
+    <template v-else>
+      <Sticky>Make a suggestion.</Sticky>
       <SelectCrime :onSelect="onSuggest" />
-    </div>
-    <Sticky v-else
-      >Waiting for {{ turnPlayer.name }} to make a suggestion.</Sticky
-    >
+    </template>
   </div>
 </template>
 
@@ -15,7 +17,8 @@ import { defineComponent, PropType } from 'vue';
 
 import Sticky from '@/components/Sticky.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
-import { Crime, Player } from '@/deduction/state';
+import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
+import { Crime, Player, TurnSuggestState } from '@/deductionSync/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
@@ -23,19 +26,30 @@ export default defineComponent({
   components: {
     SelectCrime,
     Sticky,
+    UnreadyPlayers,
   },
   props: {
+    turn: {
+      type: Object as PropType<TurnSuggestState>,
+      required: true,
+    },
+    players: {
+      type: Array as PropType<Player[]>,
+      required: true,
+    },
     yourPlayer: {
       type: Object as PropType<Maybe<Player>>,
       default: null,
     },
-    turnPlayer: {
-      type: Object as PropType<Player>,
-      required: true,
-    },
     onSuggest: {
       type: Function as PropType<(suggestion: Crime) => void>,
       required: true,
+    },
+  },
+  methods: {
+    crimeToString(crime: Crime): string {
+      const { role, tool, place } = crime;
+      return `${role.name} in the ${place.name} with the ${tool.name}`;
     },
   },
 });
@@ -49,10 +63,6 @@ export default defineComponent({
 
   h2 {
     margin-top: 0;
-  }
-
-  &__your-turn {
-    padding: $pad-sm;
   }
 }
 </style>
