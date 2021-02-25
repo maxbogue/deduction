@@ -24,10 +24,6 @@ export {
   TurnStatus,
 } from '@/deduction/state';
 
-export interface PlayerCrime extends Crime {
-  playerIndex: number;
-}
-
 export interface TurnSuggestState {
   status: TurnStatus.Suggest;
   yourSuggestion: Maybe<Crime>;
@@ -38,6 +34,7 @@ export interface TurnShareState {
   status: TurnStatus.Share;
   suggestions: Dict<Crime>;
   sharePlayers: Dict<number>;
+  sharedCards: Dict<Maybe<Card>>;
   playerIsReady: Dict<boolean>;
 }
 

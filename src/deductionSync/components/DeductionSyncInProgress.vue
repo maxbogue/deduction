@@ -2,7 +2,7 @@
   <div class="game-in-progress">
     <Players
       class="game-in-progress__players"
-      :players="state.players"
+      :players="players"
       :yourPlayer="yourPlayer"
       :turnPlayer="selectedPlayer"
       :onReconnect="reconnectAsPlayer"
@@ -10,24 +10,23 @@
     <TurnSuggest
       v-if="turn.status === TurnStatus.Suggest"
       :turn="turn"
-      :players="state.players"
+      :players="players"
       :yourPlayer="yourPlayer"
       :onSuggest="suggest"
     />
-    <!--
     <TurnShare
       v-else-if="turn.status === TurnStatus.Share"
       :turn="turn"
-      :players="state.players"
+      :players="players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="selectedPlayer"
       :onShareCard="shareCard"
     />
+    <!--
     <TurnRecord
       v-else-if="turn.status === TurnStatus.Record"
       :turn="turn"
-      :players="state.players"
+      :players="players"
       :hand="hand"
       :yourPlayer="yourPlayer"
       :turnPlayer="selectedPlayer"
@@ -37,7 +36,7 @@
     <TurnAccused
       v-else-if="turn.status === TurnStatus.Accused"
       :turn="turn"
-      :players="state.players"
+      :players="players"
       :hand="hand"
       :yourPlayer="yourPlayer"
       :turnPlayer="selectedPlayer"
@@ -48,7 +47,7 @@
       <Notepad
         class="game-in-progress__notepad"
         :skin="state.skin"
-        :players="state.players"
+        :players="players"
         :turnPlayer="selectedPlayer"
         :suggestion="suggestion"
         :sharePlayer="sharePlayer"
@@ -127,21 +126,26 @@ export default defineComponent({
     turn(): TurnState {
       return this.state.turnState;
     },
+    players(): Player[] {
+      return this.state.players;
+    },
     yourPlayer(): Maybe<Player> {
       if (!this.state.playerSecrets) {
         return null;
       }
-      return this.state.players[this.state.playerSecrets.index];
+      return this.players[this.state.playerSecrets.index];
     },
     sharePlayer(): Maybe<Player> {
       if (
-        this.turn.status !== TurnStatus.Share &&
-        this.turn.status !== TurnStatus.Record
+        !this.selectedPlayer ||
+        (this.turn.status !== TurnStatus.Share &&
+          this.turn.status !== TurnStatus.Record)
       ) {
         return null;
       }
-      // TODO real thing
-      return this.state.players[0];
+      const selectedRoleName = this.selectedPlayer.role.name;
+      const sharePlayerIndex = this.turn.sharePlayers[selectedRoleName];
+      return this.players[sharePlayerIndex];
     },
     hand(): Card[] {
       return this.state.playerSecrets?.hand ?? [];
@@ -164,12 +168,11 @@ export default defineComponent({
         suggestion,
       });
     },
-    shareCard(card: Card) {
+    shareCard(player: Player, card: Card) {
       this.send({
         kind: DeductionSyncEvents.ShareCard,
+        shareWith: this.players.indexOf(player),
         shareCard: card,
-        //TODO fix
-        shareWith: 0,
       });
     },
     setIsReady(isReady: boolean) {

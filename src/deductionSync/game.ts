@@ -1,6 +1,9 @@
+import curry from 'lodash/fp/curry';
+import flow from 'lodash/fp/flow';
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
 import mapValues from 'lodash/fp/mapValues';
+import pick from 'lodash/fp/pick';
 import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
@@ -17,7 +20,6 @@ import {
   DeductionStatus,
   Mark,
   Player,
-  PlayerCrime,
   PlayerSecrets,
   ProtoPlayer,
   RoleCard,
@@ -25,6 +27,10 @@ import {
   TurnState,
   TurnStatus,
 } from './state';
+
+const getEntryKey = <K, V>(e: [key: K, value: V]): K => e[0];
+const getEntryValue = <K, V>(e: [key: K, value: V]): V => e[1];
+const playerHasRole = curry((r: RoleCard, p: Player) => p.role.name === r.name);
 
 abstract class DeductionSyncGame extends Game {
   getKind(): Games {
@@ -440,17 +446,48 @@ class TurnShare extends TurnSuggested {
     return true;
   }
 
-  getStateForRole(): TurnState {
+  getStateForRole(role: Maybe<RoleCard>): TurnState {
     return {
       status: TurnStatus.Share,
       suggestions: this.suggestions,
       sharePlayers: this.sharePlayers,
-      playerIsReady: mapValues(Boolean, this.sharedCards),
+      sharedCards: role ? this.getSharedCardsForRole(role) : {},
+      playerIsReady: this.getPlayerIsReady(),
     };
   }
 
-  private shareCard(role: RoleCard, shareWith: number, card: Card): void {
-    //TODO validate the card
+  private getPlayerIsReady(): Dict<boolean> {
+    return dictFromList(this.observer.players, (acc, p) => {
+      const sharedCards = this.getSharedCardsForRole(p.role);
+      acc[p.role.name] = Object.values(sharedCards).every(Boolean);
+    });
+  }
+
+  private shareCard(role: RoleCard, shareWithIndex: number, card: Card): void {
+    const shareWith = this.observer.players[shareWithIndex];
+    if (!playerHasRole(role, this.getSharePlayer(shareWith))) {
+      return;
+    }
+    this.sharedCards[shareWith.role.name] = card;
+
+    if (Object.values(this.getPlayerIsReady()).every(x => x)) {
+      // TODO: Record state.
+      console.log('TRIGGERR RECORD STATE');
+    }
+  }
+
+  private getSharedCardsForRole(role: RoleCard): Dict<Maybe<Card>> {
+    const lookupPlayer = (i: number): Player => this.observer.players[i];
+
+    const shareWithRoleNames = Object.entries(this.sharePlayers)
+      .filter(flow(getEntryValue, lookupPlayer, playerHasRole(role)))
+      .map(getEntryKey);
+    return pick(shareWithRoleNames, this.sharedCards);
+  }
+
+  private getSharePlayer(shareWith: Player): Player {
+    const sharePlayerIndex = this.sharePlayers[shareWith.role.name];
+    return this.observer.players[sharePlayerIndex];
   }
 }
 
@@ -463,7 +500,7 @@ class TurnShare extends TurnSuggested {
 //
 //  constructor(
 //    observer: TurnObserver,
-//    suggestions: Dict<Maybe<PlayerCrime>>,
+//    suggestions: Dict<Crime>,
 //    sharedCards: Dict<Maybe<Card>>
 //  ) {
 //    super(observer, suggestions);
