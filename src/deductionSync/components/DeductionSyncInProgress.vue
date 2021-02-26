@@ -53,6 +53,7 @@
         :sharePlayer="sharePlayer"
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
+        :selectPlayer="p => (selectedPlayer = p)"
       />
       <h2 class="game-in-progress__hand-title">Hand</h2>
       <Cards :cards="state.playerSecrets.hand" />
@@ -152,13 +153,13 @@ export default defineComponent({
     },
     suggestion(): Maybe<Crime> {
       if (
-        this.turn.status !== TurnStatus.Share &&
-        this.turn.status !== TurnStatus.Record
+        !this.selectedPlayer ||
+        (this.turn.status !== TurnStatus.Share &&
+          this.turn.status !== TurnStatus.Record)
       ) {
         return null;
       }
-      //TODO fix
-      return null;
+      return this.turn.suggestions[this.selectedPlayer.role.name];
     },
   },
   methods: {

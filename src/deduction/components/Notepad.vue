@@ -3,10 +3,12 @@
     <table ref="table" :style="tableStyle">
       <tr>
         <th />
-        <th
+        <OptionalClick
+          is="th"
           v-for="player in players"
           :key="player.role.name"
           :class="colClasses(player)"
+          :onClick="selectPlayer ? () => selectPlayer(player) : null"
         >
           <div class="notepad__player-header">
             <RoleColor class="notepad__player-color" :role="player.role">
@@ -14,7 +16,7 @@
             </RoleColor>
             <span>{{ player.name }}</span>
           </div>
-        </th>
+        </OptionalClick>
       </tr>
       <tr>
         <th :colspan="players.length + 1">Roles</th>
@@ -82,6 +84,7 @@
 import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
+import OptionalClick from '@/components/OptionalClick';
 import { useEventListener } from '@/composables';
 import Note from '@/deduction/components/Note.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';
@@ -122,6 +125,7 @@ export default defineComponent({
   name: 'Notepad',
   components: {
     Note,
+    OptionalClick,
     RoleColor,
   },
   props: {
@@ -154,6 +158,10 @@ export default defineComponent({
         (player: Player, card: Card, marks: Mark[]) => void
       >,
       required: true,
+    },
+    selectPlayer: {
+      type: Function as PropType<(player: Player) => void>,
+      default: null,
     },
   },
   setup() {

@@ -1,20 +1,21 @@
 <template>
-  <div v-if="onClick" class="card" :class="classes" @click="onClick">
+  <OptionalClick class="card" :class="classes" :onClick="onClick">
     {{ card.name }}
-  </div>
-  <div v-else class="card" :class="classes">
-    {{ card.name }}
-  </div>
+  </OptionalClick>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+import OptionalClick from '@/components/OptionalClick';
 import { Card } from '@/deduction/state';
 import { Dict } from '@/types';
 
 export default defineComponent({
   name: 'Card',
+  components: {
+    OptionalClick,
+  },
   props: {
     card: {
       type: Object as PropType<Card>,
@@ -51,11 +52,9 @@ export default defineComponent({
   background-color: #fff;
   text-align: center;
   display: inline-block;
-  cursor: default;
 
   &--selectable {
     color: blue;
-    cursor: pointer;
   }
 
   &--selected {
