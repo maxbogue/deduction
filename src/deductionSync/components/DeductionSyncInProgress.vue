@@ -47,7 +47,7 @@
         :sharePlayer="sharePlayer"
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
-        :selectPlayer="p => (selectedPlayer = p)"
+        :selectPlayer="i => (selectedPlayerIndex = i)"
       />
       <h2 class="game-in-progress__hand-title">Hand</h2>
       <Cards :cards="state.playerSecrets.hand" />
@@ -84,7 +84,7 @@ import { Dict, Maybe } from '@/types';
 interface InProgressData {
   TurnStatus: typeof TurnStatus;
   notes: Dict<Dict<string>>;
-  selectedPlayer: Maybe<Player>;
+  selectedPlayerIndex: number;
 }
 
 export default defineComponent({
@@ -112,17 +112,22 @@ export default defineComponent({
     const { state } = toRefs(props);
     provide(SkinKey, state.value.skin);
   },
-  data: (): InProgressData => ({
-    TurnStatus,
-    notes: {},
-    selectedPlayer: null,
-  }),
+  data(): InProgressData {
+    return {
+      TurnStatus,
+      notes: {},
+      selectedPlayerIndex: this.state.playerSecrets?.index ?? 0,
+    };
+  },
   computed: {
     turn(): TurnState {
       return this.state.turnState;
     },
     players(): Player[] {
       return this.state.players;
+    },
+    selectedPlayer(): Player {
+      return this.state.players[this.selectedPlayerIndex];
     },
     yourPlayer(): Maybe<Player> {
       if (!this.state.playerSecrets) {

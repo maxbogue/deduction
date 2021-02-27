@@ -14,7 +14,7 @@
       <div>Your accusation:</div>
       <Cards :cards="Object.values(turn.accusation)" />
     </div>
-    <div v-else-if="yourPlayer">
+    <div v-else-if="yourPlayer && !yourPlayer.isDed">
       <button @click="showAccuse = true">Accuse</button>
     </div>
     <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />

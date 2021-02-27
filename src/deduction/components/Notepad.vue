@@ -5,10 +5,10 @@
         <th />
         <OptionalClick
           is="th"
-          v-for="player in players"
+          v-for="(player, i) in players"
           :key="player.role.name"
           :class="colClasses(player)"
-          :onClick="selectPlayer ? () => selectPlayer(player) : null"
+          :onClick="selectPlayer ? () => selectPlayer(i) : null"
         >
           <div class="notepad__player-header">
             <RoleColor class="notepad__player-color" :role="player.role">
@@ -160,7 +160,7 @@ export default defineComponent({
       required: true,
     },
     selectPlayer: {
-      type: Function as PropType<(player: Player) => void>,
+      type: Function as PropType<(playerIndex: number) => void>,
       default: null,
     },
   },

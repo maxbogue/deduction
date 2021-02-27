@@ -639,12 +639,6 @@ class TurnRecord extends TurnSuggested {
       return;
     }
 
-    const playersLeft = this.getLivePlayers();
-    if (playersLeft.length < 2) {
-      this.observer.gameOver(playersLeft);
-      return;
-    }
-
     if (losers.length > 0) {
       this.observer.setTurn(
         new TurnAccused(this.observer, fromEntries(loserEntries))
@@ -691,9 +685,17 @@ class TurnAccused extends Turn {
   }
 
   protected checkIfReady() {
-    if (Object.values(this.playerIsReady).every(x => x)) {
-      this.observer.setTurn(new TurnSuggest(this.observer));
+    if (!Object.values(this.playerIsReady).every(x => x)) {
+      return;
     }
+
+    const playersLeft = this.getLivePlayers();
+    if (playersLeft.length < 2) {
+      this.observer.gameOver(playersLeft);
+      return;
+    }
+
+    this.observer.setTurn(new TurnSuggest(this.observer));
   }
 
   protected setIsReady(role: RoleCard, isReady: boolean) {
