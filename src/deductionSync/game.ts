@@ -12,7 +12,18 @@ import { isAlive, playerHasRole } from '@/deduction/utils';
 import { Connection, Game, GameConfig, GameObserver } from '@/server/game';
 import { Games, GameState } from '@/state';
 import { ById, Dict, Maybe } from '@/types';
-import { dictFromList, pickMany, pickOne, repeat } from '@/utils';
+import {
+  assertExists,
+  checkDict,
+  dictFromList,
+  fromEntries,
+  getEntryKey,
+  getEntryValue,
+  not,
+  pickMany,
+  pickOne,
+  repeat,
+} from '@/utils';
 
 import { DeductionSyncEvent, DeductionSyncEvents } from './events';
 import {
@@ -28,29 +39,6 @@ import {
   TurnState,
   TurnStatus,
 } from './state';
-
-type Predicate<T> = (v: T) => boolean;
-type Entry<V, K = string> = [K, V];
-
-const not = <T>(p: Predicate<T>): Predicate<T> => flow(p, b => !b);
-const getEntryKey = <K, V>(e: [K, V]): K => e[0];
-const getEntryValue = <K, V>(e: [K, V]): V => e[1];
-
-const fromEntries = <V>(entries: Array<Entry<V>>) =>
-  dictFromList<Entry<V>, V>(entries, (dict, [k, v]: Entry<V>) => {
-    dict[k] = v;
-  });
-
-function assertExists<T>(v: T | null | undefined): T {
-  if (!v) {
-    throw new Error('Must be defined.');
-  }
-  return v;
-}
-
-function checkDict<T>(dict: Dict<Maybe<T>>): dict is Dict<T> {
-  return Object.values(dict).every(Boolean);
-}
 
 abstract class DeductionSyncGame extends Game {
   getKind(): Games {

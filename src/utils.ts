@@ -1,4 +1,6 @@
-import { Dict } from '@/types';
+import flow from 'lodash/fp/flow';
+
+import { Dict, Entry, Maybe, Predicate } from '@/types';
 
 // Generates an array of length n by repeatedly invoking f.
 export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
@@ -33,3 +35,23 @@ export const pickOne = <T>(ls: T[]): T => {
 // Removes n random items from the list and returns them.
 export const pickMany = <T>(ls: T[], n: number): T[] =>
   repeat(() => pickOne(ls), n);
+
+export const not = <T>(p: Predicate<T>): Predicate<T> => flow(p, b => !b);
+export const getEntryKey = <K, V>(e: [K, V]): K => e[0];
+export const getEntryValue = <K, V>(e: [K, V]): V => e[1];
+
+export const fromEntries = <V>(entries: Array<Entry<V>>): Dict<V> =>
+  dictFromList<Entry<V>, V>(entries, (dict, [k, v]: Entry<V>) => {
+    dict[k] = v;
+  });
+
+export function assertExists<T>(v: T | null | undefined): T {
+  if (!v) {
+    throw new Error('Must be defined.');
+  }
+  return v;
+}
+
+export function checkDict<T>(dict: Dict<Maybe<T>>): dict is Dict<T> {
+  return Object.values(dict).every(Boolean);
+}
