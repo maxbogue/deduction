@@ -1,35 +1,34 @@
 <template>
   <div class="turn-record">
-    <Sticky :sentinel="turn">
-      <div>
-        {{ getPlayerName(turnPlayer) }} suggested
-        {{ crimeToString(turn.suggestion) }}.
-      </div>
-      <div v-if="sharedCard">
-        <span>{{ getPlayerName(sharePlayer) }} shared</span>
-        <Card :card="sharedCard" />
-      </div>
-      <div v-else-if="sharePlayer !== turnPlayer">
-        {{ getPlayerName(sharePlayer) }} has shared a card.
-      </div>
-      <div v-else>No player had a matching card to share.</div>
-    </Sticky>
-    <div v-if="yourPlayer === turnPlayer">
+    <Sticky>Record your notes.</Sticky>
+    <CardShare
+      v-for="player in livePlayers"
+      :key="player.role.name"
+      :turn="turn"
+      :players="players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :shareWith="player"
+    />
+    <div v-if="turn.accusation">
+      <div>Your accusation:</div>
+      <Cards :cards="Object.values(turn.accusation)" />
+    </div>
+    <div v-else-if="yourPlayer && !yourPlayer.isDed">
       <button @click="showAccuse = true">Accuse</button>
     </div>
     <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
-    <template v-if="showAccuse">
+    <template v-if="showAccuse && !turn.accusation">
       <h2>Accusation</h2>
       <SelectCrime
         class="turn-record__accuse"
         :excludeCards="hand"
-        :buttonDisabled="!canAccuse"
-        :buttonText="canAccuse ? 'Final Accusation' : 'Waiting...'"
+        buttonText="Final Accusation"
         :onSelect="onAccuse"
       />
     </template>
     <ReadyToast
-      v-if="yourPlayer && !yourPlayer.isDed"
+      v-if="yourPlayer && !yourPlayer.isDed && !turn.accusation"
       :playerIsReady="turn.playerIsReady"
       :yourPlayer="yourPlayer"
       :setIsReady="setIsReady"
@@ -38,15 +37,16 @@
 </template>
 
 <script lang="ts">
-import isEqual from 'lodash/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import Sticky from '@/components/Sticky.vue';
-import CardComponent from '@/deduction/components/Card.vue';
+import Cards from '@/deduction/components/Cards.vue';
+import CardShare from '@/deduction/components/CardShare.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
 import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
-import { Card, Crime, Player, TurnRecordState } from '@/deduction/state';
+import { isAlive } from '@/deduction/utils';
+import { Card, Crime, Player, TurnRecordState } from '@/deductionSync/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -57,7 +57,8 @@ interface TurnRecordData {
 export default defineComponent({
   name: 'TurnRecord',
   components: {
-    Card: CardComponent,
+    Cards,
+    CardShare,
     ReadyToast,
     SelectCrime,
     Sticky,
@@ -80,10 +81,6 @@ export default defineComponent({
       type: Object as PropType<Maybe<Player>>,
       default: null,
     },
-    turnPlayer: {
-      type: Object as PropType<Player>,
-      required: true,
-    },
     setIsReady: {
       type: Function as PropType<(isReady: boolean) => void>,
       required: true,
@@ -97,24 +94,18 @@ export default defineComponent({
     showAccuse: false,
   }),
   computed: {
-    sharePlayer(): Player {
-      return this.players[this.turn.sharePlayerIndex];
-    },
-    sharedCard(): Maybe<Card> {
-      return this.turn.sharedCard;
-    },
     roleToPlayer(): Dict<Player> {
       return dictFromList(this.players, (acc, p) => {
         acc[p.role.name] = p;
       });
     },
+    livePlayers(): Player[] {
+      return this.players.filter(isAlive);
+    },
     unreadyPlayers(): Player[] {
       return Object.entries(this.turn.playerIsReady)
         .filter(e => !e[1])
         .map(e => this.roleToPlayer[e[0]]);
-    },
-    canAccuse(): boolean {
-      return isEqual(this.unreadyPlayers, [this.turnPlayer]);
     },
   },
   methods: {

@@ -6,6 +6,11 @@
       :state="state.game.state"
       :send="sendGameEvent"
     />
+    <DeductionSync
+      v-else-if="state.game.kind === Games.DeductionSync"
+      :state="state.game.state"
+      :send="sendGameEvent"
+    />
     <Modal v-if="state && !connected">Reconnecting...</Modal>
     <hr />
     <div class="room__buttons">
@@ -19,32 +24,21 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import Modal from '@/components/Modal.vue';
 import { useWebSocket } from '@/composables/websocket';
 import Deduction from '@/deduction/components/Deduction.vue';
-import { DeductionEvents } from '@/deduction/events';
-import { DeductionState, DeductionStatus, RoleCard } from '@/deduction/state';
+import DeductionSync from '@/deductionSync/components/DeductionSync.vue';
 import { RoomEvent, RoomEvents } from '@/events';
 import { Games, RoomState } from '@/state';
-import { Maybe } from '@/types';
-
-function roleFromState(state: DeductionState): Maybe<RoleCard> {
-  if (state.status === DeductionStatus.Setup) {
-    return state.playersByConnection[state.connectionId].role;
-  }
-  if (!state.playerSecrets) {
-    return null;
-  }
-  return state.players[state.playerSecrets.index].role;
-}
 
 export default defineComponent({
   name: 'Room',
   components: {
     Deduction,
+    DeductionSync,
     Modal,
   },
   setup() {
@@ -68,18 +62,6 @@ export default defineComponent({
         kind: RoomEvents.GameEvent,
         event,
       });
-
-    watch(connected, (newVal, oldVal) => {
-      if (newVal && !oldVal && state.value) {
-        const role = roleFromState(state.value.game.state);
-        if (role) {
-          sendGameEvent({
-            kind: DeductionEvents.SetRole,
-            data: role,
-          });
-        }
-      }
-    });
 
     return {
       Games,

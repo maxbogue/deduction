@@ -1,16 +1,8 @@
-import { Card, Crime, Mark, Player, RoleCard } from '@/deduction/state';
+import { DeductionEvents } from '@/deduction/events';
 
-export enum DeductionEvents {
-  Accuse = 'Accuse',
-  SetName = 'SetName',
-  SetNote = 'SetNote',
-  SetReady = 'SetReady',
-  SetRole = 'SetRole',
-  SetSkin = 'SetSkin',
-  ShareCard = 'ShareCard',
-  Start = 'Start',
-  Suggest = 'Suggest',
-}
+import { Card, Crime, Mark, Player, RoleCard } from './state';
+
+export { DeductionEvents as DeductionSyncEvents } from '@/deduction/events';
 
 export interface AccuseEvent {
   kind: DeductionEvents.Accuse;
@@ -46,7 +38,8 @@ export interface SetSkinEvent {
 
 export interface ShareCardEvent {
   kind: DeductionEvents.ShareCard;
-  sharedCard: Card;
+  shareWith: number;
+  shareCard: Card;
 }
 
 export interface StartEvent {
@@ -58,16 +51,13 @@ export interface SuggestEvent {
   suggestion: Crime;
 }
 
-export type SetupEvent =
+export type DeductionSyncEvent =
+  | AccuseEvent
   | SetNameEvent
+  | SetNoteEvent
   | SetReadyEvent
   | SetRoleEvent
-  | StartEvent;
-
-export type DeductionEvent =
-  | SetupEvent
-  | AccuseEvent
-  | SetNoteEvent
   | SetSkinEvent
   | ShareCardEvent
+  | StartEvent
   | SuggestEvent;
