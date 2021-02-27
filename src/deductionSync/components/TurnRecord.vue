@@ -10,8 +10,12 @@
       :yourPlayer="yourPlayer"
       :shareWith="player"
     />
-    <div class="turn-record__buttons">
+    <div v-if="!turn.accusation" class="turn-record__buttons">
       <button @click="showAccuse = true">Accuse</button>
+    </div>
+    <div v-else>
+      <div>Your accusation:</div>
+      <Cards :cards="Object.values(turn.accusation)" />
     </div>
     <div class="turn-record__unready-players">
       <span>Waiting for: </span>
@@ -21,7 +25,7 @@
         :role="player.role"
       />
     </div>
-    <template v-if="showAccuse">
+    <template v-if="showAccuse && !turn.accusation">
       <h2>Accusation</h2>
       <SelectCrime
         class="turn-record__accuse"
@@ -31,7 +35,7 @@
       />
     </template>
     <ReadyToast
-      v-if="yourPlayer && !yourPlayer.isDed"
+      v-if="yourPlayer && !yourPlayer.isDed && !turn.accusation"
       :playerIsReady="turn.playerIsReady"
       :yourPlayer="yourPlayer"
       :setIsReady="setIsReady"
@@ -43,6 +47,7 @@
 import { defineComponent, PropType } from 'vue';
 
 import Sticky from '@/components/Sticky.vue';
+import Cards from '@/deduction/components/Cards.vue';
 import CardShare from '@/deduction/components/CardShare.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';
@@ -58,6 +63,7 @@ interface TurnRecordData {
 export default defineComponent({
   name: 'TurnRecord',
   components: {
+    Cards,
     CardShare,
     ReadyToast,
     RoleColor,
@@ -94,12 +100,6 @@ export default defineComponent({
     showAccuse: false,
   }),
   computed: {
-    sharePlayer(): Player {
-      return this.players[this.turn.sharePlayerIndex];
-    },
-    sharedCard(): Maybe<Card> {
-      return this.turn.sharedCard;
-    },
     roleToPlayer(): Dict<Player> {
       return dictFromList(this.players, (acc, p) => {
         acc[p.role.name] = p;

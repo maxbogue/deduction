@@ -30,16 +30,13 @@
       :setIsReady="setIsReady"
       :onAccuse="accuse"
     />
-    <!--
     <TurnAccused
       v-else-if="turn.status === TurnStatus.Accused"
       :turn="turn"
       :players="players"
-      :hand="hand"
       :yourPlayer="yourPlayer"
       :setIsReady="setIsReady"
     />
-    -->
     <template v-if="state.playerSecrets">
       <Notepad
         class="game-in-progress__notepad"

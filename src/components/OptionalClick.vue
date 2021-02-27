@@ -21,6 +21,8 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
+import { Maybe } from '@/types';
+
 export default defineComponent({
   name: 'OptionalClick',
   props: {
@@ -29,7 +31,7 @@ export default defineComponent({
       default: 'div',
     },
     onClick: {
-      type: Function as PropType<() => void>,
+      type: Function as PropType<Maybe<() => void>>,
       default: null,
     },
   },

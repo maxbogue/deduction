@@ -1,10 +1,14 @@
 <template>
   <div class="turn-accused">
     <Sticky :sentinel="turn">
-      <div>{{ getPlayerName(turnPlayer) }} is ded! &#x1F47B;</div>
-      <div>Failed accusation:</div>
-      <Cards :cards="Object.values(turn.failedAccusation)" />
+      {{ Object.keys(turn.failedAccusations).length }} failed accusations were
+      made.
     </Sticky>
+    <div v-for="player in losers" :key="player.role.name">
+      <div>{{ getPlayerName(player) }} is ded! &#x1F47B;</div>
+      <div>Failed accusation:</div>
+      <Cards :cards="Object.values(turn.failedAccusations[player.role.name])" />
+    </div>
     <div class="turn-accused__unready-players">
       <span>Waiting for: </span>
       <RoleColor
@@ -29,7 +33,7 @@ import Sticky from '@/components/Sticky.vue';
 import Cards from '@/deduction/components/Cards.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';
-import { Card, Player, TurnAccusedState } from '@/deduction/state';
+import { Player, TurnAccusedState } from '@/deductionSync/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -50,17 +54,9 @@ export default defineComponent({
       type: Array as PropType<Player[]>,
       required: true,
     },
-    hand: {
-      type: Array as PropType<Card[]>,
-      required: true,
-    },
     yourPlayer: {
       type: Object as PropType<Maybe<Player>>,
       default: null,
-    },
-    turnPlayer: {
-      type: Object as PropType<Player>,
-      required: true,
     },
     setIsReady: {
       type: Function as PropType<(isReady: boolean) => void>,
@@ -72,6 +68,9 @@ export default defineComponent({
       return dictFromList(this.players, (acc, p) => {
         acc[p.role.name] = p;
       });
+    },
+    losers(): Player[] {
+      return this.players.filter(p => this.turn.failedAccusations[p.role.name]);
     },
     unreadyPlayers(): Player[] {
       return Object.entries(this.turn.playerIsReady)
