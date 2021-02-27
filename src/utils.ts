@@ -9,11 +9,11 @@ export const repeat = <T>(f: (i: number) => T, n: number): T[] => {
   return ls;
 };
 
-export const dictFromList = <T, U>(
-  ls: T[],
-  f: (acc: Dict<U>, x: T, i: number) => void
-): Dict<U> => {
-  const dict: Dict<U> = {};
+export const dictFromList = <E, K>(
+  ls: E[],
+  f: (acc: Dict<K>, x: E, i: number) => void
+): Dict<K> => {
+  const dict: Dict<K> = {};
   ls.forEach((x, i) => {
     f(dict, x, i);
   });

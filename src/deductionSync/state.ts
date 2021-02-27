@@ -26,7 +26,7 @@ export {
 
 export interface TurnSuggestState {
   status: TurnStatus.Suggest;
-  yourSuggestion: Maybe<Crime>;
+  suggestion: Maybe<Crime>;
   playerIsReady: Dict<boolean>;
 }
 
@@ -43,6 +43,7 @@ export interface TurnRecordState {
   suggestions: Dict<Crime>;
   sharePlayers: Dict<number>;
   sharedCards: Dict<Maybe<Card>>;
+  accusation: Maybe<Crime>;
   playerIsReady: Dict<boolean>;
 }
 

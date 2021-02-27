@@ -1,8 +1,8 @@
 <template>
   <div class="turn-suggest">
     <h2>Suggest</h2>
-    <template v-if="turn.yourSuggestion">
-      <Sticky>You suggested {{ crimeToString(turn.yourSuggestion) }}.</Sticky>
+    <template v-if="turn.suggestion">
+      <Sticky>You suggested {{ crimeToString(turn.suggestion) }}.</Sticky>
       <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     </template>
     <template v-else>
