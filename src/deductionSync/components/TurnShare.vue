@@ -1,6 +1,6 @@
 <template>
   <div class="turn-share">
-    <Sticky :sentinel="turn">
+    <Sticky v-if="yourPlayer" :sentinel="turn">
       You need to share {{ numCardsToShare }} more cards.
     </Sticky>
     <CardShare

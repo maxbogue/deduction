@@ -14,17 +14,10 @@
       </div>
       <div v-else>No player had a matching card to share.</div>
     </Sticky>
-    <div v-if="yourPlayer === turnPlayer" class="turn-record__buttons">
+    <div v-if="yourPlayer === turnPlayer">
       <button @click="showAccuse = true">Accuse</button>
     </div>
-    <div class="turn-record__unready-players">
-      <span>Waiting for: </span>
-      <RoleColor
-        v-for="player in unreadyPlayers"
-        :key="player.role.name"
-        :role="player.role"
-      />
-    </div>
+    <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     <template v-if="showAccuse">
       <h2>Accusation</h2>
       <SelectCrime
@@ -51,8 +44,8 @@ import { defineComponent, PropType } from 'vue';
 import Sticky from '@/components/Sticky.vue';
 import CardComponent from '@/deduction/components/Card.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
-import RoleColor from '@/deduction/components/RoleColor.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
+import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
 import { Card, Crime, Player, TurnRecordState } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -66,9 +59,9 @@ export default defineComponent({
   components: {
     Card: CardComponent,
     ReadyToast,
-    RoleColor,
     SelectCrime,
     Sticky,
+    UnreadyPlayers,
   },
   props: {
     turn: {
@@ -142,16 +135,6 @@ export default defineComponent({
 .turn-record {
   @include flex-column;
   margin-bottom: $pad-lg;
-
-  &__unready-players {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    > :not(:first-child) {
-      margin-left: $pad-xs;
-    }
-  }
 
   &__accuse :deep(.select-crime__button) {
     background-color: rgba(255, 24, 12, 0.5);

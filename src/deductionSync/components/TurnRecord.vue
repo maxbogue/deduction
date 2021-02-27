@@ -10,21 +10,14 @@
       :yourPlayer="yourPlayer"
       :shareWith="player"
     />
-    <div v-if="!turn.accusation" class="turn-record__buttons">
-      <button @click="showAccuse = true">Accuse</button>
-    </div>
-    <div v-else>
+    <div v-if="turn.accusation">
       <div>Your accusation:</div>
       <Cards :cards="Object.values(turn.accusation)" />
     </div>
-    <div class="turn-record__unready-players">
-      <span>Waiting for: </span>
-      <RoleColor
-        v-for="player in unreadyPlayers"
-        :key="player.role.name"
-        :role="player.role"
-      />
+    <div v-else-if="yourPlayer">
+      <button @click="showAccuse = true">Accuse</button>
     </div>
+    <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     <template v-if="showAccuse && !turn.accusation">
       <h2>Accusation</h2>
       <SelectCrime
@@ -50,8 +43,8 @@ import Sticky from '@/components/Sticky.vue';
 import Cards from '@/deduction/components/Cards.vue';
 import CardShare from '@/deduction/components/CardShare.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
-import RoleColor from '@/deduction/components/RoleColor.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
+import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
 import { Card, Crime, Player, TurnRecordState } from '@/deductionSync/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -66,9 +59,9 @@ export default defineComponent({
     Cards,
     CardShare,
     ReadyToast,
-    RoleColor,
     SelectCrime,
     Sticky,
+    UnreadyPlayers,
   },
   props: {
     turn: {
@@ -129,16 +122,6 @@ export default defineComponent({
 .turn-record {
   @include flex-column;
   margin-bottom: $pad-lg;
-
-  &__unready-players {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    > :not(:first-child) {
-      margin-left: $pad-xs;
-    }
-  }
 
   &__accuse :deep(.select-crime__button) {
     background-color: rgba(255, 24, 12, 0.5);

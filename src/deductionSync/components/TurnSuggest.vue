@@ -1,11 +1,14 @@
 <template>
   <div class="turn-suggest">
     <h2>Suggest</h2>
-    <template v-if="turn.suggestion">
-      <Sticky>You suggested {{ crimeToString(turn.suggestion) }}.</Sticky>
+    <template v-if="turn.suggestion || !yourPlayer || yourPlayer.isDed">
+      <Sticky v-if="turn.suggestion">
+        You suggested {{ crimeToString(turn.suggestion) }}.
+      </Sticky>
+      <Sticky v-else-if="yourPlayer">You are dead.</Sticky>
       <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     </template>
-    <template v-else>
+    <template v-else-if="yourPlayer">
       <Sticky>Make a suggestion.</Sticky>
       <SelectCrime :onSelect="onSuggest" />
     </template>

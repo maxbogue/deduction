@@ -5,14 +5,7 @@
       <div>Failed accusation:</div>
       <Cards :cards="Object.values(turn.failedAccusation)" />
     </Sticky>
-    <div class="turn-accused__unready-players">
-      <span>Waiting for: </span>
-      <RoleColor
-        v-for="player in unreadyPlayers"
-        :key="player.role.name"
-        :role="player.role"
-      />
-    </div>
+    <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     <ReadyToast
       v-if="yourPlayer && !yourPlayer.isDed"
       :playerIsReady="turn.playerIsReady"
@@ -28,7 +21,7 @@ import { defineComponent, PropType } from 'vue';
 import Sticky from '@/components/Sticky.vue';
 import Cards from '@/deduction/components/Cards.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
-import RoleColor from '@/deduction/components/RoleColor.vue';
+import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
 import { Card, Player, TurnAccusedState } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -38,8 +31,8 @@ export default defineComponent({
   components: {
     Cards,
     ReadyToast,
-    RoleColor,
     Sticky,
+    UnreadyPlayers,
   },
   props: {
     turn: {
@@ -93,23 +86,5 @@ export default defineComponent({
 .turn-accused {
   @include flex-column;
   margin-bottom: $pad-lg;
-
-  &__unready-players {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    > :not(:first-child) {
-      margin-left: $pad-xs;
-    }
-  }
-
-  &__accuse :deep(.select-crime__button) {
-    background-color: rgba(255, 24, 12, 0.5);
-
-    &[disabled] {
-      background-color: transparent;
-    }
-  }
 }
 </style>
