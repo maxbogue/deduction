@@ -42,7 +42,7 @@ export interface TurnRecordState {
   status: TurnStatus.Record;
   suggestions: Dict<Crime>;
   sharePlayers: Dict<number>;
-  yourSharedCard: Maybe<Card>;
+  sharedCards: Dict<Maybe<Card>>;
   playerIsReady: Dict<boolean>;
 }
 

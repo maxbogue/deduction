@@ -7,7 +7,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 
-import OptionalClick from '@/components/OptionalClick';
+import OptionalClick from '@/components/OptionalClick.vue';
 import { Card } from '@/deduction/state';
 import { Dict } from '@/types';
 

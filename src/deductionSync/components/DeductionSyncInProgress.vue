@@ -4,7 +4,6 @@
       class="game-in-progress__players"
       :players="players"
       :yourPlayer="yourPlayer"
-      :turnPlayer="selectedPlayer"
       :onReconnect="reconnectAsPlayer"
     />
     <TurnSuggest
@@ -22,24 +21,22 @@
       :yourPlayer="yourPlayer"
       :onShareCard="shareCard"
     />
-    <!--
     <TurnRecord
       v-else-if="turn.status === TurnStatus.Record"
       :turn="turn"
       :players="players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="selectedPlayer"
       :setIsReady="setIsReady"
       :onAccuse="accuse"
     />
+    <!--
     <TurnAccused
       v-else-if="turn.status === TurnStatus.Accused"
       :turn="turn"
       :players="players"
       :hand="hand"
       :yourPlayer="yourPlayer"
-      :turnPlayer="selectedPlayer"
       :setIsReady="setIsReady"
     />
     -->

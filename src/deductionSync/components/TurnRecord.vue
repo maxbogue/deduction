@@ -1,20 +1,16 @@
 <template>
   <div class="turn-record">
-    <Sticky :sentinel="turn">
-      <div>
-        {{ getPlayerName(turnPlayer) }} suggested
-        {{ crimeToString(turn.suggestion) }}.
-      </div>
-      <div v-if="sharedCard">
-        <span>{{ getPlayerName(sharePlayer) }} shared</span>
-        <Card :card="sharedCard" />
-      </div>
-      <div v-else-if="sharePlayer !== turnPlayer">
-        {{ getPlayerName(sharePlayer) }} has shared a card.
-      </div>
-      <div v-else>No player had a matching card to share.</div>
-    </Sticky>
-    <div v-if="yourPlayer === turnPlayer" class="turn-record__buttons">
+    <Sticky>Record your notes.</Sticky>
+    <CardShare
+      v-for="player in players"
+      :key="player.role.name"
+      :turn="turn"
+      :players="players"
+      :hand="hand"
+      :yourPlayer="yourPlayer"
+      :shareWith="player"
+    />
+    <div class="turn-record__buttons">
       <button @click="showAccuse = true">Accuse</button>
     </div>
     <div class="turn-record__unready-players">
@@ -30,8 +26,7 @@
       <SelectCrime
         class="turn-record__accuse"
         :excludeCards="hand"
-        :buttonDisabled="!canAccuse"
-        :buttonText="canAccuse ? 'Final Accusation' : 'Waiting...'"
+        buttonText="Final Accusation"
         :onSelect="onAccuse"
       />
     </template>
@@ -45,15 +40,14 @@
 </template>
 
 <script lang="ts">
-import isEqual from 'lodash/isEqual';
 import { defineComponent, PropType } from 'vue';
 
 import Sticky from '@/components/Sticky.vue';
-import CardComponent from '@/deduction/components/Card.vue';
+import CardShare from '@/deduction/components/CardShare.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
-import { Card, Crime, Player, TurnRecordState } from '@/deduction/state';
+import { Card, Crime, Player, TurnRecordState } from '@/deductionSync/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -64,7 +58,7 @@ interface TurnRecordData {
 export default defineComponent({
   name: 'TurnRecord',
   components: {
-    Card: CardComponent,
+    CardShare,
     ReadyToast,
     RoleColor,
     SelectCrime,
@@ -86,10 +80,6 @@ export default defineComponent({
     yourPlayer: {
       type: Object as PropType<Maybe<Player>>,
       default: null,
-    },
-    turnPlayer: {
-      type: Object as PropType<Player>,
-      required: true,
     },
     setIsReady: {
       type: Function as PropType<(isReady: boolean) => void>,
@@ -119,9 +109,6 @@ export default defineComponent({
       return Object.entries(this.turn.playerIsReady)
         .filter(e => !e[1])
         .map(e => this.roleToPlayer[e[0]]);
-    },
-    canAccuse(): boolean {
-      return isEqual(this.unreadyPlayers, [this.turnPlayer]);
     },
   },
   methods: {

@@ -84,7 +84,7 @@
 import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
-import OptionalClick from '@/components/OptionalClick';
+import OptionalClick from '@/components/OptionalClick.vue';
 import { useEventListener } from '@/composables';
 import Note from '@/deduction/components/Note.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';

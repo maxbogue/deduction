@@ -3,6 +3,7 @@ import flow from 'lodash/fp/flow';
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
 import mapValues from 'lodash/fp/mapValues';
+import overSome from 'lodash/fp/overSome';
 import pick from 'lodash/fp/pick';
 import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
@@ -31,6 +32,17 @@ import {
 const getEntryKey = <K, V>(e: [key: K, value: V]): K => e[0];
 const getEntryValue = <K, V>(e: [key: K, value: V]): V => e[1];
 const playerHasRole = curry((r: RoleCard, p: Player) => p.role.name === r.name);
+
+function assertExists<T>(v: T | null | undefined): T {
+  if (!v) {
+    throw new Error('Must be defined.');
+  }
+  return v;
+}
+
+function checkDict<T>(dict: Dict<Maybe<T>>): dict is Dict<T> {
+  return Object.values(dict).every(Boolean);
+}
 
 abstract class DeductionSyncGame extends Game {
   getKind(): Games {
@@ -310,9 +322,15 @@ function initNotes(
   return notes;
 }
 
-interface Turn {
-  processEvent: (role: RoleCard, event: DeductionSyncEvent) => boolean;
-  getStateForRole: (role: Maybe<RoleCard>) => TurnState;
+abstract class Turn {
+  protected observer: TurnObserver;
+
+  constructor(observer: TurnObserver) {
+    this.observer = observer;
+  }
+
+  abstract processEvent(role: RoleCard, event: DeductionSyncEvent): boolean;
+  abstract getStateForRole(role: Maybe<RoleCard>): TurnState;
 }
 
 interface TurnObserver {
@@ -322,16 +340,11 @@ interface TurnObserver {
   gameOver: (winners: Player[]) => void;
 }
 
-function checkDict<T>(dict: Dict<Maybe<T>>): dict is Dict<T> {
-  return Object.values(dict).every(Boolean);
-}
-
-class TurnSuggest implements Turn {
-  private observer: TurnObserver;
+class TurnSuggest extends Turn {
   private suggestions: Dict<Maybe<Crime>> = {};
 
   constructor(observer: TurnObserver) {
-    this.observer = observer;
+    super(observer);
     this.suggestions = dictFromList(observer.players, (dict, p) => {
       if (!p.isDed) {
         dict[p.role.name] = null;
@@ -397,8 +410,7 @@ class TurnSuggest implements Turn {
   }
 }
 
-abstract class TurnSuggested implements Turn {
-  protected observer: TurnObserver;
+abstract class TurnSuggested extends Turn {
   protected suggestions: Dict<Crime>;
   protected sharePlayers: Dict<number>;
 
@@ -407,7 +419,7 @@ abstract class TurnSuggested implements Turn {
     suggestions: Dict<Crime>,
     sharePlayers: Dict<number>
   ) {
-    this.observer = observer;
+    super(observer);
     this.suggestions = suggestions;
     this.sharePlayers = sharePlayers;
   }
@@ -431,6 +443,7 @@ class TurnShare extends TurnSuggested {
         dict[p.role.name] = null;
       }
     });
+    this.checkIfReady();
   }
 
   processEvent(role: RoleCard, event: DeductionSyncEvent): boolean {
@@ -469,11 +482,7 @@ class TurnShare extends TurnSuggested {
       return;
     }
     this.sharedCards[shareWith.role.name] = card;
-
-    if (Object.values(this.getPlayerIsReady()).every(x => x)) {
-      // TODO: Record state.
-      console.log('TRIGGERR RECORD STATE');
-    }
+    this.checkIfReady();
   }
 
   private getSharedCardsForRole(role: RoleCard): Dict<Maybe<Card>> {
@@ -482,6 +491,7 @@ class TurnShare extends TurnSuggested {
     const shareWithRoleNames = Object.entries(this.sharePlayers)
       .filter(flow(getEntryValue, lookupPlayer, playerHasRole(role)))
       .map(getEntryKey);
+
     return pick(shareWithRoleNames, this.sharedCards);
   }
 
@@ -489,95 +499,146 @@ class TurnShare extends TurnSuggested {
     const sharePlayerIndex = this.sharePlayers[shareWith.role.name];
     return this.observer.players[sharePlayerIndex];
   }
+
+  private checkIfReady() {
+    const { sharedCards } = this;
+    if (!checkDict(sharedCards)) {
+      return;
+    }
+    this.observer.setTurn(
+      new TurnRecord(
+        this.observer,
+        this.suggestions,
+        this.sharePlayers,
+        sharedCards
+      )
+    );
+  }
 }
 
-//abstract class TurnShared extends TurnSuggested {
-//  protected sharedCards: Dict<Maybe<Card>>;
-//  protected playerIsReady: Dict<boolean>;
-//
-//  abstract processEvent(role: RoleCard, event: DeductionSyncEvent): boolean;
-//  abstract getStateForRole(role: Maybe<RoleCard>): TurnState;
-//
-//  constructor(
-//    observer: TurnObserver,
-//    suggestions: Dict<Crime>,
-//    sharedCards: Dict<Maybe<Card>>
-//  ) {
-//    super(observer, suggestions);
-//    this.sharedCards = sharedCards;
-//    this.playerIsReady = dictFromList(observer.players, (dict, p) => {
-//      if (!p.isDed) {
-//        dict[p.role.name] = false;
-//      }
-//    });
-//  }
-//
-//  protected checkIfReady() {
-//    if (!Object.values(this.playerIsReady).every(x => x)) {
-//      return;
-//    }
-//
-//    //TODO handle accusations
-//    const playersLeft = this.observer.players.filter(p => !p.isDed);
-//    if (playersLeft.length > 1) {
-//      this.observer.setTurn(new TurnSuggest(this.observer));
-//    }
-//  }
-//
-//  protected setIsReady(role: RoleCard, isReady: boolean) {
-//    const player = this.observer.players.find(p => p.role.name === role.name);
-//    if (player && !player.isDed) {
-//      this.playerIsReady[role.name] = isReady;
-//      this.checkIfReady();
-//    }
-//  }
-//}
+abstract class TurnShared extends TurnSuggested {
+  protected sharedCards: Dict<Card>;
+  protected playerIsReady: Dict<boolean>;
 
-//class TurnRecord extends TurnShared {
-//  private accusations: Dict<Crime>;
-//
-//  processEvent(role: RoleCard, event: DeductionSyncEvent): boolean {
-//    switch (event.kind) {
-//      case DeductionSyncEvents.SetReady:
-//        this.setIsReady(role, event.data);
-//        break;
-//      case DeductionSyncEvents.Accuse:
-//        this.accuse(role, event.data);
-//        break;
-//      default:
-//        console.error(
-//          `Invalid event for ${DeductionStatus.InProgress}: ${event}`
-//        );
-//    }
-//    return true;
-//  }
-//
-//  getStateForRole(role: Maybe<RoleCard>): TurnState {
-//    return {
-//      status: TurnStatus.Record,
-//      suggestions: this.suggestions,
-//      sharePlayerIndex: this.sharePlayerIndex,
-//      sharedCard: this.sharedCards[role.name],
-//      playerIsReady: this.playerIsReady,
-//    };
-//  }
-//
-//  private accuse(role: RoleCard, accusation: Crime): void {
-//    const player = this.roleToPlayer[role.name];
-//    if (player.isDed) {
-//      return;
-//    }
-//
-//    if (isEqual(accusation, this.solution)) {
-//      this.observer.gameOver([player]);
-//      return;
-//    }
-//
-//    player.isDed = true;
-//
-//    //TODO: switch to accused state
-//  }
-//}
+  abstract processEvent(role: RoleCard, event: DeductionSyncEvent): boolean;
+  abstract getStateForRole(role: Maybe<RoleCard>): TurnState;
+
+  constructor(
+    observer: TurnObserver,
+    suggestions: Dict<Crime>,
+    sharePlayers: Dict<number>,
+    sharedCards: Dict<Card>
+  ) {
+    super(observer, suggestions, sharePlayers);
+    this.sharedCards = sharedCards;
+    this.playerIsReady = dictFromList(observer.players, (dict, p) => {
+      if (!p.isDed) {
+        dict[p.role.name] = false;
+      }
+    });
+  }
+
+  protected checkIfReady() {
+    if (!Object.values(this.playerIsReady).every(x => x)) {
+      return;
+    }
+
+    //TODO handle accusations
+    const playersLeft = this.observer.players.filter(p => !p.isDed);
+    if (playersLeft.length > 1) {
+      this.observer.setTurn(new TurnSuggest(this.observer));
+    }
+  }
+
+  protected setIsReady(role: RoleCard, isReady: boolean) {
+    const player = this.observer.players.find(p => p.role.name === role.name);
+    if (player && !player.isDed) {
+      this.playerIsReady[role.name] = isReady;
+      this.checkIfReady();
+    }
+  }
+}
+
+class TurnRecord extends TurnShared {
+  private accusations: Dict<Maybe<Crime>>;
+
+  constructor(
+    observer: TurnObserver,
+    suggestions: Dict<Crime>,
+    sharePlayers: Dict<number>,
+    sharedCards: Dict<Card>
+  ) {
+    super(observer, suggestions, sharePlayers, sharedCards);
+    this.accusations = dictFromList(observer.players, (acc, p) => {
+      if (!p.isDed) {
+        acc[p.role.name] = null;
+      }
+    });
+  }
+
+  processEvent(role: RoleCard, event: DeductionSyncEvent): boolean {
+    switch (event.kind) {
+      case DeductionSyncEvents.SetReady:
+        this.setIsReady(role, event.data);
+        break;
+      case DeductionSyncEvents.Accuse:
+        this.accuse(role, event.data);
+        break;
+      default:
+        console.error(
+          `Invalid event for ${DeductionStatus.InProgress}: ${event}`
+        );
+    }
+    return true;
+  }
+
+  getStateForRole(role: Maybe<RoleCard>): TurnState {
+    return {
+      status: TurnStatus.Record,
+      suggestions: this.suggestions,
+      sharePlayers: this.sharePlayers,
+      sharedCards: role ? this.getSharedCardsForRole(role) : {},
+      playerIsReady: this.playerIsReady,
+    };
+  }
+
+  private accuse(role: RoleCard, accusation: Crime): void {
+    const player = this.observer.players.find(p => p.role.name === role.name);
+    if (!player || player.isDed) {
+      return;
+    }
+    //TODO: switch to accused state
+
+    //if (isEqual(accusation, this.solution)) {
+    //this.observer.gameOver([player]);
+    //return;
+    //}
+
+    //player.isDed = true;
+  }
+
+  private getSharedCardsForRole(role: RoleCard): Dict<Maybe<Card>> {
+    const getPlayerById = (i: number): Player => this.observer.players[i];
+    const getPlayerByRoleName = (roleName: string): Player =>
+      assertExists(this.observer.players.find(p => p.role.name === roleName));
+    const isSharePlayer = flow(
+      getEntryValue,
+      getPlayerById,
+      playerHasRole(role)
+    );
+    const isShareWithPlayer = flow(
+      getEntryKey,
+      getPlayerByRoleName,
+      playerHasRole(role)
+    );
+
+    const shareWithRoleNames = Object.entries(this.sharePlayers)
+      .filter(overSome([isSharePlayer, isShareWithPlayer]))
+      .map(getEntryKey);
+
+    return pick(shareWithRoleNames, this.sharedCards);
+  }
+}
 
 class GameInProgress extends GamePostSetup {
   private turn: Turn;
