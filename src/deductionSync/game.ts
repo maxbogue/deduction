@@ -1,4 +1,3 @@
-import curry from 'lodash/fp/curry';
 import flow from 'lodash/fp/flow';
 import intersectionBy from 'lodash/fp/intersectionBy';
 import isEqual from 'lodash/fp/isEqual';
@@ -9,6 +8,7 @@ import shuffle from 'lodash/fp/shuffle';
 import sortBy from 'lodash/fp/sortBy';
 
 import { SKINS } from '@/deduction/skins';
+import { isAlive, playerHasRole } from '@/deduction/utils';
 import { Connection, Game, GameConfig, GameObserver } from '@/server/game';
 import { Games, GameState } from '@/state';
 import { ById, Dict, Maybe } from '@/types';
@@ -40,8 +40,6 @@ const fromEntries = <V>(entries: Array<Entry<V>>) =>
   dictFromList<Entry<V>, V>(entries, (dict, [k, v]: Entry<V>) => {
     dict[k] = v;
   });
-
-const playerHasRole = curry((r: RoleCard, p: Player) => p.role.name === r.name);
 
 function assertExists<T>(v: T | null | undefined): T {
   if (!v) {
@@ -342,6 +340,10 @@ abstract class Turn {
   abstract processEvent(role: RoleCard, event: DeductionSyncEvent): boolean;
   abstract getStateForRole(role: Maybe<RoleCard>): TurnState;
 
+  protected getLivePlayers(): Player[] {
+    return this.observer.players.filter(isAlive);
+  }
+
   protected getPlayerById = (i: number): Player => this.observer.players[i];
   protected getPlayerByRoleName = (roleName: string): Player =>
     assertExists(this.observer.players.find(p => p.role.name === roleName));
@@ -360,10 +362,8 @@ class TurnSuggest extends Turn {
 
   constructor(observer: TurnObserver) {
     super(observer);
-    this.suggestions = dictFromList(observer.players, (dict, p) => {
-      if (!p.isDed) {
-        dict[p.role.name] = null;
-      }
+    this.suggestions = dictFromList(this.getLivePlayers(), (dict, p) => {
+      dict[p.role.name] = null;
     });
   }
 
@@ -410,7 +410,7 @@ class TurnSuggest extends Turn {
     }
 
     const sharePlayers: Dict<number> = dictFromList(
-      this.observer.players,
+      this.getLivePlayers(),
       (dict, p) => {
         dict[p.role.name] = this.findSharePlayer(
           p.role,
@@ -452,9 +452,10 @@ class TurnShare extends TurnSuggested {
     sharePlayers: Dict<number>
   ) {
     super(observer, suggestions, sharePlayers);
-    this.sharedCards = dictFromList(observer.players, (dict, p) => {
+    this.sharedCards = dictFromList(this.getLivePlayers(), (dict, p) => {
       const sharePlayerIndex = sharePlayers[p.role.name];
-      if (p !== observer.players[sharePlayerIndex]) {
+      const sharePlayer = observer.players[sharePlayerIndex];
+      if (sharePlayer && p !== sharePlayer) {
         dict[p.role.name] = null;
       }
     });
@@ -501,10 +502,8 @@ class TurnShare extends TurnSuggested {
   }
 
   private getSharedCardsForRole(role: RoleCard): Dict<Maybe<Card>> {
-    const lookupPlayer = (i: number): Player => this.observer.players[i];
-
     const shareWithRoleNames = Object.entries(this.sharePlayers)
-      .filter(flow(getEntryValue, lookupPlayer, playerHasRole(role)))
+      .filter(flow(getEntryValue, this.getPlayerById, playerHasRole(role)))
       .map(getEntryKey);
 
     return pick(shareWithRoleNames, this.sharedCards);
@@ -544,15 +543,11 @@ class TurnRecord extends TurnSuggested {
   ) {
     super(observer, suggestions, sharePlayers);
     this.sharedCards = sharedCards;
-    this.playerIsReady = dictFromList(observer.players, (dict, p) => {
-      if (!p.isDed) {
-        dict[p.role.name] = false;
-      }
+    this.playerIsReady = dictFromList(this.getLivePlayers(), (dict, p) => {
+      dict[p.role.name] = false;
     });
-    this.accusations = dictFromList(observer.players, (acc, p) => {
-      if (!p.isDed) {
-        acc[p.role.name] = null;
-      }
+    this.accusations = dictFromList(this.getLivePlayers(), (acc, p) => {
+      acc[p.role.name] = null;
     });
   }
 
@@ -618,7 +613,7 @@ class TurnRecord extends TurnSuggested {
     }
 
     const player = this.observer.players.find(playerHasRole(role));
-    if (player && !player.isDed) {
+    if (player && isAlive(player)) {
       this.playerIsReady[role.name] = isReady;
       this.checkIfReady();
     }
@@ -656,7 +651,7 @@ class TurnRecord extends TurnSuggested {
       return;
     }
 
-    const playersLeft = this.observer.players.filter(p => !p.isDed);
+    const playersLeft = this.getLivePlayers();
     if (playersLeft.length < 2) {
       this.observer.gameOver(playersLeft);
       return;
@@ -683,10 +678,8 @@ class TurnAccused extends Turn {
   constructor(observer: TurnObserver, failedAccusations: Dict<Crime>) {
     super(observer);
     this.failedAccusations = failedAccusations;
-    this.playerIsReady = dictFromList(observer.players, (dict, p) => {
-      if (!p.isDed) {
-        dict[p.role.name] = false;
-      }
+    this.playerIsReady = dictFromList(this.getLivePlayers(), (dict, p) => {
+      dict[p.role.name] = false;
     });
   }
 
@@ -717,7 +710,7 @@ class TurnAccused extends Turn {
 
   protected setIsReady(role: RoleCard, isReady: boolean) {
     const player = this.observer.players.find(playerHasRole(role));
-    if (player && !player.isDed) {
+    if (player && isAlive(player)) {
       this.playerIsReady[role.name] = isReady;
       this.checkIfReady();
     }

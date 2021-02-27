@@ -2,7 +2,7 @@
   <div class="turn-record">
     <Sticky>Record your notes.</Sticky>
     <CardShare
-      v-for="player in players"
+      v-for="player in livePlayers"
       :key="player.role.name"
       :turn="turn"
       :players="players"
@@ -45,6 +45,7 @@ import CardShare from '@/deduction/components/CardShare.vue';
 import ReadyToast from '@/deduction/components/ReadyToast.vue';
 import SelectCrime from '@/deduction/components/SelectCrime.vue';
 import UnreadyPlayers from '@/deduction/components/UnreadyPlayers.vue';
+import { isAlive } from '@/deduction/utils';
 import { Card, Crime, Player, TurnRecordState } from '@/deductionSync/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
@@ -97,6 +98,9 @@ export default defineComponent({
       return dictFromList(this.players, (acc, p) => {
         acc[p.role.name] = p;
       });
+    },
+    livePlayers(): Player[] {
+      return this.players.filter(isAlive);
     },
     unreadyPlayers(): Player[] {
       return Object.entries(this.turn.playerIsReady)

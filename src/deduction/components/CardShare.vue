@@ -83,7 +83,7 @@ export default defineComponent({
       return this.turn.playerIsReady[this.sharePlayer.role.name];
     },
     sharedCard(): Maybe<Card> {
-      return this.turn.sharedCards[this.shareWith.role.name];
+      return this.turn.sharedCards[this.shareWith.role.name] ?? null;
     },
     shareableCards(): Card[] {
       const cards = Object.values(

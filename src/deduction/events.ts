@@ -58,13 +58,16 @@ export interface SuggestEvent {
   suggestion: Crime;
 }
 
-export type DeductionEvent =
-  | AccuseEvent
+export type SetupEvent =
   | SetNameEvent
-  | SetNoteEvent
   | SetReadyEvent
   | SetRoleEvent
+  | StartEvent;
+
+export type DeductionEvent =
+  | SetupEvent
+  | AccuseEvent
+  | SetNoteEvent
   | SetSkinEvent
   | ShareCardEvent
-  | StartEvent
   | SuggestEvent;

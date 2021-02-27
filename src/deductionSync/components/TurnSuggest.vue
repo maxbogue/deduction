@@ -1,9 +1,9 @@
 <template>
   <div class="turn-suggest">
     <h2>Suggest</h2>
-    <template v-if="turn.suggestion || !yourPlayer || yourPlayer.isDed">
-      <Sticky v-if="turn.suggestion">
-        You suggested {{ crimeToString(turn.suggestion) }}.
+    <template v-if="suggestion || !yourPlayer || yourPlayer.isDed">
+      <Sticky v-if="suggestion">
+        You suggested {{ suggestion ? crimeToString(suggestion) : '' }}.
       </Sticky>
       <Sticky v-else-if="yourPlayer">You are dead.</Sticky>
       <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
@@ -47,6 +47,11 @@ export default defineComponent({
     onSuggest: {
       type: Function as PropType<(suggestion: Crime) => void>,
       required: true,
+    },
+  },
+  computed: {
+    suggestion(): Maybe<Crime> {
+      return this.turn.suggestion;
     },
   },
   methods: {

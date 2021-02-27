@@ -1,61 +1,53 @@
+import { DeductionEvents } from '@/deduction/events';
+
 import { Card, Crime, Mark, Player, RoleCard } from './state';
 
-export enum DeductionSyncEvents {
-  Accuse = 'Accuse',
-  SetName = 'SetName',
-  SetNote = 'SetNote',
-  SetReady = 'SetReady',
-  SetRole = 'SetRole',
-  SetSkin = 'SetSkin',
-  ShareCard = 'ShareCard',
-  Start = 'Start',
-  Suggest = 'Suggest',
-}
+export { DeductionEvents as DeductionSyncEvents } from '@/deduction/events';
 
 export interface AccuseEvent {
-  kind: DeductionSyncEvents.Accuse;
+  kind: DeductionEvents.Accuse;
   data: Crime;
 }
 
 export interface SetNameEvent {
-  kind: DeductionSyncEvents.SetName;
+  kind: DeductionEvents.SetName;
   data: string;
 }
 
 export interface SetNoteEvent {
-  kind: DeductionSyncEvents.SetNote;
+  kind: DeductionEvents.SetNote;
   player: Player;
   card: Card;
   marks: Mark[];
 }
 
 export interface SetReadyEvent {
-  kind: DeductionSyncEvents.SetReady;
+  kind: DeductionEvents.SetReady;
   data: boolean;
 }
 
 export interface SetRoleEvent {
-  kind: DeductionSyncEvents.SetRole;
+  kind: DeductionEvents.SetRole;
   data: RoleCard;
 }
 
 export interface SetSkinEvent {
-  kind: DeductionSyncEvents.SetSkin;
+  kind: DeductionEvents.SetSkin;
   data: string;
 }
 
 export interface ShareCardEvent {
-  kind: DeductionSyncEvents.ShareCard;
+  kind: DeductionEvents.ShareCard;
   shareWith: number;
   shareCard: Card;
 }
 
 export interface StartEvent {
-  kind: DeductionSyncEvents.Start;
+  kind: DeductionEvents.Start;
 }
 
 export interface SuggestEvent {
-  kind: DeductionSyncEvents.Suggest;
+  kind: DeductionEvents.Suggest;
   suggestion: Crime;
 }
 

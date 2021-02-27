@@ -4,7 +4,7 @@
       You need to share {{ numCardsToShare }} more cards.
     </Sticky>
     <CardShare
-      v-for="player in players"
+      v-for="player in livePlayers"
       :key="player.role.name"
       :turn="turn"
       :players="players"
@@ -21,6 +21,7 @@ import { defineComponent, PropType } from 'vue';
 
 import Sticky from '@/components/Sticky.vue';
 import CardShare from '@/deduction/components/CardShare.vue';
+import { isAlive } from '@/deduction/utils';
 import { Card, Crime, Player, TurnShareState } from '@/deductionSync/state';
 import { Maybe } from '@/types';
 
@@ -55,6 +56,9 @@ export default defineComponent({
   computed: {
     numCardsToShare(): number {
       return Object.values(this.turn.sharedCards).filter(x => !x).length;
+    },
+    livePlayers(): Player[] {
+      return this.players.filter(isAlive);
     },
   },
   methods: {
