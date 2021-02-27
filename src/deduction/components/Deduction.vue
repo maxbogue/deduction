@@ -44,6 +44,10 @@ export default defineComponent({
       type: Object as PropType<DeductionState>,
       required: true,
     },
+    connected: {
+      type: Boolean as PropType<boolean>,
+      required: true,
+    },
     send: {
       type: Function as PropType<(event: DeductionEvent) => void>,
       required: true,

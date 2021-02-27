@@ -1,4 +1,13 @@
-import { inject, InjectionKey, onMounted, onUnmounted } from 'vue';
+import {
+  inject,
+  InjectionKey,
+  onMounted,
+  onUnmounted,
+  readonly,
+  Ref,
+  ref,
+  watch,
+} from 'vue';
 
 import { Skin } from '@/deduction/state';
 
@@ -23,4 +32,26 @@ export function useEventListener(
   onUnmounted(() => {
     el.removeEventListener(event, listener);
   });
+}
+
+// Delay the switch to false state.
+export function useOffDelayed(
+  real: Ref<boolean>,
+  delayMs: number
+): Ref<boolean> {
+  const delayed = ref(real.value);
+  let timeoutId = 0;
+
+  watch(real, () => {
+    clearTimeout(timeoutId);
+    if (real.value) {
+      delayed.value = true;
+    } else {
+      timeoutId = window.setTimeout(() => {
+        delayed.value = false;
+      }, delayMs);
+    }
+  });
+
+  return readonly(delayed);
 }

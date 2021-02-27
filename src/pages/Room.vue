@@ -4,14 +4,16 @@
     <Deduction
       v-else-if="state.game.kind === Games.Deduction"
       :state="state.game.state"
+      :connected="connected"
       :send="sendGameEvent"
     />
     <DeductionSync
       v-else-if="state.game.kind === Games.DeductionSync"
       :state="state.game.state"
+      :connected="connected"
       :send="sendGameEvent"
     />
-    <Modal v-if="state && !connected">Reconnecting...</Modal>
+    <Modal v-if="state && !showReconnectingOverlay">Reconnecting...</Modal>
     <hr />
     <div class="room__buttons">
       <button @click="restart">Restart</button>
@@ -28,6 +30,7 @@ import { computed, defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import Modal from '@/components/Modal.vue';
+import { useOffDelayed } from '@/composables';
 import { useWebSocket } from '@/composables/websocket';
 import Deduction from '@/deduction/components/Deduction.vue';
 import DeductionSync from '@/deductionSync/components/DeductionSync.vue';
@@ -66,6 +69,8 @@ export default defineComponent({
     return {
       Games,
       connected,
+      // Hide short-lived disconnects.
+      showReconnectingOverlay: useOffDelayed(connected, 500),
       state,
       sendGameEvent,
       restart,

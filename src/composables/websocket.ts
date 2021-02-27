@@ -1,4 +1,4 @@
-import { onUnmounted, readonly, Ref, ref, watch } from 'vue';
+import { onUnmounted, Ref, ref, watch } from 'vue';
 
 import { useEventListener } from '@/composables';
 import { Maybe } from '@/types';
@@ -9,25 +9,6 @@ interface UseWebSocket<S, E> {
   connected: Ref<boolean>;
   state: Ref<Maybe<S>>;
   send: (event: E) => void;
-}
-
-// Delay the switch to false state.
-function useOffDelayed(real: Ref<boolean>, delayMs: number): Ref<boolean> {
-  const delayed = ref(real.value);
-  let timeoutId = 0;
-
-  watch(real, () => {
-    clearTimeout(timeoutId);
-    if (real.value) {
-      delayed.value = true;
-    } else {
-      timeoutId = window.setTimeout(() => {
-        delayed.value = false;
-      }, delayMs);
-    }
-  });
-
-  return readonly(delayed);
 }
 
 export function useWebSocket<S, E>(url: Ref<string>): UseWebSocket<S, E> {
@@ -71,8 +52,7 @@ export function useWebSocket<S, E>(url: Ref<string>): UseWebSocket<S, E> {
   };
 
   return {
-    // Suppress short-lived disconnects.
-    connected: useOffDelayed(connected, 100),
+    connected,
     state,
     send,
   };
