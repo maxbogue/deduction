@@ -84,6 +84,5 @@ export default defineComponent({
 
 .turn-accused {
   @include flex-column;
-  margin-bottom: $pad-lg;
 }
 </style>

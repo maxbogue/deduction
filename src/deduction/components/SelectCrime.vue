@@ -134,6 +134,8 @@ export default defineComponent({
 @import '@/style/constants';
 
 .select-crime {
+  padding-bottom: $pad-xs;
+
   &__cards {
     display: flex;
     flex-direction: column;

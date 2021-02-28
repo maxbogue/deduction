@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="card-share">
     <div>
       {{ getPlayerName(shareWith) }} suggested
       {{ crimeToString(turn.suggestions[shareWith.role.name]) }}.
@@ -13,7 +13,7 @@
     </div>
     <template v-else-if="onShareCard && yourPlayer === sharePlayer">
       <div>Choose a card to share:</div>
-      <div class="turn-share__cards">
+      <div class="card-share__cards">
         <Card
           v-for="card in shareableCards"
           :key="card.name"
@@ -107,8 +107,9 @@ export default defineComponent({
 <style lang="scss" scoped>
 @import '@/style/constants';
 
-.turn-share {
+.card-share {
   @include flex-column;
+  padding: $pad-sm;
 
   &__cards {
     display: flex;

@@ -1,11 +1,14 @@
 <template>
   <div class="unready-players">
-    <span>Waiting for:</span>
-    <RoleColor
-      v-for="player in unreadyPlayers"
-      :key="player.role.name"
-      :role="player.role"
-    />
+    <div>Waiting for:</div>
+    <div class="unready-players__colors">
+      <RoleColor
+        v-for="player in unreadyPlayers"
+        :key="player.role.name"
+        class="unready-players__color"
+        :role="player.role"
+      />
+    </div>
   </div>
 </template>
 
@@ -51,12 +54,15 @@ export default defineComponent({
 @import '@/style/constants';
 
 .unready-players {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: $pad-sm;
 
-  > :not(:first-child) {
-    margin-left: $pad-xs;
+  &__colors {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &__color {
+    margin: $pad-xs;
   }
 }
 </style>

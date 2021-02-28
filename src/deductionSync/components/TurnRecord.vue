@@ -125,7 +125,6 @@ export default defineComponent({
 
 .turn-record {
   @include flex-column;
-  margin-bottom: $pad-lg;
 
   &__accuse :deep(.select-crime__button) {
     background-color: rgba(255, 24, 12, 0.5);

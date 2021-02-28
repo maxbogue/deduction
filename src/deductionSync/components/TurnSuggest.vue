@@ -6,12 +6,12 @@
         You suggested {{ suggestion ? crimeToString(suggestion) : '' }}.
       </Sticky>
       <Sticky v-else-if="yourPlayer">You are dead.</Sticky>
-      <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
     </template>
     <template v-else-if="yourPlayer">
       <Sticky>Make a suggestion.</Sticky>
       <SelectCrime :onSelect="onSuggest" />
     </template>
+    <UnreadyPlayers :players="players" :playerIsReady="turn.playerIsReady" />
   </div>
 </template>
 
