@@ -1,9 +1,10 @@
 import { DeductionState } from '@/deduction/state';
 import { DeductionSyncState } from '@/deductionSync/state';
+import { Maybe } from '@/types';
 
 export enum Games {
   Deduction = 'Deduction',
-  DeductionSync = 'DeductionSync',
+  DeductionSync = 'Deduction 2.0',
 }
 
 interface DeductionGameState {
@@ -20,5 +21,5 @@ export type GameState = DeductionGameState | DeductionSyncGameState;
 
 export interface RoomState {
   numConnections: number;
-  game: GameState;
+  game: Maybe<GameState>;
 }

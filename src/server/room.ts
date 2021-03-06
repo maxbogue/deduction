@@ -9,7 +9,7 @@ import {
   GameObserver,
 } from '@/server/game';
 import { Games } from '@/state';
-import { Dict } from '@/types';
+import { Dict, Maybe } from '@/types';
 
 const GAMES: Dict<GameConfig> = {
   [Games.Deduction]: deductionConfig,
@@ -18,13 +18,12 @@ const GAMES: Dict<GameConfig> = {
 
 export class Room implements ConnectionObserver, GameObserver {
   private readonly connections: Connection[] = [];
-  private game: Game;
-
-  constructor() {
-    this.game = deductionSyncConfig.init(this);
-  }
+  private game: Maybe<Game> = null;
 
   private initGame(): Game {
+    if (!this.game) {
+      throw new Error("Can't restart outside a game.");
+    }
     return GAMES[this.game.getKind()].init(this);
   }
 
@@ -36,7 +35,7 @@ export class Room implements ConnectionObserver, GameObserver {
   removeConnection(conn: Connection): void {
     const i = this.connections.indexOf(conn);
     this.connections.splice(i, 1);
-    this.game.removeConnection(conn);
+    this.game?.removeConnection(conn);
     this.updateState();
   }
 
@@ -44,12 +43,15 @@ export class Room implements ConnectionObserver, GameObserver {
     let updateAll = true;
     switch (event.kind) {
       case RoomEvents.SetGame:
+        this.game = event.game ? GAMES[event.game].init(this) : null;
         break;
       case RoomEvents.Restart:
         this.game = this.initGame();
         break;
       default:
-        updateAll = this.game.processEvent(conn, event.event);
+        if (this.game) {
+          updateAll = this.game.processEvent(conn, event.event);
+        }
     }
     if (updateAll) {
       this.updateState();
@@ -65,7 +67,7 @@ export class Room implements ConnectionObserver, GameObserver {
   private updateStateForConnection(conn: Connection): void {
     conn.sendState({
       numConnections: this.connections.length,
-      game: this.game.getStateForConnection(conn),
+      game: this.game?.getStateForConnection(conn) ?? null,
     });
   }
 

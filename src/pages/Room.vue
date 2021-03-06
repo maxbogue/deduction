@@ -1,6 +1,17 @@
 <template>
   <div class="room">
     <div v-if="!state">Loading...</div>
+    <form v-else-if="!state.game" @submit.prevent="setGame">
+      <h1>Select Game</h1>
+      <select v-model="gameOption" class="room__select">
+        <option v-for="game in Object.values(Games)" :key="game">
+          {{ game }}
+        </option>
+      </select>
+      <div>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
     <Deduction
       v-else-if="state.game.kind === Games.Deduction"
       :state="state.game.state"
@@ -16,7 +27,8 @@
     <Modal v-if="state && !showReconnectingOverlay">Reconnecting...</Modal>
     <hr />
     <div class="room__buttons">
-      <button @click="restart">Restart</button>
+      <button v-if="state && state.game" @click="restart">Restart</button>
+      <button v-if="state && state.game" @click="quit">Quit</button>
       <button @click="showStateJson = !showStateJson">Debug</button>
     </div>
     <div v-if="showStateJson" class="room__state">
@@ -26,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
+import { computed, defineComponent, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import Modal from '@/components/Modal.vue';
@@ -36,6 +48,7 @@ import Deduction from '@/deduction/components/Deduction.vue';
 import DeductionSync from '@/deductionSync/components/DeductionSync.vue';
 import { RoomEvent, RoomEvents } from '@/events';
 import { Games, RoomState } from '@/state';
+import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'Room',
@@ -60,21 +73,42 @@ export default defineComponent({
       }
     };
 
-    const sendGameEvent = (event: any) =>
+    const quit = () => {
+      if (confirm('Are you sure you want to quit the game?')) {
+        send({
+          kind: RoomEvents.SetGame,
+          game: null,
+        });
+      }
+    };
+
+    const sendGameEvent = (event: any) => {
       send({
         kind: RoomEvents.GameEvent,
         event,
       });
+    };
+
+    const gameOption: Ref<Maybe<Games>> = ref(null);
+    const setGame = () => {
+      send({
+        kind: RoomEvents.SetGame,
+        game: gameOption.value || null,
+      });
+    };
 
     return {
       Games,
       connected,
+      gameOption,
+      quit,
+      restart,
+      sendGameEvent,
+      setGame,
       // Hide short-lived disconnects.
       showReconnectingOverlay: useOffDelayed(connected, 500),
-      state,
-      sendGameEvent,
-      restart,
       showStateJson: ref(false),
+      state,
     };
   },
 });
@@ -112,6 +146,11 @@ export default defineComponent({
     text-align: left;
     padding: $pad-lg;
     white-space: pre-wrap;
+  }
+
+  &__select {
+    font-family: 'Crimson Text', serif;
+    font-size: 2.4rem;
   }
 }
 </style>

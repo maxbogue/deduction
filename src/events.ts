@@ -1,3 +1,6 @@
+import { Games } from '@/state';
+import { Maybe } from '@/types';
+
 export enum RoomEvents {
   SetGame = 'SetGame',
   Restart = 'Restart',
@@ -6,6 +9,7 @@ export enum RoomEvents {
 
 export interface SetGameEvent {
   kind: RoomEvents.SetGame;
+  game: Maybe<Games>;
 }
 
 export interface RestartEvent {
