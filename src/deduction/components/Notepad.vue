@@ -254,8 +254,8 @@ export default defineComponent({
 .notepad {
   text-align: center;
   cursor: default;
-  margin: $pad-sm (-$pad-md);
-  max-width: calc(100% + #{$pad-md * 2});
+  margin: $pad-sm (-$pad-xs);
+  max-width: calc(100% + #{$pad-xs * 2});
 
   table {
     box-shadow: $box-shadow;

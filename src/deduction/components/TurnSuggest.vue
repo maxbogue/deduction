@@ -4,9 +4,9 @@
       <h2>Suggest</h2>
       <SelectCrime :onSelect="onSuggest" />
     </div>
-    <Sticky v-else
-      >Waiting for {{ turnPlayer.name }} to make a suggestion.</Sticky
-    >
+    <Sticky v-else>
+      Waiting for {{ turnPlayer.name }} to make a suggestion.
+    </Sticky>
   </div>
 </template>
 

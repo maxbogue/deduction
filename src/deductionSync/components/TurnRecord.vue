@@ -1,6 +1,6 @@
 <template>
   <div class="turn-record">
-    <Sticky>Record your notes.</Sticky>
+    <Sticky :sentinel="turn">Record your notes.</Sticky>
     <CardShare
       v-for="player in livePlayers"
       :key="player.role.name"
