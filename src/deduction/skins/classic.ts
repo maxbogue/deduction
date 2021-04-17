@@ -64,11 +64,27 @@ export const classic: Skin = {
     },
     {
       type: CardType.Tool,
-      name: 'Hydroflask TM',
+      name: 'Hydroflask',
     },
     {
       type: CardType.Tool,
       name: 'Hammer',
+    },
+    {
+      type: CardType.Tool,
+      name: 'Pen',
+    },
+    {
+      type: CardType.Tool,
+      name: 'Vase',
+    },
+    {
+      type: CardType.Tool,
+      name: 'Spoon',
+    },
+    {
+      type: CardType.Tool,
+      name: 'Poison',
     },
   ],
   places: [
@@ -103,6 +119,14 @@ export const classic: Skin = {
     {
       type: CardType.Place,
       name: 'Pantry',
+    },
+    {
+      type: CardType.Place,
+      name: 'Kitchen',
+    },
+    {
+      type: CardType.Place,
+      name: 'Library',
     },
   ],
 };

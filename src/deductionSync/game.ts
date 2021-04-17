@@ -28,14 +28,17 @@ import {
 import { DeductionSyncEvent, DeductionSyncEvents } from './events';
 import {
   Card,
+  CardType,
   Crime,
   DeductionStatus,
   Mark,
+  PlaceCard,
   Player,
   PlayerSecrets,
   ProtoPlayer,
   RoleCard,
   Skin,
+  ToolCard,
   TurnState,
   TurnStatus,
 } from './state';
@@ -44,6 +47,60 @@ abstract class DeductionSyncGame extends Game {
   getKind(): Games {
     return Games.DeductionSync;
   }
+}
+
+const isTool = (c: Card): c is ToolCard => c.type === CardType.Tool;
+const isPlace = (c: Card): c is PlaceCard => c.type === CardType.Place;
+
+/**
+ * Removes cards from the skin such that each player ends up with the same
+ * number of cards.
+ */
+function balanceSkin(skin: Skin, numHands: number): Skin {
+  const roles = [...skin.roles];
+  const toolsAndPlaces: Card[] = [...skin.tools, ...skin.places];
+  const totalCards = roles.length + toolsAndPlaces.length;
+  const numToRemove = (totalCards - 3) % numHands;
+  pickMany(toolsAndPlaces, numToRemove);
+  const tools = toolsAndPlaces.filter(isTool);
+  const places = toolsAndPlaces.filter(isPlace);
+  return {
+    ...skin,
+    roles,
+    places,
+    tools,
+  };
+}
+
+function dealCards(originalSkin: Skin, numHands: number) {
+  const skin = balanceSkin(originalSkin, numHands);
+  const roles = skin.roles.slice();
+  const tools = skin.tools.slice();
+  const places = skin.places.slice();
+
+  const solution = {
+    role: pickOne(roles),
+    tool: pickOne(tools),
+    place: pickOne(places),
+  };
+
+  const allCards = [...roles, ...tools, ...places];
+
+  // shuffle the deck
+
+  const count = allCards.length;
+  const cardsPerHand = Math.floor(count / numHands);
+  const getsExtra = count % numHands;
+  const hands = repeat(
+    (i: number) =>
+      sortBy(
+        ['type', 'name'],
+        pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand)
+      ),
+    numHands
+  ).reverse();
+
+  return { skin, solution, hands };
 }
 
 class GameSetup extends DeductionSyncGame {
@@ -112,43 +169,13 @@ class GameSetup extends DeductionSyncGame {
     this.playersByConnection = {};
   }
 
-  private dealCards(numHands: number) {
-    const roles = this.skin.roles.slice();
-    const tools = this.skin.tools.slice();
-    const places = this.skin.places.slice();
-
-    const solution = {
-      role: pickOne(roles),
-      tool: pickOne(tools),
-      place: pickOne(places),
-    };
-
-    const allCards = [...roles, ...tools, ...places];
-
-    // shuffle the deck
-
-    const count = allCards.length;
-    const cardsPerHand = Math.floor(count / numHands);
-    const getsExtra = count % numHands;
-    const hands = repeat(
-      (i: number) =>
-        sortBy(
-          ['type', 'name'],
-          pickMany(allCards, i < getsExtra ? cardsPerHand + 1 : cardsPerHand)
-        ),
-      numHands
-    ).reverse();
-
-    return { solution, hands };
-  }
-
   private start(): void {
     const protoPlayers = Object.values(this.playersByConnection);
     if (protoPlayers.length < 2 || !protoPlayers.every(p => p.isReady)) {
       return;
     }
 
-    const { solution, hands } = this.dealCards(protoPlayers.length);
+    const { skin, solution, hands } = dealCards(this.skin, protoPlayers.length);
 
     const players = shuffle(protoPlayers).map(
       ({ role, name }: ProtoPlayer, i: number): Player => {
@@ -167,7 +194,7 @@ class GameSetup extends DeductionSyncGame {
 
     const game = new GameInProgress(
       this.observer,
-      this.skin,
+      skin,
       mapValues(p => p.role, this.playersByConnection),
       players,
       hands,

@@ -12,6 +12,9 @@ import { Dict, Maybe } from '@/types';
 
 export {
   Card,
+  CardType,
+  ToolCard,
+  PlaceCard,
   Crime,
   DeductionStatus,
   Mark,
