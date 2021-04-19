@@ -9,14 +9,14 @@
     "build": "NODE_ENV=production webpack --mode production --progress",
     "prod": "NODE_ENV=production node build/main.js",
     "lint": "eslint --ext .ts,.vue --fix src",
-    "typecheck": "vuedx-typecheck"
+    "typecheck": "vue-tsc --noEmit"
   },
   "lint-staged": {
     "*.(ts|vue)": "eslint --fix"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "vuedx-typecheck && echo && lint-staged"
+      "pre-commit": "vue-tsc --noEmit && echo && lint-staged"
     }
   },
   "dependencies": {
@@ -42,7 +42,6 @@
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
     "@vue/compiler-sfc": "^3.0.5",
-    "@vuedx/typecheck": "^0.6.0",
     "babel-loader": "^8.2.2",
     "chalk": "^4.1.0",
     "css-loader": "^5.0.1",
@@ -64,6 +63,7 @@
     "ts-loader": "^8.0.13",
     "url-loader": "^4.1.1",
     "vue-loader": "^16.1.2",
+    "vue-tsc": "^0.0.24",
     "webpack": "^5.11.1",
     "webpack-cli": "^4.5.0",
     "webpack-merge": "^5.7.3",

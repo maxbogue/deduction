@@ -35,7 +35,7 @@
       <button
         v-if="crime && !buttonDisabled"
         class="select-crime__button"
-        @click="onSelect(crime)"
+        @click="crime && onSelect(crime)"
       >
         {{ buttonText }}
       </button>

@@ -6,7 +6,7 @@
       :onReconnect="reconnectAsPlayer"
     />
     <h2>Game Over!</h2>
-    <Sticky :sentinel="turn">
+    <Sticky>
       <div>Winner is {{ winners.map(p => p.name).join(' and ') }}!</div>
       <div class="game-in-progress__cards">
         <Cards :cards="Object.values(state.solution)" />
