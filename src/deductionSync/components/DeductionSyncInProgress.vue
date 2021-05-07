@@ -40,7 +40,7 @@
     <template v-if="state.playerSecrets">
       <Notepad
         class="game-in-progress__notepad"
-        :skin="state.skin"
+        :skin="state.playerSecrets.skin"
         :players="players"
         :turnPlayer="selectedPlayer"
         :suggestion="suggestion"

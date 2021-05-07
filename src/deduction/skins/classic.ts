@@ -36,7 +36,7 @@ export const classic: Skin = {
     },
     {
       type: CardType.Role,
-      name: 'Ms. Fuschia',
+      name: 'Ms. Fuchsia',
       color: '#cc0088',
     },
     {

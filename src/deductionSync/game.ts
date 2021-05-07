@@ -72,6 +72,15 @@ function balanceSkin(skin: Skin, numHands: number): Skin {
   };
 }
 
+function shuffleSkin(skin: Skin): Skin {
+  return {
+    ...skin,
+    roles: shuffle(skin.roles),
+    places: shuffle(skin.places),
+    tools: shuffle(skin.tools),
+  };
+}
+
 function dealCards(originalSkin: Skin, numHands: number) {
   const skin = balanceSkin(originalSkin, numHands);
   const roles = skin.roles.slice();
@@ -753,6 +762,7 @@ class GameInProgress extends GamePostSetup {
       hands.map((hand, i) => ({
         index: i,
         hand,
+        skin: shuffleSkin(skin),
         notes: initNotes(skin, players, i, hand),
       })),
       solution

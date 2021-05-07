@@ -3,7 +3,7 @@ import {
   Crime,
   DeductionStatus,
   Player,
-  PlayerSecrets,
+  PlayerSecrets as BasePlayerSecrets,
   SetupState,
   Skin,
   TurnStatus,
@@ -19,13 +19,17 @@ export {
   DeductionStatus,
   Mark,
   Player,
-  PlayerSecrets,
   ProtoPlayer,
   RoleCard,
   SetupState,
   Skin,
   TurnStatus,
 } from '@/deduction/state';
+
+export interface PlayerSecrets extends BasePlayerSecrets {
+  // Randomly shuffled skin.
+  skin: Skin;
+}
 
 export interface TurnSuggestState {
   status: TurnStatus.Suggest;
