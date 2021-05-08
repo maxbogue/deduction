@@ -1,7 +1,7 @@
 <template>
   <div class="game-over">
     <Players
-      :players="state.players"
+      :players="players"
       :yourPlayer="yourPlayer"
       :onReconnect="reconnectAsPlayer"
     />
@@ -16,7 +16,7 @@
       <Notepad
         class="game-over__notepad"
         :skin="state.skin"
-        :players="state.players"
+        :players="notepadPlayers"
         :notes="state.playerSecrets.notes"
         :setNote="setNote"
       />
@@ -39,7 +39,13 @@ import {
   DeductionSyncEvent,
   DeductionSyncEvents,
 } from '@/deductionSync/events';
-import { Card, GameOverState, Mark, Player } from '@/deductionSync/state';
+import {
+  Card,
+  GameOverState,
+  Mark,
+  Player,
+  PlayerSecrets,
+} from '@/deductionSync/state';
 import { Maybe } from '@/types';
 
 export default defineComponent({
@@ -61,6 +67,20 @@ export default defineComponent({
     },
   },
   computed: {
+    playerSecrets(): Maybe<PlayerSecrets> {
+      return this.state.playerSecrets;
+    },
+    players(): Player[] {
+      return this.state.players;
+    },
+    notepadPlayers(): Player[] {
+      if (!this.playerSecrets) {
+        return this.players;
+      }
+      // Rotate the player list to put the current player first.
+      const i = this.playerSecrets.index;
+      return [...this.players.slice(i), ...this.players.slice(0, i)];
+    },
     yourPlayer(): Maybe<Player> {
       return this.state.playerSecrets
         ? this.state.players[this.state.playerSecrets.index]

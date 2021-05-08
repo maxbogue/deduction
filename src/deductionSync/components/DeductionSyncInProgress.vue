@@ -37,20 +37,20 @@
       :yourPlayer="yourPlayer"
       :setIsReady="setIsReady"
     />
-    <template v-if="state.playerSecrets">
+    <template v-if="playerSecrets">
       <Notepad
         class="game-in-progress__notepad"
-        :skin="state.playerSecrets.skin"
-        :players="players"
+        :skin="playerSecrets.skin"
+        :players="notepadPlayers"
         :turnPlayer="selectedPlayer"
         :suggestion="suggestion"
         :sharePlayer="sharePlayer"
-        :notes="state.playerSecrets.notes"
+        :notes="playerSecrets.notes"
         :setNote="setNote"
         :selectPlayer="i => (selectedPlayerIndex = i)"
       />
       <h2 class="game-in-progress__hand-title">Hand</h2>
-      <Cards :cards="state.playerSecrets.hand" />
+      <Cards :cards="playerSecrets.hand" />
     </template>
   </div>
 </template>
@@ -76,6 +76,7 @@ import {
   InProgressState,
   Mark,
   Player,
+  PlayerSecrets,
   TurnState,
   TurnStatus,
 } from '@/deductionSync/state';
@@ -116,24 +117,34 @@ export default defineComponent({
     return {
       TurnStatus,
       notes: {},
-      selectedPlayerIndex: this.state.playerSecrets?.index ?? 0,
+      selectedPlayerIndex: 0,
     };
   },
   computed: {
     turn(): TurnState {
       return this.state.turnState;
     },
+    playerSecrets(): Maybe<PlayerSecrets> {
+      return this.state.playerSecrets;
+    },
     players(): Player[] {
       return this.state.players;
     },
+    notepadPlayers(): Player[] {
+      if (!this.playerSecrets) {
+        return this.players;
+      }
+      // Rotate the player list to put the current player first.
+      const i = this.playerSecrets.index;
+      return [...this.players.slice(i), ...this.players.slice(0, i)];
+    },
     selectedPlayer(): Player {
-      return this.state.players[this.selectedPlayerIndex];
+      return this.notepadPlayers[this.selectedPlayerIndex];
     },
     yourPlayer(): Maybe<Player> {
-      if (!this.state.playerSecrets) {
-        return null;
-      }
-      return this.players[this.state.playerSecrets.index];
+      return this.playerSecrets
+        ? this.state.players[this.playerSecrets.index]
+        : null;
     },
     sharePlayer(): Maybe<Player> {
       if (
@@ -148,7 +159,7 @@ export default defineComponent({
       return this.players[sharePlayerIndex];
     },
     hand(): Card[] {
-      return this.state.playerSecrets?.hand ?? [];
+      return this.playerSecrets?.hand ?? [];
     },
     suggestion(): Maybe<Crime> {
       if (
@@ -159,6 +170,11 @@ export default defineComponent({
         return null;
       }
       return this.turn.suggestions[this.selectedPlayer.role.name];
+    },
+  },
+  watch: {
+    turn() {
+      this.selectedPlayerIndex = 0;
     },
   },
   methods: {
