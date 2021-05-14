@@ -172,11 +172,6 @@ export default defineComponent({
       return this.turn.suggestions[this.selectedPlayer.role.name];
     },
   },
-  watch: {
-    turn() {
-      this.selectedPlayerIndex = 0;
-    },
-  },
   methods: {
     suggest(suggestion: Crime) {
       this.send({
