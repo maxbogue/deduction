@@ -31,7 +31,7 @@ export default defineComponent({
       default: 'div',
     },
     onClick: {
-      type: Function as PropType<Maybe<() => void>>,
+      type: (Function as unknown) as PropType<Maybe<() => void>>,
       default: null,
     },
   },

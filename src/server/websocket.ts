@@ -5,6 +5,13 @@ import { RoomState } from '@/state';
 
 let nextId = 1;
 
+enum ReadyState {
+  Connecting = 0,
+  Open = 1,
+  Closing = 2,
+  Closed = 3,
+}
+
 export class WebSocketConnection implements Connection {
   private observer: ConnectionObserver;
   private ws: WebSocket;
@@ -29,6 +36,9 @@ export class WebSocketConnection implements Connection {
   }
 
   sendState(state: RoomState): void {
+    if (this.ws.readyState !== ReadyState.Open) {
+      return;
+    }
     try {
       this.ws.send(JSON.stringify(state));
     } catch (e: unknown) {
