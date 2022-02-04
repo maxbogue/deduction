@@ -13,8 +13,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { computed, defineComponent, PropType, provide } from 'vue';
 
+import { SkinKey } from '@/composables';
 import GameInProgress from '@/deduction/components/GameInProgress.vue';
 import GameOver from '@/deduction/components/GameOver.vue';
 import GameSetup from '@/deduction/components/GameSetup.vue';
@@ -53,9 +54,11 @@ export default defineComponent({
       required: true,
     },
   },
-  data: () => ({
-    DeductionStatus,
-  }),
+  setup(props) {
+    const skin = computed(() => props.state.skin);
+    provide(SkinKey, skin);
+    return { DeductionStatus };
+  },
   watch: {
     connected(newVal, oldVal) {
       if (newVal && !oldVal) {

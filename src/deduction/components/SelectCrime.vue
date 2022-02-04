@@ -86,9 +86,7 @@ export default defineComponent({
   },
   setup() {
     const skin = safeInject(SkinKey);
-    return {
-      skin,
-    };
+    return { skin };
   },
   data: (): InProgressData => ({
     selectedRole: null,

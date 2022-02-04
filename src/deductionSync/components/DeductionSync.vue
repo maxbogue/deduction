@@ -13,8 +13,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { computed, defineComponent, PropType, provide } from 'vue';
 
+import { SkinKey } from '@/composables';
 import DeductionSetup from '@/deduction/components/GameSetup.vue';
 import DeductionSyncInProgress from '@/deductionSync/components/DeductionSyncInProgress.vue';
 import DeductionSyncOver from '@/deductionSync/components/DeductionSyncOver.vue';
@@ -60,9 +61,19 @@ export default defineComponent({
       required: true,
     },
   },
-  data: () => ({
-    DeductionStatus,
-  }),
+  setup(props) {
+    const skin = computed(() => {
+      const { state } = props;
+      if (state.status !== DeductionStatus.Setup && state.playerSecrets) {
+        return state.playerSecrets.skin;
+      }
+      return state.skin;
+    });
+
+    provide(SkinKey, skin);
+
+    return { DeductionStatus };
+  },
   watch: {
     connected(newVal, oldVal) {
       if (newVal && !oldVal) {

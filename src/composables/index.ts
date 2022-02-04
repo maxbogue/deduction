@@ -1,4 +1,5 @@
 import {
+  ComputedRef,
   inject,
   InjectionKey,
   onMounted,
@@ -11,7 +12,7 @@ import {
 
 import { Skin } from '@/deduction/state';
 
-export const SkinKey: InjectionKey<Skin> = Symbol('Skin');
+export const SkinKey: InjectionKey<ComputedRef<Skin>> = Symbol('Skin');
 
 export function safeInject<T>(key: InjectionKey<T>): T {
   const value = inject(key);

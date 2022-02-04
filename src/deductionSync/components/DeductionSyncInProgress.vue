@@ -40,7 +40,6 @@
     <template v-if="playerSecrets">
       <Notepad
         class="game-in-progress__notepad"
-        :skin="playerSecrets.skin"
         :players="notepadPlayers"
         :turnPlayer="selectedPlayer"
         :suggestion="suggestion"
@@ -56,9 +55,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, provide, toRefs } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
 
-import { SkinKey } from '@/composables';
 import Cards from '@/deduction/components/Cards.vue';
 import Notepad from '@/deduction/components/Notepad.vue';
 import Players from '@/deduction/components/Players.vue';
@@ -80,13 +78,7 @@ import {
   TurnState,
   TurnStatus,
 } from '@/deductionSync/state';
-import { Dict, Maybe } from '@/types';
-
-interface InProgressData {
-  TurnStatus: typeof TurnStatus;
-  notes: Dict<Dict<string>>;
-  selectedPlayerIndex: number;
-}
+import { Maybe } from '@/types';
 
 export default defineComponent({
   name: 'DeductionSyncInProgress',
@@ -109,16 +101,9 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props) {
-    const { state } = toRefs(props);
-    provide(SkinKey, state.value.skin);
-  },
-  data(): InProgressData {
-    return {
-      TurnStatus,
-      notes: {},
-      selectedPlayerIndex: 0,
-    };
+  setup() {
+    const selectedPlayerIndex = ref(0);
+    return { TurnStatus, selectedPlayerIndex };
   },
   computed: {
     turn(): TurnState {

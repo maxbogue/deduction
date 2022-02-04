@@ -85,10 +85,10 @@ import isEqual from 'lodash/fp/isEqual';
 import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 
 import OptionalClick from '@/components/OptionalClick.vue';
-import { useEventListener } from '@/composables';
+import { safeInject, SkinKey, useEventListener } from '@/composables';
 import Note from '@/deduction/components/Note.vue';
 import RoleColor from '@/deduction/components/RoleColor.vue';
-import { Card, Crime, Mark, Player, Skin } from '@/deduction/state';
+import { Card, Crime, Mark, Player } from '@/deduction/state';
 import { Dict, Maybe } from '@/types';
 import { dictFromList } from '@/utils';
 
@@ -129,10 +129,6 @@ export default defineComponent({
     RoleColor,
   },
   props: {
-    skin: {
-      type: Object as PropType<Skin>,
-      required: true,
-    },
     players: {
       type: Array as PropType<Player[]>,
       required: true,
@@ -188,8 +184,11 @@ export default defineComponent({
     onMounted(scaleTable);
     useEventListener(window, 'resize', scaleTable);
 
+    const skin = safeInject(SkinKey);
+
     return {
       shownNoteDropdown,
+      skin,
       table,
       tableHeight,
       tableScale,
